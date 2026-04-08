@@ -219,7 +219,7 @@ apps/web/lib/
 - **Seguridad**: Path traversal prevention en lectura de archivos (validar que ruta resuelta esté dentro de `{BASE_PATH}/{projectId}/`)
 - **Ownership**: Solo el owner del proyecto puede ver/descargar archivos
 - **Streaming**: ZIP generado en streaming, no buffered en memoria
-- **Caché**: Response de contenido de archivo puede llevar `Cache-Control: private, max-age=3600` cuando el proyecto tiene `status = done`. Para proyectos en ejecución (`status = working|queued`), usar `Cache-Control: private, no-cache` ya que un retry podría regenerar archivos. Considerar ETag basado en `generated_files.created_at` para revalidación eficiente
+- **Caché**: Response de contenido de archivo puede llevar `Cache-Control: private, max-age=3600` cuando el proyecto tiene `status = done`. Para proyectos en ejecución (`status = running|idle`), usar `Cache-Control: private, no-cache` ya que un retry podría regenerar archivos. Considerar ETag basado en `generated_files.created_at` para revalidación eficiente
 - **Límite**: Archivos individuales > 1MB se truncan en el viewer con mensaje "Archivo demasiado grande para preview"
 
 ---

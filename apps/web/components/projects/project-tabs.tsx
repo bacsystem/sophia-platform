@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import type { Project } from '@sophia/shared';
 import { ProjectSpecViewer } from './project-spec-viewer';
 
@@ -50,7 +51,12 @@ export function ProjectTabs({ project }: ProjectTabsProps) {
         )}
         {active === 'files' && (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <p className="text-white/30 text-sm">Gestión de archivos disponible en M6</p>
+            <Link
+              href={`/projects/${project.id}/files`}
+              className="text-violet-400 hover:text-violet-300 text-sm font-medium transition-colors"
+            >
+              Abrir gestor de archivos →
+            </Link>
           </div>
         )}
         {active === 'logs' && (
