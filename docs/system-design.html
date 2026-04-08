@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sophia Platform — System Design</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500&family=Cabinet+Grotesk:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#07090f;--bg2:#0c1018;--panel:#10141f;--panel2:#141824;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.1);
+  --accent:#1D4ED8;--accent2:#7c3aed;--green:#10b981;
+  --amber:#f59e0b;--text:#dde4f5;--muted:#3d4f6e;--muted2:#5a6e8e;
+  --mono:'Geist Mono',monospace;--display:'Cabinet Grotesk',sans-serif;
+}
+html,body{background:var(--bg);color:var(--text);font-family:var(--display);line-height:1.6}
+body{padding:40px 24px 100px;max-width:1000px;margin:0 auto}
+
+/* HEADER */
+.hero{text-align:center;padding:60px 0 50px;border-bottom:1px solid var(--border);margin-bottom:60px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(29,78,216,.08);border:1px solid rgba(29,78,216,.2);border-radius:100px;padding:6px 16px;font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:20px}
+.hero h1{font-size:clamp(2.2rem,6vw,4rem);font-weight:900;letter-spacing:-.04em;line-height:1.05;margin-bottom:12px}
+.hero h1 span{color:var(--accent)}
+.hero p{font-size:13px;color:var(--muted2);font-family:var(--mono);max-width:500px;margin:0 auto}
+.hero-version{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:12px}
+
+/* SECTION */
+.section{margin-bottom:60px}
+.section-label{font-family:var(--mono);font-size:9px;color:var(--accent);letter-spacing:.2em;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:12px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.section-title{font-size:20px;font-weight:800;letter-spacing:-.02em;margin-bottom:8px}
+.section-desc{font-size:13px;color:var(--muted2);line-height:1.7;margin-bottom:24px}
+
+/* ARCH LAYERS */
+.arch{border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:20px}
+.arch-layer{border-bottom:1px solid var(--border);display:grid;gap:0}
+.arch-layer:last-child{border-bottom:none}
+.layer-label{background:rgba(255,255,255,.02);padding:10px 20px;font-family:var(--mono);font-size:9px;color:var(--muted2);letter-spacing:.15em;text-transform:uppercase;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.layer-label span{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.layer-nodes{display:flex;gap:12px;padding:16px 20px;flex-wrap:wrap}
+.node{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;flex:1;min-width:140px}
+.node-name{font-size:12px;font-weight:700;margin-bottom:4px}
+.node-desc{font-size:10px;font-family:var(--mono);color:var(--muted2);line-height:1.5}
+.node-badge{display:inline-block;font-size:8px;font-family:var(--mono);padding:2px 7px;border-radius:4px;margin-top:6px}
+
+.layer-user .layer-label span{background:#06d6a0}
+.layer-user .node{border-color:rgba(6,214,160,.15)}
+.layer-web .layer-label span{background:var(--accent)}
+.layer-web .node{border-color:rgba(29,78,216,.15)}
+.layer-api .layer-label span{background:var(--accent2)}
+.layer-api .node{border-color:rgba(124,58,237,.15)}
+.layer-agents .layer-label span{background:#f59e0b}
+.layer-agents .node{border-color:rgba(245,158,11,.15)}
+.layer-data .layer-label span{background:#10b981}
+.layer-data .node{border-color:rgba(16,185,129,.15)}
+.layer-infra .layer-label span{background:#ef4444}
+.layer-infra .node{border-color:rgba(239,68,68,.15)}
+
+/* FLOW */
+.flow{display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.flow-step{display:grid;grid-template-columns:40px 1fr;border-bottom:1px solid var(--border)}
+.flow-step:last-child{border-bottom:none}
+.flow-num{display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.02);border-right:1px solid var(--border);font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent)}
+.flow-content{padding:14px 18px}
+.flow-title{font-size:12px;font-weight:700;margin-bottom:3px}
+.flow-desc{font-size:11px;font-family:var(--mono);color:var(--muted2);line-height:1.5}
+.flow-tag{display:inline-block;font-size:9px;font-family:var(--mono);padding:1px 7px;border-radius:4px;margin-top:5px;background:rgba(29,78,216,.1);border:1px solid rgba(29,78,216,.2);color:var(--accent)}
+
+/* MODULES */
+.modules{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.module-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative;overflow:hidden}
+.module-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.m1::before{background:#5b8dee}
+.m2::before{background:#8b5cf6}
+.m3::before{background:#06d6a0}
+.m4::before{background:#f59e0b}
+.m5::before{background:#ec4899}
+.m6::before{background:#10b981}
+.m7::before{background:#ef4444}
+.module-num{font-family:var(--mono);font-size:9px;color:var(--muted2);margin-bottom:6px;letter-spacing:.1em}
+.module-name{font-size:13px;font-weight:700;margin-bottom:4px}
+.module-desc{font-size:10px;color:var(--muted2);font-family:var(--mono);line-height:1.5;margin-bottom:8px}
+.module-stack{display:flex;gap:4px;flex-wrap:wrap}
+.stack-tag{font-size:8px;font-family:var(--mono);padding:2px 6px;border-radius:4px;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--muted2)}
+
+/* ERD */
+.erd{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.erd-table{background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.erd-header{padding:10px 14px;font-size:11px;font-weight:700;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px}
+.erd-header span{font-size:9px;font-family:var(--mono);color:var(--muted2);margin-left:auto}
+.erd-field{padding:5px 14px;font-family:var(--mono);font-size:9px;display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid rgba(255,255,255,.03)}
+.erd-field:last-child{border-bottom:none}
+.erd-field .fname{color:var(--text)}
+.erd-field .ftype{color:var(--muted2)}
+.erd-field .fpk{color:var(--accent);font-weight:700}
+.erd-field .ffk{color:#f59e0b}
+
+/* DECISIONS */
+.decisions{display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.decision-row{display:grid;grid-template-columns:160px 1fr 1fr;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:10px}
+.decision-row:last-child{border-bottom:none}
+.decision-row.header{background:rgba(255,255,255,.02);font-weight:600;color:var(--text)}
+.decision-topic{padding:10px 14px;border-right:1px solid var(--border);color:var(--accent)}
+.decision-chosen{padding:10px 14px;border-right:1px solid var(--border);color:var(--green)}
+.decision-why{padding:10px 14px;color:var(--muted2)}
+
+/* WEBSOCKET EVENTS */
+.events{background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.event-row{display:grid;grid-template-columns:180px 1fr;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:10px}
+.event-row:last-child{border-bottom:none}
+.event-name{padding:10px 14px;color:var(--accent);border-right:1px solid var(--border);background:rgba(29,78,216,.04)}
+.event-desc{padding:10px 14px;color:var(--muted2)}
+
+/* INFRA */
+.infra-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.infra-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px}
+.infra-icon{margin-bottom:10px;line-height:0}
+.infra-icon svg{width:24px;height:24px;stroke-width:1.5}
+.infra-name{font-size:12px;font-weight:700;margin-bottom:4px}
+.infra-desc{font-size:10px;font-family:var(--mono);color:var(--muted2);line-height:1.5}
+
+/* SECURITY */
+.sec-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sec-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px}
+.sec-title{font-size:11px;font-weight:700;font-family:var(--mono);color:var(--amber);margin-bottom:8px;text-transform:uppercase;letter-spacing:.1em}
+.sec-item{font-size:10px;font-family:var(--mono);color:var(--muted2);line-height:1.8}
+
+/* C4 DIAGRAMS */
+.c4-context{display:flex;flex-direction:column;align-items:center;gap:16px;padding:24px;border:1px solid var(--border);border-radius:16px}
+.c4-row{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;width:100%}
+.c4-box{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px 20px;text-align:center;min-width:140px;flex:1;max-width:220px;position:relative}
+.c4-box.primary{border-color:rgba(29,78,216,.3);background:rgba(29,78,216,.06)}
+.c4-box.external{border-color:rgba(124,58,237,.2);background:rgba(124,58,237,.04)}
+.c4-box.user{border-color:rgba(6,214,160,.2);background:rgba(6,214,160,.04)}
+.c4-box-name{font-size:12px;font-weight:700;margin-bottom:4px}
+.c4-box-type{font-size:9px;font-family:var(--mono);color:var(--muted2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.1em}
+.c4-box-desc{font-size:10px;font-family:var(--mono);color:var(--muted2);line-height:1.5}
+.c4-arrow{font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;padding:4px 0;letter-spacing:.05em}
+.c4-arrow::before{content:'↓ '}
+
+/* CONTAINER DETAIL */
+.container-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.container-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative}
+.container-card::before{content:'';position:absolute;left:0;top:12px;bottom:12px;width:2px;border-radius:1px}
+.cc-web::before{background:#1d4ed8}
+.cc-api::before{background:#7c3aed}
+.cc-worker::before{background:#f59e0b}
+.cc-pg::before{background:#10b981}
+.cc-redis::before{background:#ef4444}
+.cc-fs::before{background:#06d6a0}
+.container-name{font-size:12px;font-weight:700;margin-bottom:4px;padding-left:10px}
+.container-tech{font-size:9px;font-family:var(--mono);color:var(--muted2);padding-left:10px;margin-bottom:8px}
+.container-items{list-style:none;padding-left:10px}
+.container-items li{font-size:10px;font-family:var(--mono);color:var(--muted2);line-height:1.8;padding-left:12px;position:relative}
+.container-items li::before{content:'›';position:absolute;left:0;color:var(--muted)}
+
+/* AGENT FLOW */
+.agent-flow{display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.af-step{display:grid;grid-template-columns:36px 1fr 1fr;border-bottom:1px solid var(--border)}
+.af-step:last-child{border-bottom:none}
+.af-num{display:flex;align-items:center;justify-content:center;background:rgba(245,158,11,.04);border-right:1px solid var(--border);font-family:var(--mono);font-size:10px;font-weight:600;color:#f59e0b}
+.af-action{padding:12px 16px;border-right:1px solid var(--border)}
+.af-detail{padding:12px 16px}
+.af-label{font-size:11px;font-weight:700;margin-bottom:2px}
+.af-desc{font-size:10px;font-family:var(--mono);color:var(--muted2);line-height:1.5}
+.af-loop{background:rgba(245,158,11,.03);border:1px dashed rgba(245,158,11,.2);border-radius:10px;padding:12px 16px;margin-top:16px;text-align:center}
+.af-loop-label{font-size:10px;font-family:var(--mono);color:#f59e0b;font-weight:600;margin-bottom:4px}
+.af-loop-desc{font-size:10px;font-family:var(--mono);color:var(--muted2)}
+
+/* ERD RELATIONSHIPS */
+.erd-relations{display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-top:16px}
+.erd-rel{display:grid;grid-template-columns:140px 60px 140px 1fr;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:10px;align-items:center}
+.erd-rel:last-child{border-bottom:none}
+.erd-rel-from{padding:8px 12px;color:var(--accent)}
+.erd-rel-type{padding:8px 6px;text-align:center;color:var(--muted)}
+.erd-rel-to{padding:8px 12px;color:var(--green)}
+.erd-rel-fk{padding:8px 12px;color:var(--muted2)}
+
+/* SCALE */
+.scale-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.scale-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px}
+.scale-label{font-size:9px;font-family:var(--mono);color:var(--amber);text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px}
+.scale-title{font-size:12px;font-weight:700;margin-bottom:6px}
+.scale-desc{font-size:10px;font-family:var(--mono);color:var(--muted2);line-height:1.7}
+
+/* DEPLOY PIPELINE */
+.pipeline{display:flex;gap:0;border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.pipe-stage{flex:1;padding:16px;border-right:1px solid var(--border);text-align:center;position:relative}
+.pipe-stage:last-child{border-right:none}
+.pipe-stage::after{content:'→';position:absolute;right:-8px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--muted);z-index:1}
+.pipe-stage:last-child::after{content:''}
+.pipe-icon{margin-bottom:8px;line-height:0}
+.pipe-icon svg{width:20px;height:20px;stroke-width:1.5}
+.pipe-name{font-size:11px;font-weight:700;margin-bottom:4px}
+.pipe-desc{font-size:9px;font-family:var(--mono);color:var(--muted2);line-height:1.5}
+
+/* LIMITS TABLE */
+.limits{border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.limit-row{display:grid;grid-template-columns:200px 120px 1fr;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:10px}
+.limit-row:last-child{border-bottom:none}
+.limit-row.lheader{background:rgba(255,255,255,.02);font-weight:600}
+.limit-what{padding:8px 14px;border-right:1px solid var(--border);color:var(--text)}
+.limit-val{padding:8px 14px;border-right:1px solid var(--border);color:var(--amber)}
+.limit-note{padding:8px 14px;color:var(--muted2)}
+
+@media(max-width:600px){
+  .infra-grid{grid-template-columns:1fr}
+  .sec-grid{grid-template-columns:1fr}
+  .flow-step{grid-template-columns:32px 1fr}
+  .decision-row{grid-template-columns:1fr}
+  .decision-topic,.decision-chosen,.decision-why{border-right:none;border-bottom:1px solid var(--border)}
+  .container-grid{grid-template-columns:1fr}
+  .af-step{grid-template-columns:28px 1fr}
+  .af-detail{display:none}
+  .pipeline{flex-direction:column}
+  .pipe-stage{border-right:none;border-bottom:1px solid var(--border)}
+  .pipe-stage::after{content:'↓';right:50%;top:auto;bottom:-8px;transform:translateX(50%)}
+  .c4-row{flex-direction:column;align-items:center}
+  .scale-grid{grid-template-columns:1fr}
+  .erd-rel{grid-template-columns:1fr}
+  .limit-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="eyebrow">System Design</div>
+  <h1>Sophia <span>Platform</span></h1>
+  <p>Plataforma web de generación autónoma de software con agentes IA especializados — Claude Tool Use</p>
+  <div class="hero-version">v1.3 · 7 módulos · 28 HUs · 6 capas secuenciales</div>
+</div>
+
+<!-- 1. ARQUITECTURA DE CAPAS -->
+<div class="section">
+  <div class="section-label">01</div>
+  <div class="section-title">Arquitectura de Capas</div>
+  <div class="section-desc">Vista completa del sistema desde el usuario hasta la infraestructura. Monorepo Turborepo con frontend en Vercel y backend + worker en Railway.</div>
+
+  <div class="arch">
+
+    <div class="arch-layer layer-user">
+      <div class="layer-label"><span></span>Capa de Usuario</div>
+      <div class="layer-nodes">
+        <div class="node">
+          <div class="node-name">Browser / Web</div>
+          <div class="node-desc">Next.js 15 App Router<br>shadcn/ui + Tailwind CSS<br>Zustand + Framer Motion<br>Lucide React + Recharts</div>
+          <div class="node-badge" style="background:rgba(6,214,160,.1);border:1px solid rgba(6,214,160,.2);color:#06d6a0">React 19 + TypeScript</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arch-layer layer-web">
+      <div class="layer-label"><span></span>Capa Web — Next.js 15</div>
+      <div class="layer-nodes">
+        <div class="node">
+          <div class="node-name">Auth Pages</div>
+          <div class="node-desc">/login /register<br>/forgot-password<br>/reset-password</div>
+        </div>
+        <div class="node">
+          <div class="node-name">Projects</div>
+          <div class="node-desc">Lista proyectos (grid)<br>Crear proyecto<br>Templates predefinidos</div>
+        </div>
+        <div class="node">
+          <div class="node-name">Agent Dashboard</div>
+          <div class="node-desc">Canvas API nativo<br>6 nodos + orchestrator<br>WebSocket client</div>
+        </div>
+        <div class="node">
+          <div class="node-name">File Manager</div>
+          <div class="node-desc">Árbol de archivos<br>shiki syntax highlight<br>Descarga ZIP</div>
+        </div>
+        <div class="node">
+          <div class="node-name">Settings</div>
+          <div class="node-desc">API key Anthropic<br>Uso de tokens<br>Perfil + contraseña</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arch-layer layer-api">
+      <div class="layer-label"><span></span>Capa API — Node.js 22 + Fastify</div>
+      <div class="layer-nodes">
+        <div class="node">
+          <div class="node-name">Auth Module</div>
+          <div class="node-desc">JWT cookies httpOnly<br>bcryptjs cost 12<br>Rate limit Redis</div>
+        </div>
+        <div class="node">
+          <div class="node-name">Projects Module</div>
+          <div class="node-desc">CRUD + state machine<br>Start/pause/continue<br>Prisma + soft delete</div>
+        </div>
+        <div class="node">
+          <div class="node-name">Spec Module</div>
+          <div class="node-desc">3 Claude calls SSE<br>spec + data-model +<br>api-design</div>
+        </div>
+        <div class="node">
+          <div class="node-name">Settings Module</div>
+          <div class="node-desc">AES-256-GCM encrypt<br>Token usage stats<br>Profile + password</div>
+        </div>
+        <div class="node">
+          <div class="node-name">WebSocket</div>
+          <div class="node-desc">@fastify/websocket<br>/ws/projects/:id<br>Reconnect + replay</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arch-layer layer-agents">
+      <div class="layer-label"><span></span>Capa de Agentes IA — Claude Tool Use (6 capas secuenciales)</div>
+      <div class="layer-nodes">
+        <div class="node">
+          <div class="node-name">Orchestrator</div>
+          <div class="node-desc">Coordina 6 capas<br>secuencialmente<br>BullMQ worker</div>
+        </div>
+        <div class="node">
+          <div class="node-name">DBA Agent</div>
+          <div class="node-desc">Layer 1: Database<br>schema.prisma<br>migraciones, seeds</div>
+        </div>
+        <div class="node">
+          <div class="node-name">Backend Agent</div>
+          <div class="node-desc">Layer 2: Backend<br>routes, controllers<br>services, schemas</div>
+        </div>
+        <div class="node">
+          <div class="node-name">Frontend Agent</div>
+          <div class="node-desc">Layer 3: Frontend<br>pages, components<br>hooks, stores</div>
+        </div>
+        <div class="node">
+          <div class="node-name">QA Agent</div>
+          <div class="node-desc">Layer 4: Testing<br>unit tests<br>integration tests</div>
+        </div>
+        <div class="node">
+          <div class="node-name">Docs Agent</div>
+          <div class="node-desc">Layer 5: Docs<br>README, API docs<br>architecture</div>
+        </div>
+        <div class="node">
+          <div class="node-name">Deploy Agent</div>
+          <div class="node-desc">Layer 6: Deployment<br>Dockerfile, CI/CD<br>docker-compose</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arch-layer layer-data">
+      <div class="layer-label"><span></span>Capa de Datos</div>
+      <div class="layer-nodes">
+        <div class="node">
+          <div class="node-name">PostgreSQL 16</div>
+          <div class="node-desc">users, projects<br>agents, agent_logs<br>generated_files +5 más</div>
+          <div class="node-badge" style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);color:#10b981">Prisma ORM</div>
+        </div>
+        <div class="node">
+          <div class="node-name">Redis 7</div>
+          <div class="node-desc">BullMQ queue jobs<br>Rate limiting counters<br>Pause flags por proyecto</div>
+          <div class="node-badge" style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);color:#10b981">ioredis</div>
+        </div>
+        <div class="node">
+          <div class="node-name">File System</div>
+          <div class="node-desc">Archivos generados en<br>{PROJECTS_BASE}/{id}/<br>Metadata en BD, contenido en disco</div>
+          <div class="node-badge" style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);color:#10b981">Node fs/promises</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arch-layer layer-infra">
+      <div class="layer-label"><span></span>Capa de Infraestructura</div>
+      <div class="layer-nodes">
+        <div class="node">
+          <div class="node-name">Vercel</div>
+          <div class="node-desc">Frontend Next.js<br>Auto-deploy main<br>CDN global</div>
+        </div>
+        <div class="node">
+          <div class="node-name">Railway</div>
+          <div class="node-desc">API Fastify (proceso 1)<br>BullMQ Worker (proceso 2)<br>PostgreSQL + Redis</div>
+        </div>
+        <div class="node">
+          <div class="node-name">Turborepo</div>
+          <div class="node-desc">Monorepo: apps/ + packages/<br>pnpm workspaces<br>Build cache</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 2. FLUJO PRINCIPAL -->
+<div class="section">
+  <div class="section-label">02</div>
+  <div class="section-title">Flujo: Generar un Sistema</div>
+  <div class="section-desc">Desde que el usuario describe el sistema hasta que descarga el código generado.</div>
+
+  <div class="flow">
+    <div class="flow-step">
+      <div class="flow-num">1</div>
+      <div class="flow-content">
+        <div class="flow-title">Usuario crea proyecto</div>
+        <div class="flow-desc">Describe el sistema en lenguaje natural, selecciona stack y agentes. Se crea el proyecto en estado idle.</div>
+        <span class="flow-tag">POST /api/projects → status: idle</span>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">2</div>
+      <div class="flow-content">
+        <div class="flow-title">Spec Engine genera documentación</div>
+        <div class="flow-desc">3 llamadas secuenciales a Claude: spec.md → data-model.md → api-design.md. El usuario ve el texto en tiempo real via SSE.</div>
+        <span class="flow-tag">POST /api/projects/:id/spec/generate → GET /spec/stream (SSE)</span>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">3</div>
+      <div class="flow-content">
+        <div class="flow-title">Usuario revisa, edita y ejecuta</div>
+        <div class="flow-desc">Revisa el spec generado, puede editarlo con @uiw/react-md-editor. Al hacer clic en "Iniciar", el job se encola en BullMQ.</div>
+        <span class="flow-tag">POST /api/projects/:id/start → BullMQ job enqueued</span>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">4</div>
+      <div class="flow-content">
+        <div class="flow-title">Orchestrator ejecuta 6 capas secuencialmente</div>
+        <div class="flow-desc">El worker BullMQ lee el spec y ejecuta: Database → Backend → Frontend → Testing → Docs → Deployment. Cada capa recibe contexto de las anteriores. Sin paralelismo en MVP.</div>
+        <span class="flow-tag">BullMQ Worker → Orchestrator → Layer 1…6 sequential</span>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">5</div>
+      <div class="flow-content">
+        <div class="flow-title">Agentes trabajan con Tool Use</div>
+        <div class="flow-desc">Cada agente usa Claude Tool Use en loop: envía prompt → Claude responde con createFile/readFile/listFiles → backend ejecuta tool → repite hasta taskComplete. Emite eventos WebSocket en tiempo real.</div>
+        <span class="flow-tag">Claude API tool_use → createFile → WS emit → repeat</span>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">6</div>
+      <div class="flow-content">
+        <div class="flow-title">Proyecto completado</div>
+        <div class="flow-desc">Al completar Layer 6, status cambia a done. Emite project:done via WebSocket. El usuario descarga el ZIP con toda la estructura.</div>
+        <span class="flow-tag">project:done → GET /api/projects/:id/download → ZIP stream</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3. MÓDULOS -->
+<div class="section">
+  <div class="section-label">03</div>
+  <div class="section-title">Módulos del Sistema</div>
+  <div class="section-desc">7 módulos con specs en specs/m[n]-[nombre]/spec.md. 28 historias de usuario distribuidas en 4 sprints.</div>
+
+  <div class="modules">
+    <div class="module-card m1">
+      <div class="module-num">M1 · Sprint 1 · HU-01→05</div>
+      <div class="module-name">Auth</div>
+      <div class="module-desc">Registro, login, logout, refresh token, recuperar contraseña. JWT en cookies httpOnly.</div>
+      <div class="module-stack">
+        <span class="stack-tag">Fastify JWT</span>
+        <span class="stack-tag">bcryptjs</span>
+        <span class="stack-tag">Redis</span>
+        <span class="stack-tag">Resend</span>
+      </div>
+    </div>
+    <div class="module-card m2">
+      <div class="module-num">M2 · Sprint 1 · HU-06→10</div>
+      <div class="module-name">Projects</div>
+      <div class="module-desc">CRUD proyectos. State machine (idle→running→paused→done/error). Stubs de ejecución para M4.</div>
+      <div class="module-stack">
+        <span class="stack-tag">Prisma</span>
+        <span class="stack-tag">Zod</span>
+        <span class="stack-tag">shadcn/ui</span>
+      </div>
+    </div>
+    <div class="module-card m3">
+      <div class="module-num">M3 · Sprint 2 · HU-11→13</div>
+      <div class="module-name">Spec Engine</div>
+      <div class="module-desc">Genera spec.md, data-model.md y api-design.md con Claude. Streaming SSE. 5 templates predefinidos.</div>
+      <div class="module-stack">
+        <span class="stack-tag">Anthropic SDK</span>
+        <span class="stack-tag">SSE</span>
+        <span class="stack-tag">md-editor</span>
+      </div>
+    </div>
+    <div class="module-card m4">
+      <div class="module-num">M4 · Sprint 3 · HU-14→17</div>
+      <div class="module-name">Agent Runner</div>
+      <div class="module-desc">Orchestrator + 6 agentes Tool Use. 6 capas secuenciales. Pause/continue/retry. WebSocket events.</div>
+      <div class="module-stack">
+        <span class="stack-tag">BullMQ</span>
+        <span class="stack-tag">Claude Tool Use</span>
+        <span class="stack-tag">WebSocket</span>
+      </div>
+    </div>
+    <div class="module-card m5">
+      <div class="module-num">M5 · Sprint 4 · HU-18→22</div>
+      <div class="module-name">Dashboard</div>
+      <div class="module-desc">Canvas API nativo con animaciones. Log en tiempo real. Métricas. Controles de ejecución. Vista mobile simplificada.</div>
+      <div class="module-stack">
+        <span class="stack-tag">Canvas API</span>
+        <span class="stack-tag">Framer Motion</span>
+        <span class="stack-tag">Zustand</span>
+      </div>
+    </div>
+    <div class="module-card m6">
+      <div class="module-num">M6 · Sprint 4 · HU-23→25</div>
+      <div class="module-name">File Manager</div>
+      <div class="module-desc">Árbol de archivos generados. Syntax highlighting con shiki. Descarga ZIP con archiver streaming.</div>
+      <div class="module-stack">
+        <span class="stack-tag">archiver</span>
+        <span class="stack-tag">shiki</span>
+        <span class="stack-tag">fs/promises</span>
+      </div>
+    </div>
+    <div class="module-card m7">
+      <div class="module-num">M7 · Sprint 4 · HU-26→28</div>
+      <div class="module-name">Settings</div>
+      <div class="module-desc">API key Anthropic encriptada AES-256-GCM. Uso de tokens con costos. Editar perfil y contraseña.</div>
+      <div class="module-stack">
+        <span class="stack-tag">AES-256-GCM</span>
+        <span class="stack-tag">recharts</span>
+        <span class="stack-tag">Zod</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4. DATA MODEL ERD -->
+<div class="section">
+  <div class="section-label">04</div>
+  <div class="section-title">Modelo de Datos (ERD)</div>
+  <div class="section-desc">9 tablas en PostgreSQL 16, gestionadas con Prisma ORM. Contenido de archivos en filesystem, no en BD.</div>
+
+  <div class="erd">
+
+    <div class="erd-table">
+      <div class="erd-header" style="color:#5b8dee">users <span>M1</span></div>
+      <div class="erd-field"><span class="fname fpk">id</span><span class="ftype">uuid PK</span></div>
+      <div class="erd-field"><span class="fname">name</span><span class="ftype">varchar(100)</span></div>
+      <div class="erd-field"><span class="fname">email</span><span class="ftype">varchar UNIQUE</span></div>
+      <div class="erd-field"><span class="fname">password</span><span class="ftype">varchar bcrypt</span></div>
+      <div class="erd-field"><span class="fname">created_at</span><span class="ftype">timestamptz</span></div>
+      <div class="erd-field"><span class="fname">updated_at</span><span class="ftype">timestamptz</span></div>
+    </div>
+
+    <div class="erd-table">
+      <div class="erd-header" style="color:#5b8dee">refresh_tokens <span>M1</span></div>
+      <div class="erd-field"><span class="fname fpk">id</span><span class="ftype">uuid PK</span></div>
+      <div class="erd-field"><span class="fname ffk">user_id</span><span class="ftype">uuid FK</span></div>
+      <div class="erd-field"><span class="fname">token</span><span class="ftype">varchar hash</span></div>
+      <div class="erd-field"><span class="fname">expires_at</span><span class="ftype">timestamptz</span></div>
+      <div class="erd-field"><span class="fname">revoked</span><span class="ftype">boolean</span></div>
+      <div class="erd-field"><span class="fname">created_at</span><span class="ftype">timestamptz</span></div>
+    </div>
+
+    <div class="erd-table">
+      <div class="erd-header" style="color:#5b8dee">password_reset_tokens <span>M1</span></div>
+      <div class="erd-field"><span class="fname fpk">id</span><span class="ftype">uuid PK</span></div>
+      <div class="erd-field"><span class="fname ffk">user_id</span><span class="ftype">uuid FK</span></div>
+      <div class="erd-field"><span class="fname">token</span><span class="ftype">varchar hash</span></div>
+      <div class="erd-field"><span class="fname">expires_at</span><span class="ftype">timestamptz</span></div>
+      <div class="erd-field"><span class="fname">used</span><span class="ftype">boolean</span></div>
+      <div class="erd-field"><span class="fname">created_at</span><span class="ftype">timestamptz</span></div>
+    </div>
+
+    <div class="erd-table">
+      <div class="erd-header" style="color:#8b5cf6">projects <span>M2</span></div>
+      <div class="erd-field"><span class="fname fpk">id</span><span class="ftype">uuid PK</span></div>
+      <div class="erd-field"><span class="fname ffk">user_id</span><span class="ftype">uuid FK</span></div>
+      <div class="erd-field"><span class="fname">name</span><span class="ftype">varchar(100)</span></div>
+      <div class="erd-field"><span class="fname">description</span><span class="ftype">text</span></div>
+      <div class="erd-field"><span class="fname">stack</span><span class="ftype">varchar(50)</span></div>
+      <div class="erd-field"><span class="fname">status</span><span class="ftype">varchar(20)</span></div>
+      <div class="erd-field"><span class="fname">progress</span><span class="ftype">integer 0-100</span></div>
+      <div class="erd-field"><span class="fname">current_layer</span><span class="ftype">integer 1-6</span></div>
+      <div class="erd-field"><span class="fname">tokens_used</span><span class="ftype">integer cache</span></div>
+      <div class="erd-field"><span class="fname">config</span><span class="ftype">jsonb</span></div>
+      <div class="erd-field"><span class="fname">deleted_at</span><span class="ftype">timestamptz?</span></div>
+    </div>
+
+    <div class="erd-table">
+      <div class="erd-header" style="color:#8b5cf6">project_specs <span>M2/M3</span></div>
+      <div class="erd-field"><span class="fname fpk">id</span><span class="ftype">uuid PK</span></div>
+      <div class="erd-field"><span class="fname ffk">project_id</span><span class="ftype">uuid FK</span></div>
+      <div class="erd-field"><span class="fname">version</span><span class="ftype">integer</span></div>
+      <div class="erd-field"><span class="fname">content</span><span class="ftype">jsonb</span></div>
+      <div class="erd-field"><span class="fname">created_at</span><span class="ftype">timestamptz</span></div>
+      <div class="erd-field"><span class="fname" style="color:var(--muted)">UQ: (project_id, version)</span><span class="ftype"></span></div>
+    </div>
+
+    <div class="erd-table">
+      <div class="erd-header" style="color:#f59e0b">agents <span>M4</span></div>
+      <div class="erd-field"><span class="fname fpk">id</span><span class="ftype">uuid PK</span></div>
+      <div class="erd-field"><span class="fname ffk">project_id</span><span class="ftype">uuid FK</span></div>
+      <div class="erd-field"><span class="fname">type</span><span class="ftype">varchar(20)</span></div>
+      <div class="erd-field"><span class="fname">status</span><span class="ftype">varchar(20)</span></div>
+      <div class="erd-field"><span class="fname">progress</span><span class="ftype">integer 0-100</span></div>
+      <div class="erd-field"><span class="fname">current_task</span><span class="ftype">text?</span></div>
+      <div class="erd-field"><span class="fname">tokens_input</span><span class="ftype">integer</span></div>
+      <div class="erd-field"><span class="fname">tokens_output</span><span class="ftype">integer</span></div>
+      <div class="erd-field"><span class="fname">layer</span><span class="ftype">integer 1-6</span></div>
+      <div class="erd-field"><span class="fname">error</span><span class="ftype">text?</span></div>
+      <div class="erd-field"><span class="fname">started_at</span><span class="ftype">timestamptz?</span></div>
+      <div class="erd-field"><span class="fname">completed_at</span><span class="ftype">timestamptz?</span></div>
+      <div class="erd-field"><span class="fname" style="color:var(--muted)">UQ: (project_id, type)</span><span class="ftype"></span></div>
+    </div>
+
+    <div class="erd-table">
+      <div class="erd-header" style="color:#06d6a0">agent_logs <span>M4</span></div>
+      <div class="erd-field"><span class="fname fpk">id</span><span class="ftype">uuid PK</span></div>
+      <div class="erd-field"><span class="fname ffk">agent_id</span><span class="ftype">uuid FK</span></div>
+      <div class="erd-field"><span class="fname ffk">project_id</span><span class="ftype">uuid FK denorm</span></div>
+      <div class="erd-field"><span class="fname">type</span><span class="ftype">info/ok/warn/error</span></div>
+      <div class="erd-field"><span class="fname">message</span><span class="ftype">text</span></div>
+      <div class="erd-field"><span class="fname">created_at</span><span class="ftype">timestamptz</span></div>
+    </div>
+
+    <div class="erd-table">
+      <div class="erd-header" style="color:#10b981">generated_files <span>M4/M6</span></div>
+      <div class="erd-field"><span class="fname fpk">id</span><span class="ftype">uuid PK</span></div>
+      <div class="erd-field"><span class="fname ffk">project_id</span><span class="ftype">uuid FK</span></div>
+      <div class="erd-field"><span class="fname ffk">agent_id</span><span class="ftype">uuid FK</span></div>
+      <div class="erd-field"><span class="fname">name</span><span class="ftype">varchar(255)</span></div>
+      <div class="erd-field"><span class="fname">path</span><span class="ftype">text relative</span></div>
+      <div class="erd-field"><span class="fname">size_bytes</span><span class="ftype">integer</span></div>
+      <div class="erd-field"><span class="fname">layer</span><span class="ftype">integer 1-6</span></div>
+      <div class="erd-field"><span class="fname">created_at</span><span class="ftype">timestamptz</span></div>
+      <div class="erd-field"><span class="fname" style="color:var(--muted)">contenido en filesystem</span><span class="ftype"></span></div>
+    </div>
+
+    <div class="erd-table">
+      <div class="erd-header" style="color:#ef4444">user_settings <span>M7</span></div>
+      <div class="erd-field"><span class="fname fpk">id</span><span class="ftype">uuid PK</span></div>
+      <div class="erd-field"><span class="fname ffk">user_id</span><span class="ftype">uuid FK UQ</span></div>
+      <div class="erd-field"><span class="fname">api_key_encrypted</span><span class="ftype">bytea AES</span></div>
+      <div class="erd-field"><span class="fname">api_key_iv</span><span class="ftype">bytea 12B</span></div>
+      <div class="erd-field"><span class="fname">api_key_tag</span><span class="ftype">bytea 16B</span></div>
+      <div class="erd-field"><span class="fname">api_key_last4</span><span class="ftype">varchar(4)</span></div>
+      <div class="erd-field"><span class="fname">created_at</span><span class="ftype">timestamptz</span></div>
+      <div class="erd-field"><span class="fname">updated_at</span><span class="ftype">timestamptz</span></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 5. DECISIONES TÉCNICAS -->
+<div class="section">
+  <div class="section-label">05</div>
+  <div class="section-title">Decisiones Técnicas</div>
+  <div class="section-desc">Decisiones clave tomadas durante el diseño. Cada una justificada contra la alternativa descartada.</div>
+
+  <div class="decisions">
+    <div class="decision-row header">
+      <div class="decision-topic" style="color:var(--text)">Tema</div>
+      <div class="decision-chosen" style="color:var(--text)">Decisión</div>
+      <div class="decision-why" style="color:var(--text)">Por qué</div>
+    </div>
+    <div class="decision-row">
+      <div class="decision-topic">Auth</div>
+      <div class="decision-chosen">JWT custom en Fastify</div>
+      <div class="decision-why">Eliminamos NextAuth.js v5 — Fastify es el único auth server. Cookies httpOnly.</div>
+    </div>
+    <div class="decision-row">
+      <div class="decision-topic">Dashboard visual</div>
+      <div class="decision-chosen">Vanilla Canvas API</div>
+      <div class="decision-why">Total control sobre animaciones y partículas. Sin overhead de D3 o Three.js. Eventos manejados manualmente (hit-testing).</div>
+    </div>
+    <div class="decision-row">
+      <div class="decision-topic">Ejecución de agentes</div>
+      <div class="decision-chosen">Secuencial 6 capas</div>
+      <div class="decision-why">Sin paralelismo en MVP para evitar inconsistencias. Post-MVP se evaluará.</div>
+    </div>
+    <div class="decision-row">
+      <div class="decision-topic">IA / Agentes</div>
+      <div class="decision-chosen">Claude Tool Use (loop)</div>
+      <div class="decision-why">Agentes no generan texto plano — crean archivos iterativamente via tools.</div>
+    </div>
+    <div class="decision-row">
+      <div class="decision-topic">API key storage</div>
+      <div class="decision-chosen">AES-256-GCM en user_settings</div>
+      <div class="decision-why">Cada usuario su propia key. No hay key del sistema. Encrypt con IV único.</div>
+    </div>
+    <div class="decision-row">
+      <div class="decision-topic">Archivos generados</div>
+      <div class="decision-chosen">Filesystem + metadata en BD</div>
+      <div class="decision-why">Contenido en disco (no BLOB). BD solo path, size_bytes, agent. ZIP con archiver streaming.</div>
+    </div>
+    <div class="decision-row">
+      <div class="decision-topic">Cola de trabajos</div>
+      <div class="decision-chosen">BullMQ worker separado</div>
+      <div class="decision-why">Worker como proceso independiente en Railway. Concurrency 3 proyectos simultáneos.</div>
+    </div>
+    <div class="decision-row">
+      <div class="decision-topic">Rate limiting</div>
+      <div class="decision-chosen">Redis counters con TTL</div>
+      <div class="decision-why">Login: 5 intentos/15min. Registro: 3/hora/IP. API key verify: 5/hora.</div>
+    </div>
+    <div class="decision-row">
+      <div class="decision-topic">Spec editor</div>
+      <div class="decision-chosen">@uiw/react-md-editor</div>
+      <div class="decision-why">Editor markdown ligero con preview. No Monaco (demasiado pesado para este caso).</div>
+    </div>
+    <div class="decision-row">
+      <div class="decision-topic">UI Components</div>
+      <div class="decision-chosen">shadcn/ui + Tailwind CSS</div>
+      <div class="decision-why">Componentes copiados al proyecto (no dependencia). Customizables con Tailwind.</div>
+    </div>
+  </div>
+</div>
+
+<!-- 6. WEBSOCKET EVENTS -->
+<div class="section">
+  <div class="section-label">06</div>
+  <div class="section-title">Eventos WebSocket</div>
+  <div class="section-desc">El servidor emite estos eventos al cliente en tiempo real via /ws/projects/:id. Auth via JWT cookie en handshake. Reconnect cada 3s con replay desde lastEventId.</div>
+
+  <div class="events">
+    <div class="event-row">
+      <div class="event-name">agent:status</div>
+      <div class="event-desc">agentId, agentType (dba|backend|frontend|qa|docs|deploy), status (idle|working|done|error|paused), progress 0-100, currentTask</div>
+    </div>
+    <div class="event-row">
+      <div class="event-name">agent:log</div>
+      <div class="event-desc">agentId, agentType, type (info|ok|warn|error), message, timestamp ISO 8601</div>
+    </div>
+    <div class="event-row">
+      <div class="event-name">file:created</div>
+      <div class="event-desc">agentId, agentType, fileName, filePath, fileSize — aparece en panel de archivos con animación</div>
+    </div>
+    <div class="event-row">
+      <div class="event-name">project:progress</div>
+      <div class="event-desc">progress 0-100, layer 1-6, layerName — actualiza barra general y etiqueta de capa activa</div>
+    </div>
+    <div class="event-row">
+      <div class="event-name">project:done</div>
+      <div class="event-desc">totalFiles, tokensInput, tokensOutput, duration (segundos) — activa botón descarga ZIP</div>
+    </div>
+    <div class="event-row">
+      <div class="event-name">project:error</div>
+      <div class="event-desc">agentId, agentType, error, retryable (boolean) — nodo cambia a rojo con shake animation</div>
+    </div>
+    <div class="event-row">
+      <div class="event-name">project:paused</div>
+      <div class="event-desc">layer, layerName, lastFile — nodos atenúan animación, activa botón Continuar</div>
+    </div>
+  </div>
+</div>
+
+<!-- 7. SEGURIDAD -->
+<div class="section">
+  <div class="section-label">07</div>
+  <div class="section-title">Seguridad</div>
+  <div class="section-desc">Medidas de seguridad implementadas transversalmente en todos los módulos.</div>
+
+  <div class="sec-grid">
+    <div class="sec-card">
+      <div class="sec-title">Autenticación</div>
+      <div class="sec-item">
+        ● JWT access token en cookie httpOnly Secure SameSite=Strict (15 min)<br>
+        ● Refresh token rotativo en cookie httpOnly (24h / 30d con rememberMe)<br>
+        ● bcryptjs cost 12 para hashing de contraseñas<br>
+        ● Mensaje genérico en login fallido (no revela si email existe)
+      </div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-title">Encriptación</div>
+      <div class="sec-item">
+        ● API keys: AES-256-GCM con IV único (12 bytes) por registro<br>
+        ● ENCRYPTION_KEY en .env (32 bytes hex, nunca en código ni BD)<br>
+        ● Auth tag 16 bytes almacenado separado del ciphertext<br>
+        ● Solo últimos 4 chars visibles al usuario (sk-ant-...XXXX)
+      </div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-title">Rate Limiting</div>
+      <div class="sec-item">
+        ● Login: 5 intentos / 15 min por email (Redis TTL)<br>
+        ● Registro: 3 por IP por hora<br>
+        ● Password reset: 3 por email por hora<br>
+        ● API key verify: 5 por usuario por hora<br>
+        ● Spec generation: 10/proyecto/hora, 50/usuario/día
+      </div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-title">Path Traversal Prevention</div>
+      <div class="sec-item">
+        ● Tools createFile/readFile validan ruta dentro de {PROJECTS_BASE}/{projectId}/<br>
+        ● No hay tool runCommand — agentes no ejecutan comandos<br>
+        ● Límites: 100 archivos/agente, 100KB/archivo, 5min timeout<br>
+        ● WebSocket auth via JWT en handshake + ownership check
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 8. INFRAESTRUCTURA -->
+<div class="section">
+  <div class="section-label">08</div>
+  <div class="section-title">Infraestructura y Deploy</div>
+  <div class="section-desc">Stack de deployment para producción y desarrollo local.</div>
+
+  <div class="infra-grid">
+    <div class="infra-card">
+      <div class="infra-icon" style="color:#fff"><i data-lucide="triangle"></i></div>
+      <div class="infra-name">Vercel — Frontend</div>
+      <div class="infra-desc">Next.js 15 App Router<br>Auto-deploy desde main<br>Edge network global<br>Env vars por entorno</div>
+    </div>
+    <div class="infra-card">
+      <div class="infra-icon" style="color:var(--accent2)"><i data-lucide="train-front"></i></div>
+      <div class="infra-name">Railway — Backend</div>
+      <div class="infra-desc">Proceso 1: Fastify API<br>Proceso 2: BullMQ Worker<br>PostgreSQL 16 managed<br>Redis 7 managed</div>
+    </div>
+    <div class="infra-card">
+      <div class="infra-icon" style="color:var(--accent)"><i data-lucide="container"></i></div>
+      <div class="infra-name">Docker Compose — Local</div>
+      <div class="infra-desc">PostgreSQL + Redis local<br>pnpm docker:up<br>Hot reload con tsx watch<br>Mismo config que prod</div>
+    </div>
+    <div class="infra-card">
+      <div class="infra-icon" style="color:var(--amber)"><i data-lucide="zap"></i></div>
+      <div class="infra-name">Turborepo — Monorepo</div>
+      <div class="infra-desc">apps/web + apps/api<br>packages/shared<br>pnpm workspaces<br>Build cache inteligente</div>
+    </div>
+  </div>
+</div>
+
+<!-- 9. C4 — CONTEXT DIAGRAM -->
+<div class="section">
+  <div class="section-label">09</div>
+  <div class="section-title">C4 Level 1 — Context</div>
+  <div class="section-desc">Vista de más alto nivel: quién interactúa con Sophia Platform y con qué sistemas externos se comunica.</div>
+
+  <div class="c4-context">
+    <div class="c4-row">
+      <div class="c4-box user">
+        <div class="c4-box-type">Persona</div>
+        <div class="c4-box-name">Usuario / Developer</div>
+        <div class="c4-box-desc">Describe el software que quiere generar, revisa specs, monitorea agentes y descarga código</div>
+      </div>
+    </div>
+    <div class="c4-arrow">usa</div>
+    <div class="c4-row">
+      <div class="c4-box primary" style="max-width:400px">
+        <div class="c4-box-type">Sistema</div>
+        <div class="c4-box-name">Sophia Platform</div>
+        <div class="c4-box-desc">Plataforma web que orquesta agentes IA para generar proyectos de software completos capa por capa</div>
+      </div>
+    </div>
+    <div class="c4-arrow">se comunica con</div>
+    <div class="c4-row">
+      <div class="c4-box external">
+        <div class="c4-box-type">External API</div>
+        <div class="c4-box-name">Anthropic API</div>
+        <div class="c4-box-desc">Claude Tool Use para generación de código por agentes</div>
+      </div>
+      <div class="c4-box external">
+        <div class="c4-box-type">External Service</div>
+        <div class="c4-box-name">Resend</div>
+        <div class="c4-box-desc">Envío de emails transaccionales (password reset)</div>
+      </div>
+      <div class="c4-box external">
+        <div class="c4-box-type">Platform</div>
+        <div class="c4-box-name">Vercel</div>
+        <div class="c4-box-desc">Hosting del frontend Next.js con CDN global</div>
+      </div>
+      <div class="c4-box external">
+        <div class="c4-box-type">Platform</div>
+        <div class="c4-box-name">Railway</div>
+        <div class="c4-box-desc">Hosting API + Worker + PostgreSQL + Redis</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 10. C4 — CONTAINER DIAGRAM -->
+<div class="section">
+  <div class="section-label">10</div>
+  <div class="section-title">C4 Level 2 — Containers</div>
+  <div class="section-desc">Dentro de Sophia Platform: qué procesos corren, qué almacenamiento usan y cómo se comunican entre sí.</div>
+
+  <div class="container-grid">
+    <div class="container-card cc-web">
+      <div class="container-name">Next.js App</div>
+      <div class="container-tech">React 19 · TypeScript · Vercel</div>
+      <ul class="container-items">
+        <li>App Router (SSR + Client)</li>
+        <li>shadcn/ui + Tailwind CSS</li>
+        <li>Zustand (global state)</li>
+        <li>Framer Motion (transitions)</li>
+        <li>Lucide React (icons)</li>
+        <li>Recharts (estadísticas)</li>
+        <li>Canvas API (agent dashboard)</li>
+        <li>WebSocket client → API</li>
+        <li>Cookies httpOnly (JWT)</li>
+      </ul>
+    </div>
+    <div class="container-card cc-api">
+      <div class="container-name">Fastify API</div>
+      <div class="container-tech">Node.js 22 · TypeScript · Railway Proc 1</div>
+      <ul class="container-items">
+        <li>REST endpoints /api/*</li>
+        <li>@fastify/jwt (cookie auth)</li>
+        <li>@fastify/websocket (/ws/*)</li>
+        <li>Prisma ORM client</li>
+        <li>BullMQ job producer</li>
+        <li>SSE streaming (spec gen)</li>
+      </ul>
+    </div>
+    <div class="container-card cc-worker">
+      <div class="container-name">BullMQ Worker</div>
+      <div class="container-tech">Node.js 22 · TypeScript · Railway Proc 2</div>
+      <ul class="container-items">
+        <li>Orchestrator (6 layers)</li>
+        <li>6 agent runners</li>
+        <li>Tool handlers (FS ops)</li>
+        <li>Anthropic SDK client</li>
+        <li>WS event emitter</li>
+        <li>Concurrency: 3 jobs</li>
+      </ul>
+    </div>
+    <div class="container-card cc-pg">
+      <div class="container-name">PostgreSQL 16</div>
+      <div class="container-tech">Managed · Railway</div>
+      <ul class="container-items">
+        <li>9 tablas (Prisma ORM)</li>
+        <li>users, projects, agents</li>
+        <li>agent_logs, generated_files</li>
+        <li>project_specs, user_settings</li>
+        <li>refresh_tokens, password_reset_tokens</li>
+      </ul>
+    </div>
+    <div class="container-card cc-redis">
+      <div class="container-name">Redis 7</div>
+      <div class="container-tech">Managed · Railway</div>
+      <ul class="container-items">
+        <li>BullMQ job queue</li>
+        <li>Rate limiting counters</li>
+        <li>Pause flags por proyecto</li>
+        <li>No sessions (JWT stateless)</li>
+      </ul>
+    </div>
+    <div class="container-card cc-fs">
+      <div class="container-name">File System</div>
+      <div class="container-tech">Railway Volume · Local disk</div>
+      <ul class="container-items">
+        <li>{PROJECTS_BASE}/{projectId}/</li>
+        <li>Archivos generados por agentes</li>
+        <li>Metadata en BD, contenido en disco</li>
+        <li>ZIP streaming para descarga</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- 11. C4 — COMPONENT DIAGRAM (API) -->
+<div class="section">
+  <div class="section-label">11</div>
+  <div class="section-title">C4 Level 3 — Components (API)</div>
+  <div class="section-desc">Componentes internos del proceso Fastify API. Cada módulo es un plugin Fastify registrado bajo su prefijo.</div>
+
+  <div class="container-grid">
+    <div class="container-card cc-api">
+      <div class="container-name">Auth Module</div>
+      <div class="container-tech">/api/auth/*</div>
+      <ul class="container-items">
+        <li>auth.routes.ts → POST /register, /login, /logout, /refresh, /forgot-password, /reset-password</li>
+        <li>auth.controller.ts → thin handlers</li>
+        <li>auth.service.ts → bcrypt, JWT, email</li>
+        <li>auth.schema.ts → Zod validation</li>
+        <li>auth.middleware.ts → authenticate hook</li>
+      </ul>
+    </div>
+    <div class="container-card cc-api">
+      <div class="container-name">Projects Module</div>
+      <div class="container-tech">/api/projects/*</div>
+      <ul class="container-items">
+        <li>project.routes.ts → CRUD + start/pause/continue</li>
+        <li>project.controller.ts</li>
+        <li>project.service.ts → state machine</li>
+        <li>project.schema.ts → Zod</li>
+      </ul>
+    </div>
+    <div class="container-card cc-api">
+      <div class="container-name">Spec Module</div>
+      <div class="container-tech">/api/projects/:id/spec/*</div>
+      <ul class="container-items">
+        <li>spec.routes.ts → generate, stream, get, update</li>
+        <li>spec.controller.ts</li>
+        <li>spec.service.ts → 3 Claude calls SSE</li>
+        <li>spec.schema.ts</li>
+      </ul>
+    </div>
+    <div class="container-card cc-api">
+      <div class="container-name">Files Module</div>
+      <div class="container-tech">/api/projects/:id/files/*</div>
+      <ul class="container-items">
+        <li>file.routes.ts → tree, content, download ZIP</li>
+        <li>file.service.ts → fs + archiver</li>
+      </ul>
+    </div>
+    <div class="container-card cc-api">
+      <div class="container-name">Settings Module</div>
+      <div class="container-tech">/api/settings/*</div>
+      <ul class="container-items">
+        <li>settings.routes.ts → API key, profile, password, usage</li>
+        <li>settings.service.ts → AES-256-GCM</li>
+        <li>settings.schema.ts</li>
+      </ul>
+    </div>
+    <div class="container-card cc-worker">
+      <div class="container-name">Agent System</div>
+      <div class="container-tech">BullMQ Worker Process</div>
+      <ul class="container-items">
+        <li>orchestrator.ts → coordina 6 layers</li>
+        <li>base-agent.ts → Tool Use loop</li>
+        <li>dba-agent.ts → Layer 1</li>
+        <li>backend-agent.ts → Layer 2</li>
+        <li>frontend-agent.ts → Layer 3</li>
+        <li>qa-agent.ts → Layer 4</li>
+        <li>docs-agent.ts → Layer 5</li>
+        <li>deploy-agent.ts → Layer 6</li>
+        <li>tool-handlers.ts → createFile, readFile, listFiles, taskComplete</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- 12. AGENT EXECUTION FLOW -->
+<div class="section">
+  <div class="section-label">12</div>
+  <div class="section-title">Flujo de Ejecución de un Agente</div>
+  <div class="section-desc">Detalle del Tool Use loop que cada agente ejecuta dentro de su capa. El agente no genera texto — crea archivos iterativamente hasta completar su tarea.</div>
+
+  <div class="agent-flow">
+    <div class="af-step">
+      <div class="af-num">1</div>
+      <div class="af-action">
+        <div class="af-label">Orchestrator asigna capa</div>
+        <div class="af-desc">Worker BullMQ toma job de la cola. Orchestrator selecciona la siguiente capa pendiente (1→6) y crea el agente correspondiente.</div>
+      </div>
+      <div class="af-detail">
+        <div class="af-label">Datos de entrada</div>
+        <div class="af-desc">projectId, spec (content JSONB), archivos generados por capas anteriores (contexto acumulado)</div>
+      </div>
+    </div>
+    <div class="af-step">
+      <div class="af-num">2</div>
+      <div class="af-action">
+        <div class="af-label">Construye prompt con contexto</div>
+        <div class="af-desc">Lee skills/{agent}/system.md + task.md. Inyecta el spec del proyecto, data-model, api-design y lista de archivos ya generados.</div>
+      </div>
+      <div class="af-detail">
+        <div class="af-label">Prompt structure</div>
+        <div class="af-desc">system: skill system.md<br>user: spec + context + task.md<br>tools: [createFile, readFile, listFiles, taskComplete]</div>
+      </div>
+    </div>
+    <div class="af-step">
+      <div class="af-num">3</div>
+      <div class="af-action">
+        <div class="af-label">Llamada a Claude API</div>
+        <div class="af-desc">POST /messages con tools definition. Claude analiza el contexto y decide qué tool usar primero.</div>
+      </div>
+      <div class="af-detail">
+        <div class="af-label">Response type</div>
+        <div class="af-desc">stop_reason: "tool_use"<br>content: [{type: "tool_use", name: "createFile", input: {path, content}}]</div>
+      </div>
+    </div>
+    <div class="af-step">
+      <div class="af-num">4</div>
+      <div class="af-action">
+        <div class="af-label">Ejecuta tool en backend</div>
+        <div class="af-desc">Backend valida path (anti-traversal), ejecuta la operación en filesystem, registra en BD (generated_files) y emite WS event.</div>
+      </div>
+      <div class="af-detail">
+        <div class="af-label">Tools disponibles</div>
+        <div class="af-desc">createFile(path, content) → escribe archivo<br>readFile(path) → lee archivo existente<br>listFiles(dir?) → lista directorio<br>taskComplete(summary) → finaliza agente</div>
+      </div>
+    </div>
+    <div class="af-step">
+      <div class="af-num">5</div>
+      <div class="af-action">
+        <div class="af-label">Retorna resultado a Claude</div>
+        <div class="af-desc">El resultado del tool se envía como tool_result. Claude decide si necesita otra operación o si ya terminó.</div>
+      </div>
+      <div class="af-detail">
+        <div class="af-label">Loop condition</div>
+        <div class="af-desc">Repite pasos 3→4→5 hasta que Claude llame taskComplete o se alcance el timeout (5 min) o límite (100 archivos).</div>
+      </div>
+    </div>
+    <div class="af-step">
+      <div class="af-num">6</div>
+      <div class="af-action">
+        <div class="af-label">Agente completa / error</div>
+        <div class="af-desc">Si taskComplete → agent status=done, emite agent:status WS. Si error/timeout → status=error, project puede reintentar.</div>
+      </div>
+      <div class="af-detail">
+        <div class="af-label">Post-completion</div>
+        <div class="af-desc">Orchestrator actualiza progress, avanza a siguiente capa. Al completar Layer 6 → project:done.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="af-loop">
+    <div class="af-loop-label">TOOL USE LOOP (pasos 3 → 4 → 5)</div>
+    <div class="af-loop-desc">Claude API call → tool_use response → execute tool → tool_result → Claude API call → … → taskComplete</div>
+  </div>
+</div>
+
+<!-- 13. ERD RELATIONSHIPS -->
+<div class="section">
+  <div class="section-label">13</div>
+  <div class="section-title">Relaciones entre Tablas</div>
+  <div class="section-desc">Mapa de foreign keys y cardinalidad. Complementa la sección 04 (ERD) con las relaciones explícitas.</div>
+
+  <div class="erd-relations">
+    <div class="erd-rel" style="background:rgba(255,255,255,.02);font-weight:600">
+      <div class="erd-rel-from" style="color:var(--text)">From</div>
+      <div class="erd-rel-type" style="color:var(--text)">Card.</div>
+      <div class="erd-rel-to" style="color:var(--text)">To</div>
+      <div class="erd-rel-fk" style="color:var(--text)">FK / Constraint</div>
+    </div>
+    <div class="erd-rel">
+      <div class="erd-rel-from">users</div>
+      <div class="erd-rel-type">1 → N</div>
+      <div class="erd-rel-to">projects</div>
+      <div class="erd-rel-fk">projects.user_id → users.id (CASCADE)</div>
+    </div>
+    <div class="erd-rel">
+      <div class="erd-rel-from">users</div>
+      <div class="erd-rel-type">1 → N</div>
+      <div class="erd-rel-to">refresh_tokens</div>
+      <div class="erd-rel-fk">refresh_tokens.user_id → users.id (CASCADE)</div>
+    </div>
+    <div class="erd-rel">
+      <div class="erd-rel-from">users</div>
+      <div class="erd-rel-type">1 → N</div>
+      <div class="erd-rel-to">password_reset_tokens</div>
+      <div class="erd-rel-fk">password_reset_tokens.user_id → users.id (CASCADE)</div>
+    </div>
+    <div class="erd-rel">
+      <div class="erd-rel-from">users</div>
+      <div class="erd-rel-type">1 → 1</div>
+      <div class="erd-rel-to">user_settings</div>
+      <div class="erd-rel-fk">user_settings.user_id → users.id (CASCADE) UNIQUE</div>
+    </div>
+    <div class="erd-rel">
+      <div class="erd-rel-from">projects</div>
+      <div class="erd-rel-type">1 → N</div>
+      <div class="erd-rel-to">project_specs</div>
+      <div class="erd-rel-fk">project_specs.project_id → projects.id (CASCADE) + UQ(project_id, version)</div>
+    </div>
+    <div class="erd-rel">
+      <div class="erd-rel-from">projects</div>
+      <div class="erd-rel-type">1 → N</div>
+      <div class="erd-rel-to">agents</div>
+      <div class="erd-rel-fk">agents.project_id → projects.id (CASCADE) + UQ(project_id, type)</div>
+    </div>
+    <div class="erd-rel">
+      <div class="erd-rel-from">projects</div>
+      <div class="erd-rel-type">1 → N</div>
+      <div class="erd-rel-to">generated_files</div>
+      <div class="erd-rel-fk">generated_files.project_id → projects.id (CASCADE)</div>
+    </div>
+    <div class="erd-rel">
+      <div class="erd-rel-from">agents</div>
+      <div class="erd-rel-type">1 → N</div>
+      <div class="erd-rel-to">agent_logs</div>
+      <div class="erd-rel-fk">agent_logs.agent_id → agents.id (CASCADE)</div>
+    </div>
+    <div class="erd-rel">
+      <div class="erd-rel-from">agents</div>
+      <div class="erd-rel-type">1 → N</div>
+      <div class="erd-rel-to">generated_files</div>
+      <div class="erd-rel-fk">generated_files.agent_id → agents.id (SET NULL)</div>
+    </div>
+    <div class="erd-rel">
+      <div class="erd-rel-from">projects</div>
+      <div class="erd-rel-type">1 → N</div>
+      <div class="erd-rel-to">agent_logs</div>
+      <div class="erd-rel-fk">agent_logs.project_id → projects.id (CASCADE) — denormalized</div>
+    </div>
+  </div>
+</div>
+
+<!-- 14. SYSTEM LIMITS -->
+<div class="section">
+  <div class="section-label">14</div>
+  <div class="section-title">Límites del Sistema (MVP)</div>
+  <div class="section-desc">Restricciones hardcodeadas para el MVP. Configurables post-MVP vía user_settings o admin panel.</div>
+
+  <div class="limits">
+    <div class="limit-row lheader">
+      <div class="limit-what">Recurso</div>
+      <div class="limit-val">Límite</div>
+      <div class="limit-note">Notas</div>
+    </div>
+    <div class="limit-row">
+      <div class="limit-what">Archivos por agente</div>
+      <div class="limit-val">100</div>
+      <div class="limit-note">Previene loops infinitos de Tool Use</div>
+    </div>
+    <div class="limit-row">
+      <div class="limit-what">Tamaño por archivo</div>
+      <div class="limit-val">100 KB</div>
+      <div class="limit-note">Archivos de código no deberían exceder esto</div>
+    </div>
+    <div class="limit-row">
+      <div class="limit-what">Timeout por agente</div>
+      <div class="limit-val">5 min</div>
+      <div class="limit-note">Si no llama taskComplete, se fuerza error</div>
+    </div>
+    <div class="limit-row">
+      <div class="limit-what">Proyectos simultáneos</div>
+      <div class="limit-val">3</div>
+      <div class="limit-note">BullMQ worker concurrency</div>
+    </div>
+    <div class="limit-row">
+      <div class="limit-what">Capas de ejecución</div>
+      <div class="limit-val">6 (seq)</div>
+      <div class="limit-note">Database → Backend → Frontend → Testing → Docs → Deploy</div>
+    </div>
+    <div class="limit-row">
+      <div class="limit-what">Login attempts</div>
+      <div class="limit-val">5 / 15min</div>
+      <div class="limit-note">Por email, Redis TTL counter</div>
+    </div>
+    <div class="limit-row">
+      <div class="limit-what">Register attempts</div>
+      <div class="limit-val">3 / hora</div>
+      <div class="limit-note">Por IP</div>
+    </div>
+    <div class="limit-row">
+      <div class="limit-what">Spec generation</div>
+      <div class="limit-val">10/proy/hora</div>
+      <div class="limit-note">50/usuario/día máximo</div>
+    </div>
+    <div class="limit-row">
+      <div class="limit-what">API key verify</div>
+      <div class="limit-val">5 / hora</div>
+      <div class="limit-note">Por usuario</div>
+    </div>
+    <div class="limit-row">
+      <div class="limit-what">WebSocket reconnect</div>
+      <div class="limit-val">3 seg</div>
+      <div class="limit-note">Con replay desde lastEventId</div>
+    </div>
+    <div class="limit-row">
+      <div class="limit-what">Ring buffer logs</div>
+      <div class="limit-val">200 entries</div>
+      <div class="limit-note">Dashboard frontend, circular buffer</div>
+    </div>
+    <div class="limit-row">
+      <div class="limit-what">JWT access token TTL</div>
+      <div class="limit-val">15 min</div>
+      <div class="limit-note">httpOnly Secure SameSite=Strict cookie</div>
+    </div>
+    <div class="limit-row">
+      <div class="limit-what">Refresh token TTL</div>
+      <div class="limit-val">24h / 30d</div>
+      <div class="limit-note">30 días con rememberMe flag</div>
+    </div>
+  </div>
+</div>
+
+<!-- 15. SCALABILITY -->
+<div class="section">
+  <div class="section-label">15</div>
+  <div class="section-title">Escalabilidad y Evolución</div>
+  <div class="section-desc">Decisiones de escalabilidad para el MVP y roadmap de mejoras post-MVP.</div>
+
+  <div class="scale-grid">
+    <div class="scale-card">
+      <div class="scale-label">MVP — Actual</div>
+      <div class="scale-title">Single Worker Process</div>
+      <div class="scale-desc">Un proceso BullMQ worker con concurrency=3. Suficiente para ~50 usuarios concurrentes generando proyectos. Bottleneck principal: llamadas a Anthropic API (~30s por agente).</div>
+    </div>
+    <div class="scale-card">
+      <div class="scale-label">MVP — Actual</div>
+      <div class="scale-title">Sequential Layers</div>
+      <div class="scale-desc">6 capas ejecutadas una tras otra. Tiempo total estimado por proyecto: 3-8 minutos. Sin paralelismo para evitar conflictos entre archivos generados.</div>
+    </div>
+    <div class="scale-card">
+      <div class="scale-label">Post-MVP</div>
+      <div class="scale-title">Horizontal Workers</div>
+      <div class="scale-desc">Escalar agregando más procesos worker en Railway. BullMQ distribuye jobs automáticamente. Cada worker con su propia conexión a filesystem (Railway volumes compartidos o S3).</div>
+    </div>
+    <div class="scale-card">
+      <div class="scale-label">Post-MVP</div>
+      <div class="scale-title">Partial Parallelism</div>
+      <div class="scale-desc">QA Agent (Layer 4) podría correr en paralelo con Docs Agent (Layer 5) ya que no modifican los mismos archivos. Deploy Agent (Layer 6) siempre último.</div>
+    </div>
+    <div class="scale-card">
+      <div class="scale-label">Post-MVP</div>
+      <div class="scale-title">S3 File Storage</div>
+      <div class="scale-desc">Migrar archivos generados de filesystem local a S3/R2. Permite workers sin estado y descarga directa. BD mantiene path S3 en vez de path local.</div>
+    </div>
+    <div class="scale-card">
+      <div class="scale-label">Post-MVP</div>
+      <div class="scale-title">Streaming Token Billing</div>
+      <div class="scale-desc">API key del usuario → billing directo. Tracking en tiempo real de tokens_input + tokens_output con pricing table (ANTHROPIC_PRICING). Dashboard de costos por proyecto.</div>
+    </div>
+  </div>
+</div>
+
+<!-- 16. DEPLOYMENT PIPELINE -->
+<div class="section">
+  <div class="section-label">16</div>
+  <div class="section-title">Pipeline de Deployment</div>
+  <div class="section-desc">Flujo desde git push hasta producción. Frontend y backend se deployean independientemente.</div>
+
+  <div class="pipeline" style="margin-bottom:16px">
+    <div class="pipe-stage">
+      <div class="pipe-icon" style="color:var(--green)"><i data-lucide="git-branch"></i></div>
+      <div class="pipe-name">Git Push</div>
+      <div class="pipe-desc">Push a main<br>PR merge</div>
+    </div>
+    <div class="pipe-stage">
+      <div class="pipe-icon" style="color:var(--amber)"><i data-lucide="shield-check"></i></div>
+      <div class="pipe-name">CI Checks</div>
+      <div class="pipe-desc">TypeScript check<br>Lint + Format<br>Unit tests</div>
+    </div>
+    <div class="pipe-stage">
+      <div class="pipe-icon" style="color:var(--accent2)"><i data-lucide="hammer"></i></div>
+      <div class="pipe-name">Build</div>
+      <div class="pipe-desc">Turborepo build<br>apps/web → .next/<br>apps/api → dist/</div>
+    </div>
+    <div class="pipe-stage">
+      <div class="pipe-icon" style="color:var(--accent)"><i data-lucide="database"></i></div>
+      <div class="pipe-name">DB Migrate</div>
+      <div class="pipe-desc">prisma migrate deploy<br>Solo si hay cambios<br>en schema</div>
+    </div>
+    <div class="pipe-stage">
+      <div class="pipe-icon" style="color:var(--green)"><i data-lucide="rocket"></i></div>
+      <div class="pipe-name">Deploy</div>
+      <div class="pipe-desc">Vercel: frontend<br>Railway: API proc<br>Railway: Worker proc</div>
+    </div>
+  </div>
+
+  <div class="infra-grid">
+    <div class="infra-card">
+      <div class="infra-name">Frontend (Vercel)</div>
+      <div class="infra-desc">Auto-deploy en push a main<br>Preview deploys en PRs<br>Environment variables por branch<br>Edge functions para middleware</div>
+    </div>
+    <div class="infra-card">
+      <div class="infra-name">Backend (Railway)</div>
+      <div class="infra-desc">2 servicios: API + Worker<br>Dockerfile multi-stage build<br>Health check endpoint /health<br>Auto-restart on crash<br>Shared PostgreSQL + Redis</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script>lucide.createIcons();</script>
+</body>
+</html>
