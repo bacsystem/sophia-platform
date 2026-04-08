@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useState } from 'react';
+import { Loader2, CheckCircle2 } from 'lucide-react';
 
 const forgotPasswordFormSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -50,8 +51,9 @@ export function ForgotPasswordForm() {
 
   if (sent) {
     return (
-      <div className="mt-8 rounded-md bg-green-50 p-6 text-center">
-        <p className="text-sm text-green-700">
+      <div className="rounded-2xl bg-green-500/10 border border-green-500/20 p-6 text-center space-y-3">
+        <CheckCircle2 className="mx-auto text-green-400" size={32} />
+        <p className="text-sm text-green-300">
           Si el email existe, recibirás instrucciones para restablecer tu contraseña.
         </p>
       </div>
@@ -59,35 +61,41 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
       {serverError && (
-        <div className="rounded-md bg-red-50 p-4 text-sm text-red-700">
-          {serverError}
+        <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-4">
+          <p className="text-sm text-red-400">{serverError}</p>
         </div>
       )}
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="email" className="label-premium block mb-1.5">
           Email
         </label>
         <input
           id="email"
           type="email"
           autoComplete="email"
+          placeholder="tu@email.com"
           {...register('email')}
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          className="glass-input w-full rounded-xl px-4 py-3 text-sm"
         />
-        {errors.email && (
-          <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-        )}
+        {errors.email && <p className="error-text">{errors.email.message}</p>}
       </div>
 
       <button
         type="submit"
         disabled={isSubmitting}
-        className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50"
+        className="btn-primary w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white"
       >
-        {isSubmitting ? 'Enviando...' : 'Enviar instrucciones'}
+        {isSubmitting ? (
+          <>
+            <Loader2 size={16} className="animate-spin" />
+            Enviando...
+          </>
+        ) : (
+          'Enviar instrucciones'
+        )}
       </button>
     </form>
   );

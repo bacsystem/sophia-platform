@@ -5,7 +5,7 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    ignores: ['dist/', 'node_modules/', 'prisma/migrations/'],
+    ignores: ['dist/', 'node_modules/', 'prisma/migrations/', 'coverage/', 'build/'],
   },
   {
     rules: {

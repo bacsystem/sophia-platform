@@ -44,12 +44,21 @@ sophia-platform/
 
 ### Modules (28 HUs total)
 
-| Sprint | Módulo | HUs |
-|--------|--------|-----|
-| 1 | M1 Auth, M2 Projects | HU-01→10 |
-| 2 | M3 Spec Engine | HU-11→13 |
-| 3 | M4 Agent Runner | HU-14→17 |
-| 4 | M5 Dashboard, M6 File Manager, M7 Settings | HU-18→28 |
+| Sprint | Módulo | HUs | Estado |
+|--------|--------|-----|--------|
+| 1 | M1 Auth | HU-01→05 | ✅ v1.3 completado |
+| 1 | M2 Projects | HU-06→10 | 📋 Spec ready |
+| 2 | M3 Spec Engine | HU-11→13 | 📋 Spec ready |
+| 3 | M4 Agent Runner | HU-14→17 | 📋 Spec ready |
+| 4 | M5 Dashboard, M6 File Manager, M7 Settings | HU-18→28 | 📋 Spec ready |
+
+### Sprint Status (actualización al iniciar sesión)
+
+| Módulo | Branch | Tareas | Versión | Último commit |
+|--------|--------|--------|---------|---------------|
+| M1 Auth | `001-m1-auth` | 46/46 | v1.3 | feat(M1): implement M1-Auth complete + UI premium |
+| M2 Projects | — | 0/35 | v1.0 | pendiente |
+| M3–M7 | — | 0/131 | — | pendiente |
 
 ### Key Commands
 
@@ -295,3 +304,52 @@ Reglas:
 2. Actualizar `docs/task-tracker.md` con el nuevo conteo
 3. Si hubo cambios en spec/plan, incrementar versión y agregar entrada en `CHANGELOG.md`
 4. Si se agregaron dependencias cross-module, actualizar `docs/context-map.md`
+
+### Release por Módulo
+
+Al completar **todas** las tareas de un módulo (100% ✅):
+
+```bash
+# 1. Commit de cierre del módulo
+git add -A
+git commit -m "release(MX): vX.Y.Z — <nombre módulo> complete"
+
+# 2. Tag semántico
+git tag -a mX-<nombre>-vX.Y.Z -m "MX <Nombre> vX.Y.Z — <descripción breve>"
+
+# 3. Push rama + tags (obligatorio)
+git push origin <branch> --tags
+```
+
+**Convención de tags:**
+- Formato: `m<N>-<nombre-kebab>-v<MAJOR>.<MINOR>.<PATCH>`
+- Ejemplo: `m1-auth-v1.3.1`, `m2-projects-v1.0.0`
+- El tag apunta al commit de release, no al merge
+- **Push obligatorio:** `git push origin <branch> --tags` después de cada tag
+
+**Versión del módulo:**
+- Formato: `MAJOR.MINOR.PATCH` (Semantic Versioning completo)
+- `PATCH` sube con fixes post-release (bugs, a11y, docs, CodeRabbit findings)
+- `MINOR` sube con cada iteración completa (implementación, tests, build ✅)
+- `MAJOR` sube solo si hay rediseño de spec (breaking change en HUs o modelo de datos)
+
+### CodeRabbit Review Protocol
+
+Cada PR pasa por revisión automática de CodeRabbit. Al recibir findings:
+
+1. **Verificar** cada finding contra el código actual antes de aplicar el fix
+2. **Prioridad:** Critical > Major > Minor > Warning
+3. **Aplicar** solo los fixes necesarios (no aplicar si el código ya cumple)
+4. **Actualizar** CHANGELOG.md con los fixes en la sección `### Fixed`
+5. **Commit:** `fix(coderabbit): resolve PR review findings` con lista de issues
+
+**Checks obligatorios que deben pasar en verde:**
+- Docstring Coverage ≥ 80% — todas las funciones públicas (`export function`, `export const`) deben tener JSDoc en frontend y TSDoc en backend
+- Semantic Versioning — versiones en `spec.md` usan `MAJOR.MINOR.PATCH`
+- CHANGELOG estructura — cada entrada incluye `Added/Changed/Fixed/Removed`
+- Accessibility — botones icon-only deben tener `aria-label` dinámico + `aria-pressed` para toggles
+
+**Regla de docstrings:**
+- Backend (`apps/api/src/**`): JSDoc en todas las funciones exported de `*.service.ts`, `*.controller.ts`, `*.routes.ts`
+- Frontend (`apps/web/**`): JSDoc en todos los componentes React exported y hooks custom
+- Formato mínimo: `/** @description ... */` o `/** descripción de una línea */`

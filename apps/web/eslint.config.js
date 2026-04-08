@@ -7,7 +7,7 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    ignores: ['.next/', 'node_modules/'],
+    ignores: ['.next/', 'node_modules/', 'dist/', 'coverage/', 'build/'],
   },
   {
     plugins: {
