@@ -1,6 +1,6 @@
 'use client';
 
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useState } from 'react';
@@ -66,7 +66,6 @@ export function ProjectForm({ project }: ProjectFormProps) {
     register,
     handleSubmit,
     control,
-    watch,
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<ProjectFormData>({
@@ -88,10 +87,11 @@ export function ProjectForm({ project }: ProjectFormProps) {
         },
   });
 
-  const watchedName = watch('name');
-  const watchedDescription = watch('description');
-  const watchedStack = watch('stack');
-  const watchedAgents = watch('agents');
+  const watchedName = useWatch({ control, name: 'name' });
+  const watchedDescription = useWatch({ control, name: 'description' });
+  const watchedStack = useWatch({ control, name: 'stack' });
+  const watchedModel = useWatch({ control, name: 'model' });
+  const watchedAgents = useWatch({ control, name: 'agents' });
 
   const onSubmit = async (data: ProjectFormData) => {
     setServerError(null);
@@ -209,7 +209,7 @@ export function ProjectForm({ project }: ProjectFormProps) {
         <label className="label-premium">Modelo de IA *</label>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {MODEL_OPTIONS.map((opt) => {
-            const isSelected = watch('model') === opt.value;
+            const isSelected = watchedModel === opt.value;
             return (
               <button
                 key={opt.value}
