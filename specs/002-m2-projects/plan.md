@@ -15,9 +15,9 @@ CRUD completo de proyectos con máquina de estados (idle→running→paused→do
 **Testing**: Vitest (unit + integration)
 **Target Platform**: Web (Fastify API + Next.js frontend)
 **Project Type**: web-service + web-app (monorepo Turborepo)
-**Performance Goals**: < 200ms p95 listado con paginación, ILIKE search < 100ms
+**Performance Goals**: ≤ 300ms p95 listado con hasta 100 proyectos del usuario
 **Constraints**: Cookies httpOnly auth, Prisma directo, 9 agentes en pipeline, pnpm exclusivo
-**Scale/Scope**: MVP — 5 HUs, 9 endpoints, 2 tablas, 3 páginas frontend
+**Scale/Scope**: MVP — 5 HUs, 10 endpoints, 2 tablas, 3 páginas frontend
 
 ## Constitution Check
 
@@ -28,7 +28,7 @@ CRUD completo de proyectos con máquina de estados (idle→running→paused→do
 | III. Pipeline 9 Agentes | ✅ PASS | Config acepta 9 agentes; seed/security/integration obligatorios |
 | IV. pnpm Exclusivo | ✅ PASS | |
 | V. Patrón Backend | ✅ PASS | routes → controller → service → schema. Respuestas `{ data }` |
-| VI. Frontend Server-First | ✅ PASS | Server components, "use client" solo para forms e interactividad |
+| VI. Frontend Server-First | ✅ PASS | Server components, "use client" solo para forms e interactividad; tipos M2 en @sophia/shared |
 | VII. Seguridad Default | ✅ PASS | Ownership validation, soft delete, Zod validation |
 
 ## Project Structure
@@ -58,11 +58,17 @@ apps/web/
 │   └── projects/[id]/page.tsx         # Detalle con tabs (HU-08)
 ├── components/projects/
 │   ├── project-card.tsx
+│   ├── project-grid.tsx
 │   ├── project-form.tsx
-│   ├── project-list.tsx
+│   ├── project-header.tsx
+│   ├── project-actions.tsx
 │   ├── project-detail.tsx
 │   ├── project-tabs.tsx
-│   └── delete-project-modal.tsx
+│   ├── project-spec-viewer.tsx
+│   ├── stack-selector.tsx
+│   ├── agent-selector.tsx
+│   ├── delete-project-dialog.tsx
+│   └── project-empty-state.tsx
 └── hooks/
     └── use-projects.ts
 ```
@@ -78,7 +84,7 @@ apps/web/
 
 ### project_specs
 - `id` UUID PK, `project_id` FK→projects, `version` INT auto-incremental
-- `content` JSONB `{ spec, dataModel, apiDesign }`, `source` VARCHAR(20), `valid` BOOLEAN
+- `content` JSONB
 - `created_at` TIMESTAMPTZ
 
 ## API Contracts
@@ -93,7 +99,8 @@ apps/web/
 | POST | /api/projects/:id/start | 200 | `{ data: { id, status } }` (stub) |
 | POST | /api/projects/:id/pause | 200 | `{ data: { id, status } }` (stub) |
 | POST | /api/projects/:id/continue | 200 | `{ data: { id, status } }` (stub) |
-| GET | /api/projects/:id/download | 200 | ZIP stream (implementado en M6) |
+| POST | /api/projects/:id/retry | 200 | `{ data: { id, status } }` (stub) |
+| GET | /api/projects/:id/download | 501 | `{ error: "NOT_IMPLEMENTED" }` (M6) |
 
 ## Architecture Decisions
 

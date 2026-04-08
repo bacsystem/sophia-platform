@@ -2,6 +2,7 @@
 
 **Input**: Design documents from `/specs/002-m2-projects/`
 **Prerequisites**: plan.md ✅ | spec.md ✅ | data-model.md ✅ | contracts/ ✅ | research.md ✅ | quickstart.md ✅
+**Last analyze**: 2026-04-08 — 12 findings resolved (C1, H1, H2, H3, M1–M5, L1–L3)
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -30,6 +31,7 @@
 ⚠️ **CRITICAL**: Ninguna HU puede implementarse hasta completar esta fase
 
 - [ ] T004 Create Zod schemas in `apps/api/src/modules/projects/project.schema.ts` — `CreateProjectSchema` (dual refine para agentes obligatorios + generadores), `UpdateProjectSchema` (partial), `ListProjectsQuerySchema` (page, limit, status, search)
+- [ ] T004.5 Create M2 shared types in `packages/shared/src/types/projects.ts` — export `ProjectStatus` enum, `Project`, `ProjectSpec`, `CreateProjectInput`, `UpdateProjectInput`, `ListProjectsQuery`, `ProjectListMeta`; re-export from `packages/shared/src/index.ts`
 - [ ] T005 Create routes file with all 10 routes declared in `apps/api/src/modules/projects/project.routes.ts` — GET/POST /api/projects, GET/PATCH/DELETE /api/projects/:id, POST start/pause/continue/retry, GET download
 
 **Checkpoint**: Schemas compilados sin errores; rutas registradas (handlers vacíos OK)
@@ -106,8 +108,10 @@
 - [ ] T034 [US4] Create `updateProject(userId, id, input)` in `project.service.ts` — 404/403 checks, validar `status === "idle"` (400 si no), Zod partial parse, `prisma.project.update`
 - [ ] T035 [US4] Create `updateProjectHandler` in `project.controller.ts` — return 200 `{ data: updatedProject }`
 - [ ] T036 [US4] Wire `PATCH /api/projects/:id` route to handler in `project.routes.ts`
+- [ ] T036.5 [P] [US4] Add edit button to `apps/web/components/projects/project-actions.tsx` — visible solo cuando `status === "idle"`, navega a `/projects/[id]/edit`
+- [ ] T036.6 [P] [US4] Create edit page at `apps/web/app/(dashboard)/projects/[id]/edit/page.tsx` — server component; reutiliza `ProjectForm` pre-populated con datos del proyecto, PATCH on submit, toast de éxito via hook, redirect back a `/projects/[id]`
 
-**Checkpoint**: Update bloqueado en estados non-idle; toast de éxito en frontend (via use-projects hook)
+**Checkpoint**: Update bloqueado en estados non-idle; edit button solo visible en idle; toast de éxito tras guardar
 
 ---
 
@@ -121,8 +125,9 @@
 - [ ] T038 [US5] Create `deleteProjectHandler` in `project.controller.ts` — return 200 `{ data: { message: "Proyecto eliminado" } }`
 - [ ] T039 [US5] Wire `DELETE /api/projects/:id` route to handler in `project.routes.ts`
 - [ ] T040 [P] [US5] Create `DeleteProjectDialog` in `apps/web/components/projects/delete-project-dialog.tsx` — "use client", modal shadcn Dialog, input para escribir nombre del proyecto, botón confirmar (disabled si nombre no coincide), llama a DELETE endpoint y redirige a /projects
+- [ ] T040.5 [P] [US5] Wire `DeleteProjectDialog` en vista de detalle: añadir opción "Eliminar" al menú ⋯ de `apps/web/components/projects/project-actions.tsx` o en `apps/web/app/(dashboard)/projects/[id]/page.tsx` — visible cuando `status !== "running"`
 
-**Checkpoint**: Soft delete funcional; GET en proyecto eliminado retorna 404; modal requiere nombre exacto
+**Checkpoint**: Soft delete funcional; GET en proyecto eliminado retorna 404; modal requiere nombre exacto; trigger de eliminación accesible desde card Y desde vista de detalle
 
 ---
 

@@ -536,7 +536,7 @@ prisma/migrations/   → Migración M2
 - [ ] Paginación server-side con búsqueda y filtros funciona
 - [ ] Máquina de estados valida transiciones correctamente (400 en transición inválida)
 - [ ] Start/pause/continue cambian status correctamente (stubs para M4)
-- [ ] Download genera ZIP con streaming (guard: mínimo capa 3)
+- [ ] Ruta `GET /api/projects/:id/download` declara stub 501 `NOT_IMPLEMENTED` (implementación ZIP en M6)
 - [ ] Spec se almacena en tabla separada con versionamiento
 - [ ] Soft delete implementado (no hard delete)
 - [ ] Solo el owner puede ver/editar/eliminar sus proyectos (403)
