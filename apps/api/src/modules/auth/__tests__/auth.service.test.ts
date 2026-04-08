@@ -1,12 +1,17 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { buildApp } from '../../../app.js';
 import type { FastifyInstance } from 'fastify';
+import { getRedisClient } from '../../../lib/redis.js';
 
 let app: FastifyInstance;
 
 beforeAll(async () => {
   app = await buildApp();
   await app.ready();
+  // Clear rate limit keys to avoid interference from other test files
+  const redis = getRedisClient();
+  const keys = await redis.keys('auth:*');
+  if (keys.length) await redis.del(...keys);
 });
 
 describe('Auth API', () => {

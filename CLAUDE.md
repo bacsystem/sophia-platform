@@ -174,6 +174,7 @@ Dentro de cada módulo, el orden de implementación es:
 
 > **Lint obligatorio**: ejecutar `pnpm --filter @sophia/web lint` y `pnpm --filter @sophia/api lint` después de cada cambio en `apps/web/` o `apps/api/` respectivamente.
 > **Build obligatorio**: ejecutar `pnpm --filter @sophia/api build` y `pnpm --filter @sophia/web build` para verificar que compila sin errores antes de commit.
+> **Test obligatorio**: ejecutar `pnpm --filter @sophia/api test` antes de commit para verificar que todos los tests pasan.
 
 ### Token Optimization
 
