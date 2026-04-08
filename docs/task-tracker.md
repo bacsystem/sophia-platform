@@ -2,7 +2,7 @@
 
 Resumen de progreso por módulo. Actualizar al completar cada fase o sprint.
 
-> Última actualización: 2026-04-08
+> Última actualización: 2026-05-08
 
 ---
 
@@ -14,10 +14,10 @@ Resumen de progreso por módulo. Actualizar al completar cada fase o sprint.
 | 1 | M2 Projects | HU-06→10 | 49 | 49 | 100% | ✅ Complete |
 | 2 | M3 Spec Engine | HU-11→13 | 31 | 31 | 100% | ✅ Complete |
 | 3 | M4 Agent Runner | HU-14→17 | 38 | 38 | 100% | ✅ Complete |
-| 4 | M5 Dashboard | HU-18→22 | 22 | 0 | 0% | 📋 Spec ready |
+| 4 | M5 Dashboard | HU-18→22 | 22 | 22 | 100% | ✅ Complete |
 | 4 | M6 File Manager | HU-23→25 | 22 | 0 | 0% | 📋 Spec ready |
 | 4 | M7 Settings | HU-26→28 | 24 | 0 | 0% | 📋 Spec ready |
-| **—** | **TOTAL** | **28** | **232** | **126** | **54%** | |
+| **—** | **TOTAL** | **28** | **232** | **148** | **64%** | |
 
 ### Leyenda de estados
 
@@ -81,14 +81,14 @@ Resumen de progreso por módulo. Actualizar al completar cada fase o sprint.
 
 | Fase | Descripción | Tareas | Completadas | Estado |
 |------|-------------|--------|-------------|--------|
-| Phase 1 | Setup (Shared + Store + WS Hook) | 6 | 0 | ⬜ |
-| Phase 2 | HU-18 Ver Agentes en Tiempo Real | 5 | 0 | ⬜ |
-| Phase 3 | HU-19 Log en Tiempo Real | 1 | 0 | ⬜ |
-| Phase 4 | HU-20 Archivos en Tiempo Real | 2 | 0 | ⬜ |
-| Phase 5 | HU-21 Métricas del Proyecto | 1 | 0 | ⬜ |
-| Phase 6 | HU-22 Controlar Ejecución | 1 | 0 | ⬜ |
-| Phase 7 | Layout + Mobile + Empty State | 3 | 0 | ⬜ |
-| Phase 8 | Polish & Tests | 3 | 0 | ⬜ |
+| Phase 1 | Setup (Shared + Store + WS Hook) | 6 | 6 | ✅ |
+| Phase 2 | HU-18 Ver Agentes en Tiempo Real | 5 | 5 | ✅ |
+| Phase 3 | HU-19 Log en Tiempo Real | 1 | 1 | ✅ |
+| Phase 4 | HU-20 Archivos en Tiempo Real | 2 | 2 | ✅ |
+| Phase 5 | HU-21 Métricas del Proyecto | 1 | 1 | ✅ |
+| Phase 6 | HU-22 Controlar Ejecución | 1 | 1 | ✅ |
+| Phase 7 | Layout + Mobile + Empty State | 3 | 3 | ✅ |
+| Phase 8 | Polish & Tests | 3 | 3 | ✅ |
 
 ### M6 File Manager (22 tareas)
 

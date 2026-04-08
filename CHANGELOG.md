@@ -6,6 +6,45 @@ Versionado semántico a nivel de proyecto: `MAJOR.MINOR.PATCH`.
 
 ---
 
+## [v0.5.0] — 2026-05-08 ✅ M5 Dashboard
+
+### Added
+- M5 Dashboard (HU-18→22): visualización en tiempo real de la ejecución de agentes IA
+- Canvas API nativo: 10 agentes animados con conexiones, partículas, tooltips y selección por click
+- `agent-canvas.tsx` — renderizado rAF con devicePixelRatio scaling, ResizeObserver, ref pattern (`renderFnRef`)
+- `agent-canvas-renderer.ts` — dibujado de nodos (4 estados: idle/working/done/error), conexiones activas/inactivas, labels
+- `agent-canvas-events.ts` — hit-testing circular con tolerancia de 4px
+- `agent-particles.ts` — sistema de partículas con lifetime 2s y spawn 400ms
+- `agent-log-panel.tsx` — panel de logs en tiempo real con auto-scroll, filtro por agente, pause/play
+- `agent-files-panel.tsx` — panel de archivos generados con agrupación por carpeta, badge NEW (3s), Framer Motion
+- `file-preview-modal.tsx` — vista previa de archivos con shiki syntax highlighting (github-dark), copy to clipboard
+- `agent-metrics-bar.tsx` — 5 indicadores (agentes, capa, archivos, tiempo, tokens) + barra de progreso gradient
+- `agent-controls.tsx` — controles de ejecución: Pausar (con confirmación), Continuar, Reintentar, Download ZIP (placeholder M6)
+- `agent-detail-panel.tsx` — panel lateral con status badge, elapsed time, últimos 8 logs y archivos del agente seleccionado
+- `dashboard-layout.tsx` — layout responsive: desktop (canvas + sidebar tabs) / mobile (<768px lista + tabs)
+- `agent-list-mobile.tsx` — lista vertical de agentes con status dot, progress bar y porcentaje
+- `dashboard-empty.tsx` — estado idle antes de iniciar generación
+- `use-dashboard-store.ts` — Zustand store con ring buffer (200 logs), 10 agent nodes, métricas, acciones
+- `use-websocket.ts` — WebSocket hook con reconexión (3s), replay via `?since=lastEventId`, 7 event types
+- `use-elapsed-time.ts` — timer hook con formato mm:ss
+- `packages/shared/constants/file-icons.ts` — mapa de íconos SVG para Canvas (12 extensiones)
+- `apps/web/lib/agent-config.ts` — configuración de 10 agentes (posición, color, conexiones) en canvas 700×500
+- `apps/web/lib/ws-events.ts` — 7 tipos de eventos WebSocket
+- Link "Ver Dashboard" en `project-actions.tsx` (visible cuando status !== 'idle')
+- Tests: `agent-canvas-renderer.test.ts` (10), `agent-log-panel.test.tsx` (4), `use-websocket.test.ts` (4) — 18 tests total
+- Testing infra: Vitest 3.2.4 + React Testing Library + jsdom en `apps/web/`
+
+### Changed
+- `apps/web/components/projects/project-actions.tsx`: añadido enlace Dashboard con ícono LayoutDashboard
+
+### Fixed
+- `agent-files-panel.tsx`: corregido `useState(() => setTimeout)` → `useEffect` con cleanup
+
+### Removed
+- N/A
+
+---
+
 ## [v0.4.0] — 2026-05-07 ✅ M4 Agent Runner
 
 ### Added
