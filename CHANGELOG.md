@@ -6,6 +6,39 @@ Versionado semántico a nivel de proyecto: `MAJOR.MINOR.PATCH`.
 
 ---
 
+## [v0.6.0] — 2026-05-09 ✅ M6 File Manager
+
+### Added
+- M6 File Manager (HU-23→25): gestor de archivos generados por agentes
+- Backend: módulo `files/` con 4 endpoints (tree, content, raw, download ZIP)
+- `file.service.ts` — getFileTree (flat→tree), getFileContent (1MB truncation, path traversal prevention), getRawFile (stream), downloadProject (archiver ZIP streaming)
+- `file.controller.ts` — handlers con Cache-Control + ETag para contenido, Content-Disposition para descargas
+- `file.schema.ts` — validación Zod con UUID params
+- `file.routes.ts` — 4 GET routes con authenticate preHandler
+- Frontend: file manager con tree sidebar + viewer panel responsive
+- `file-tree.tsx` — árbol colapsable con búsqueda client-side, stats (archivos/tamaño)
+- `file-tree-node.tsx` — nodos con íconos por extensión (Lucide), badges de color por agente
+- `file-viewer.tsx` — syntax highlighting con shiki (async import), line numbers, @tanstack/react-virtual para >500 líneas, copy/download
+- `file-search.tsx` — búsqueda con Cmd+F shortcut
+- `file-breadcrumb.tsx` — navegación por path con segmentos clickeables
+- `download-button.tsx` — descarga ZIP con tamaño estimado, estados disabled con tooltips
+- `file-tree-builder.ts` — utilidad flat→tree transformation
+- `file-manager-client.tsx` — layout responsive (md:flex-row sidebar + viewer, stacked mobile)
+- Page SSR: `projects/[id]/files/page.tsx` con fetch de proyecto + tree
+- Tests: `file.service.test.ts` (9 unit tests), `file-tree.test.tsx` (7 component tests) — 16 tests total
+- Dependencias: archiver, shiki, @tanstack/react-virtual
+
+### Changed
+- `project-tabs.tsx`: tab "Archivos" ahora enlaza al gestor de archivos (`/projects/:id/files`)
+
+### Fixed
+- Eliminado stub `downloadProjectHandler` de `project.routes.ts` / `project.controller.ts` (conflicto de ruta con M6)
+
+### Removed
+- N/A
+
+---
+
 ## [v0.5.0] — 2026-05-08 ✅ M5 Dashboard
 
 ### Added

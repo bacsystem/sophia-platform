@@ -155,13 +155,4 @@ export async function retryProjectHandler(
   reply.status(200).send(result);
 }
 
-/** Stub: download ZIP (M6 implements). */
-export async function downloadProjectHandler(
-  _request: FastifyRequest,
-  reply: FastifyReply,
-): Promise<void> {
-  reply.status(500).send({
-    error: 'NOT_IMPLEMENTED',
-    message: 'Descarga de archivos implementada en M6',
-  });
-}
+

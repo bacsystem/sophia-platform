@@ -2,7 +2,7 @@
 
 Resumen de progreso por módulo. Actualizar al completar cada fase o sprint.
 
-> Última actualización: 2026-05-08
+> Última actualización: 2026-05-09
 
 ---
 
@@ -15,9 +15,9 @@ Resumen de progreso por módulo. Actualizar al completar cada fase o sprint.
 | 2 | M3 Spec Engine | HU-11→13 | 31 | 31 | 100% | ✅ Complete |
 | 3 | M4 Agent Runner | HU-14→17 | 38 | 38 | 100% | ✅ Complete |
 | 4 | M5 Dashboard | HU-18→22 | 22 | 22 | 100% | ✅ Complete |
-| 4 | M6 File Manager | HU-23→25 | 22 | 0 | 0% | 📋 Spec ready |
+| 4 | M6 File Manager | HU-23→25 | 23 | 23 | 100% | ✅ Complete |
 | 4 | M7 Settings | HU-26→28 | 24 | 0 | 0% | 📋 Spec ready |
-| **—** | **TOTAL** | **28** | **232** | **148** | **64%** | |
+| **—** | **TOTAL** | **28** | **233** | **209** | **90%** | |
 
 ### Leyenda de estados
 
@@ -90,15 +90,15 @@ Resumen de progreso por módulo. Actualizar al completar cada fase o sprint.
 | Phase 7 | Layout + Mobile + Empty State | 3 | 3 | ✅ |
 | Phase 8 | Polish & Tests | 3 | 3 | ✅ |
 
-### M6 File Manager (22 tareas)
+### M6 File Manager (23 tareas)
 
 | Fase | Descripción | Tareas | Completadas | Estado |
 |------|-------------|--------|-------------|--------|
-| Phase 1 | Setup (Module Structure) | 2 | 0 | ⬜ |
-| Phase 2 | HU-23 Ver Árbol de Archivos | 8 | 0 | ⬜ |
-| Phase 3 | HU-24 Ver Contenido de Archivo | 6 | 0 | ⬜ |
-| Phase 4 | HU-25 Descargar ZIP | 4 | 0 | ⬜ |
-| Phase 5 | Polish & Tests | 2 | 0 | ⬜ |
+| Phase 1 | Setup (Module Structure) | 3 | 3 | ✅ |
+| Phase 2 | HU-23 Ver Árbol de Archivos | 8 | 8 | ✅ |
+| Phase 3 | HU-24 Ver Contenido de Archivo | 6 | 6 | ✅ |
+| Phase 4 | HU-25 Descargar ZIP | 4 | 4 | ✅ |
+| Phase 5 | Polish & Tests | 2 | 2 | ✅ |
 
 ### M7 Settings (24 tareas)
 
