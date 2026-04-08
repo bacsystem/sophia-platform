@@ -1,0 +1,311 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "M4 Agent Runner API",
+    "version": "1.3.0",
+    "description": "Agent execution orchestration: start, pause, continue, retry projects. Agent status and logs via REST + WebSocket."
+  },
+  "servers": [{ "url": "http://localhost:3001" }],
+  "paths": {
+    "/api/projects/{id}/start": {
+      "post": {
+        "summary": "Start project execution",
+        "tags": ["Agent Runner"],
+        "parameters": [{ "$ref": "#/components/parameters/ProjectId" }],
+        "responses": {
+          "200": {
+            "description": "Project started, agents created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string", "format": "uuid" },
+                        "status": { "type": "string", "enum": ["running"] },
+                        "agents": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/AgentSummary" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/projects/{id}/pause": {
+      "post": {
+        "summary": "Pause project execution (graceful)",
+        "tags": ["Agent Runner"],
+        "parameters": [{ "$ref": "#/components/parameters/ProjectId" }],
+        "responses": {
+          "200": {
+            "description": "Pause flag set",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string", "format": "uuid" },
+                        "status": { "type": "string", "enum": ["pausing"] }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/projects/{id}/continue": {
+      "post": {
+        "summary": "Continue paused project execution",
+        "tags": ["Agent Runner"],
+        "parameters": [{ "$ref": "#/components/parameters/ProjectId" }],
+        "responses": {
+          "200": {
+            "description": "Project resumed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string", "format": "uuid" },
+                        "status": { "type": "string", "enum": ["running"] }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/projects/{id}/retry": {
+      "post": {
+        "summary": "Retry project from failed layer",
+        "tags": ["Agent Runner"],
+        "parameters": [{ "$ref": "#/components/parameters/ProjectId" }],
+        "responses": {
+          "200": {
+            "description": "Retry enqueued from failed layer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string", "format": "uuid" },
+                        "status": { "type": "string", "enum": ["running"] },
+                        "retryFromLayer": { "type": "number" },
+                        "retryFromLayerName": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/projects/{id}/agents": {
+      "get": {
+        "summary": "List agents for a project",
+        "tags": ["Agent Runner"],
+        "parameters": [{ "$ref": "#/components/parameters/ProjectId" }],
+        "responses": {
+          "200": {
+            "description": "List of agents with status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Agent" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/projects/{id}/logs": {
+      "get": {
+        "summary": "Get paginated agent logs for a project",
+        "tags": ["Agent Runner"],
+        "parameters": [
+          { "$ref": "#/components/parameters/ProjectId" },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1, "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 50 } },
+          { "name": "agentType", "in": "query", "schema": { "type": "string", "enum": ["dba","seed","backend","frontend","qa","security","docs","deploy","integration"] } },
+          { "name": "type", "in": "query", "schema": { "type": "string", "enum": ["info","ok","warn","error"] } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated logs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/AgentLog" } },
+                    "meta": { "$ref": "#/components/schemas/PaginationMeta" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "ProjectId": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "format": "uuid" }
+      }
+    },
+    "schemas": {
+      "AgentSummary": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "type": { "type": "string" },
+          "status": { "type": "string" }
+        }
+      },
+      "Agent": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "type": { "type": "string", "enum": ["dba","seed","backend","frontend","qa","security","docs","deploy","integration"] },
+          "status": { "type": "string", "enum": ["idle","queued","working","done","error","paused"] },
+          "progress": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "currentTask": { "type": "string", "nullable": true },
+          "tokensInput": { "type": "integer" },
+          "tokensOutput": { "type": "integer" },
+          "filesCreated": { "type": "integer", "description": "Computed from generated_files count" },
+          "layer": { "type": "number" },
+          "error": { "type": "string", "nullable": true },
+          "startedAt": { "type": "string", "format": "date-time", "nullable": true },
+          "completedAt": { "type": "string", "format": "date-time", "nullable": true }
+        }
+      },
+      "AgentLog": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "agentId": { "type": "string", "format": "uuid" },
+          "agentType": { "type": "string" },
+          "type": { "type": "string", "enum": ["info","ok","warn","error"] },
+          "message": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "PaginationMeta": {
+        "type": "object",
+        "properties": {
+          "total": { "type": "integer" },
+          "page": { "type": "integer" },
+          "limit": { "type": "integer" },
+          "pages": { "type": "integer" }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Bad request (invalid state transition, no spec, etc.)",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": { "type": "string" },
+                "message": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Unauthorized — missing or invalid session cookie",
+        "content": {
+          "application/json": {
+            "schema": { "type": "object", "properties": { "error": { "type": "string" } } }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Forbidden — resource belongs to another user",
+        "content": {
+          "application/json": {
+            "schema": { "type": "object", "properties": { "error": { "type": "string" } } }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Project not found",
+        "content": {
+          "application/json": {
+            "schema": { "type": "object", "properties": { "error": { "type": "string" }, "message": { "type": "string" } } }
+          }
+        }
+      }
+    }
+  },
+  "x-websocket": {
+    "/ws/projects/{id}": {
+      "description": "Real-time agent execution events. Auth via JWT cookie in handshake. Reconnect with ?since=<ISO-timestamp> for replay.",
+      "events": {
+        "agent:status": { "data": { "agentId": "uuid", "agentType": "string", "status": "string", "progress": "number" } },
+        "agent:log": { "data": { "agentId": "uuid", "agentType": "string", "type": "info|ok|warn|error", "message": "string", "timestamp": "ISO8601" } },
+        "file:created": { "data": { "agentId": "uuid", "agentType": "string", "fileName": "string", "filePath": "string", "fileSize": "number" } },
+        "project:progress": { "data": { "progress": "number", "layer": "number", "layerName": "string" } },
+        "project:done": { "data": { "totalFiles": "number", "tokensInput": "number", "tokensOutput": "number", "duration": "number" } },
+        "project:paused": { "data": { "layer": "number", "layerName": "string", "lastFile": "string|null" } },
+        "project:error": { "data": { "agentId": "uuid", "agentType": "string", "error": "string", "retryable": "boolean" } }
+      }
+    }
+  }
+}

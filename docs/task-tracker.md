@@ -13,7 +13,7 @@ Resumen de progreso por módulo. Actualizar al completar cada fase o sprint.
 | 1 | M1 Auth | HU-01→05 | 46 | 46 | 100% | ✅ Complete |
 | 1 | M2 Projects | HU-06→10 | 49 | 49 | 100% | ✅ Complete |
 | 2 | M3 Spec Engine | HU-11→13 | 31 | 31 | 100% | ✅ Complete |
-| 3 | M4 Agent Runner | HU-14→17 | 38 | 0 | 0% | 📋 Spec ready |
+| 3 | M4 Agent Runner | HU-14→17 | 38 | 38 | 100% | ✅ Complete |
 | 4 | M5 Dashboard | HU-18→22 | 22 | 0 | 0% | 📋 Spec ready |
 | 4 | M6 File Manager | HU-23→25 | 22 | 0 | 0% | 📋 Spec ready |
 | 4 | M7 Settings | HU-26→28 | 24 | 0 | 0% | 📋 Spec ready |
@@ -70,12 +70,12 @@ Resumen de progreso por módulo. Actualizar al completar cada fase o sprint.
 
 | Fase | Descripción | Tareas | Completadas | Estado |
 |------|-------------|--------|-------------|--------|
-| Phase 1 | Setup (Schema + Infrastructure) | 9 | 0 | ⬜ |
-| Phase 2 | Agent Framework (Core) | 3 | 0 | ⬜ |
-| Phase 3 | HU-14 Ejecutar Proyecto | 15 | 0 | ⬜ |
-| Phase 4 | HU-15 + HU-16 Pausar y Continuar | 3 | 0 | ⬜ |
-| Phase 5 | HU-17 Reintentar desde Error | 3 | 0 | ⬜ |
-| Phase 6 | Polish & Tests | 5 | 0 | ⬜ |
+| Phase 1 | Setup (Schema + Infrastructure) | 9 | 9 | ✅ |
+| Phase 2 | Agent Framework (Core) | 3 | 3 | ✅ |
+| Phase 3 | HU-14 Ejecutar Proyecto | 15 | 15 | ✅ |
+| Phase 4 | HU-15 + HU-16 Pausar y Continuar | 3 | 3 | ✅ |
+| Phase 5 | HU-17 Reintentar desde Error | 3 | 3 | ✅ |
+| Phase 6 | Polish & Tests | 5 | 5 | ✅ |
 
 ### M5 Dashboard (22 tareas)
 

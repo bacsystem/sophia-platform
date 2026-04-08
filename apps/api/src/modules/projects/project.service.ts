@@ -1,4 +1,5 @@
 import prisma from '../../lib/prisma.js';
+import { enqueueAgentRun } from '../../queue/agent-queue.js';
 import type { CreateProjectInput, UpdateProjectInput, ListProjectsQuery } from './project.schema.js';
 
 /** Maps currentLayer number to a human-readable layer name. */
@@ -178,7 +179,7 @@ export async function deleteProject(userId: string, id: string) {
   if (project.userId !== userId) {
     return { error: 'FORBIDDEN', message: 'No tienes acceso a este proyecto', status: 403 };
   }
-  if (project.status === 'running') {
+  if (['running', 'generating', 'pausing', 'paused'].includes(project.status)) {
     return {
       error: 'CANNOT_DELETE_RUNNING',
       message: 'No se puede eliminar un proyecto en ejecución',
@@ -190,79 +191,68 @@ export async function deleteProject(userId: string, id: string) {
   return { data: { message: 'Proyecto eliminado' } };
 }
 
-/** Transitions project status with validation. */
-async function transitionStatus(
-  userId: string,
-  id: string,
-  fromStatus: string[],
-  toStatus: string,
-  errorCode: string,
-  errorMessage: string,
-) {
-  const project = await prisma.project.findFirst({ where: { id, deletedAt: null } });
-
-  if (!project) {
-    return { error: 'NOT_FOUND', message: 'Proyecto no encontrado', status: 404 };
-  }
-  if (project.userId !== userId) {
-    return { error: 'FORBIDDEN', message: 'No tienes acceso a este proyecto', status: 403 };
-  }
-  if (!fromStatus.includes(project.status)) {
-    return { error: errorCode, message: errorMessage, status: 400 };
-  }
-
-  const updated = await prisma.project.update({
-    where: { id },
-    data: { status: toStatus },
-  });
-
-  return { data: { id: updated.id, status: updated.status } };
-}
-
-/** Stub: changes status to running. M4 will replace with real logic. */
+/** Enqueues the agent pipeline and transitions project to 'generating'. */
 export async function startProject(userId: string, id: string) {
-  return transitionStatus(
-    userId,
-    id,
-    ['idle'],
-    'running',
-    'INVALID_STATE_TRANSITION',
-    "Solo se puede iniciar desde estado 'idle'",
-  );
+  const project = await prisma.project.findFirst({ where: { id, deletedAt: null } });
+  if (!project) return { error: 'NOT_FOUND', message: 'Proyecto no encontrado', status: 404 };
+  if (project.userId !== userId) return { error: 'FORBIDDEN', message: 'No tienes acceso a este proyecto', status: 403 };
+  if (!['idle', 'error'].includes(project.status)) {
+    return { error: 'INVALID_STATE_TRANSITION', message: "Solo se puede iniciar desde estado 'idle' o 'error'", status: 400 };
+  }
+
+  await prisma.project.update({ where: { id }, data: { status: 'generating' } });
+  const jobId = await enqueueAgentRun(id, userId);
+
+  return { data: { id, status: 'generating', jobId } };
 }
 
-/** Stub: changes status to paused. M4 will replace with real logic. */
+/** Sets Redis pause flag so the orchestrator pauses before the next layer. */
 export async function pauseProject(userId: string, id: string) {
-  return transitionStatus(
-    userId,
-    id,
-    ['running'],
-    'paused',
-    'INVALID_STATE_TRANSITION',
-    'Solo se puede pausar un proyecto en ejecución',
-  );
+  const project = await prisma.project.findFirst({ where: { id, deletedAt: null } });
+  if (!project) return { error: 'NOT_FOUND', message: 'Proyecto no encontrado', status: 404 };
+  if (project.userId !== userId) return { error: 'FORBIDDEN', message: 'No tienes acceso a este proyecto', status: 403 };
+  if (project.status !== 'generating') {
+    return { error: 'INVALID_STATE_TRANSITION', message: 'Solo se puede pausar un proyecto en ejecución', status: 400 };
+  }
+
+  const { createClient } = await import('redis');
+  const redis = createClient({ url: process.env.REDIS_URL ?? 'redis://localhost:6379' });
+  await redis.connect();
+  await redis.set(`project:pause:${id}`, '1', { EX: 3600 }); // auto-expire 1h
+  await redis.disconnect();
+
+  return { data: { id, status: 'pausing' } };
 }
 
-/** Stub: changes status back to running from paused. M4 will replace with real logic. */
+/** Clears Redis pause flag so the orchestrator resumes. */
 export async function continueProject(userId: string, id: string) {
-  return transitionStatus(
-    userId,
-    id,
-    ['paused'],
-    'running',
-    'INVALID_STATE_TRANSITION',
-    'Solo se puede continuar un proyecto pausado',
-  );
+  const project = await prisma.project.findFirst({ where: { id, deletedAt: null } });
+  if (!project) return { error: 'NOT_FOUND', message: 'Proyecto no encontrado', status: 404 };
+  if (project.userId !== userId) return { error: 'FORBIDDEN', message: 'No tienes acceso a este proyecto', status: 403 };
+  if (!['paused', 'pausing', 'generating'].includes(project.status)) {
+    return { error: 'INVALID_STATE_TRANSITION', message: 'Solo se puede continuar un proyecto pausado o en proceso de pausar', status: 400 };
+  }
+
+  const { createClient } = await import('redis');
+  const redis = createClient({ url: process.env.REDIS_URL ?? 'redis://localhost:6379' });
+  await redis.connect();
+  await redis.del(`project:pause:${id}`);
+  await redis.disconnect();
+
+  return { data: { id, status: 'generating' } };
 }
 
-/** Stub: retries from error state. M4 will replace with real logic. */
+/** Re-enqueues the pipeline from error state. */
 export async function retryProject(userId: string, id: string) {
-  return transitionStatus(
-    userId,
-    id,
-    ['error'],
-    'running',
-    'INVALID_STATE_TRANSITION',
-    "Solo se puede reintentar desde estado 'error'",
-  );
+  const project = await prisma.project.findFirst({ where: { id, deletedAt: null } });
+  if (!project) return { error: 'NOT_FOUND', message: 'Proyecto no encontrado', status: 404 };
+  if (project.userId !== userId) return { error: 'FORBIDDEN', message: 'No tienes acceso a este proyecto', status: 403 };
+  if (project.status !== 'error') {
+    return { error: 'INVALID_STATE_TRANSITION', message: "Solo se puede reintentar desde estado 'error'", status: 400 };
+  }
+
+  await prisma.project.update({ where: { id }, data: { status: 'generating' } });
+  const jobId = await enqueueAgentRun(id, userId);
+
+  return { data: { id, status: 'generating', jobId } };
 }

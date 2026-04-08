@@ -1,6 +1,23 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { buildApp } from '../../../app.js';
 import type { FastifyInstance } from 'fastify';
+
+// Mock BullMQ and Redis to avoid real connections in integration tests
+vi.mock('../../../queue/agent-queue.js', () => ({
+  enqueueAgentRun: vi.fn().mockResolvedValue('mock-job-id'),
+  agentQueue: { add: vi.fn().mockResolvedValue({ id: 'mock-job-id' }) },
+}));
+
+vi.mock('redis', () => {
+  const client = {
+    connect: vi.fn().mockResolvedValue(undefined),
+    set: vi.fn().mockResolvedValue('OK'),
+    del: vi.fn().mockResolvedValue(1),
+    get: vi.fn().mockResolvedValue(null),
+    disconnect: vi.fn().mockResolvedValue(undefined),
+  };
+  return { createClient: vi.fn(() => client) };
+});
 
 let app: FastifyInstance;
 let accessToken: string;
@@ -155,7 +172,7 @@ describe('Projects API Integration', () => {
 
       expect(res.statusCode).toBe(200);
       const body = JSON.parse(res.body);
-      expect(body.data.status).toBe('running');
+      expect(body.data.status).toBe('generating');
     });
 
     it('should return 400 for invalid transition (running→start)', async () => {
@@ -181,7 +198,7 @@ describe('Projects API Integration', () => {
 
       expect(res.statusCode).toBe(200);
       const body = JSON.parse(res.body);
-      expect(body.data.status).toBe('paused');
+      expect(body.data.status).toBe('pausing');
     });
   });
 
@@ -195,7 +212,7 @@ describe('Projects API Integration', () => {
 
       expect(res.statusCode).toBe(200);
       const body = JSON.parse(res.body);
-      expect(body.data.status).toBe('running');
+      expect(body.data.status).toBe('generating');
     });
   });
 
