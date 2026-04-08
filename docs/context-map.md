@@ -124,17 +124,17 @@ Lee:
   apps/api/src/modules/agents/dba-agent.ts   → ejemplo de implementación
   specs/004-m4-agent-runner/spec.md
 
-NO existe "spec-agent" — los 6 agentes son: dba, backend, frontend, qa, docs, deploy
+NOTA: `skills/spec-agent/` existe pero NO es un agente del pipeline — es el agente de generación de specs de M3 (usa system.md + spec.md + data-model.md + api-design.md). Los 9 agentes del pipeline son: dba, seed, backend, frontend, qa, security, docs, deploy, integration
 ```
 
 ## Deploy / Docker
 
 ```
 Lee:
-  deployment/Dockerfile.api
-  deployment/Dockerfile.worker
-  docker-compose.yml
-  .env.example
+  deployment/docker/Dockerfile.api
+  deployment/docker/Dockerfile.worker  ← pendiente de crear
+  docker-compose.yml                   ← pendiente de crear
+  .env.example                         ← pendiente de crear
 
 NO leas: código de la aplicación
 ```

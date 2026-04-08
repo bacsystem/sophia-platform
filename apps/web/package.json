@@ -12,6 +12,7 @@
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
     "@sophia/shared": "workspace:*",
+    "@uiw/react-md-editor": "^4.1.0",
     "lucide-react": "^0.400.0",
     "next": "^15.2.0",
     "react": "^19.0.0",

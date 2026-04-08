@@ -47,10 +47,10 @@ Motor de generación de specs usando IA. Convierte la descripción en lenguaje n
 - [ ] El usuario ve el progreso en tiempo real (SSE streaming por documento)
 - [ ] Si la descripción del proyecto es menor de 20 chars → error 422
 - [ ] Timeout de 90 segundos por documento — si se excede, guarda lo parcial y reporta error
-- [ ] Si Claude falla → retry automático hasta 3 veces, luego error al usuario
+- [ ] Si Claude falla → retry automático hasta 3 veces, luego error al usuario (ver C3 para detalle por tipo de error Anthropic)
 - [ ] El output de cada documento se valida contra un schema de secciones obligatorias
 - [ ] El spec se guarda en `project_specs` con version incremental
-- [ ] Rate limit: 10 generaciones por proyecto por hora, 50 por usuario por día
+- [ ] Rate limit aplicado (ver NFRs Específicos de M3)
 
 **Flujo de generación:**
 
@@ -206,6 +206,8 @@ data: {"type":"error","file":"data-model.md","message":"Timeout después de 90s"
       "dataModel": "# Data Model\n\n...",
       "apiDesign": "# API Design\n\n..."
     },
+    "source": "generated",
+    "valid": true,
     "createdAt": "2026-04-07T12:00:00Z"
   }
 }
@@ -373,6 +375,33 @@ skills/
 | created_at  | timestamptz  | No       | now()             | —                          |
 
 > **Nota**: Tabla de solo lectura en MVP. Se pobla con seed de Prisma. No hay `user_id` ni CRUD de usuario.
+
+---
+
+## Clarificaciones (speckit.clarify)
+
+Las siguientes decisiones fueron tomadas durante la fase de clarificación:
+
+### C1 — Generación parcial (fallo en un documento)
+
+**Pregunta**: Si `spec.md` se genera OK pero `data-model.md` falla tras 3 retries, ¿qué hacer?
+
+**Decisión**: **Guardar parcial con `valid: false`**. Se guarda lo que se generó correctamente, la versión se marca con `valid = false` en la tabla `project_specs`, y el usuario puede reintentar la generación completa. En el frontend se muestra un badge "Generación incompleta" y el botón "Regenerar" permanece activo.
+
+### C2 — Navegación durante streaming SSE
+
+**Pregunta**: Si el usuario navega fuera de la página mientras se transmite la generación por SSE, ¿qué hacer?
+
+**Decisión**: **Continuar en background**. El job de generación sigue ejecutándose en el backend independientemente de la conexión SSE. Cuando el usuario vuelve a la página del proyecto, se consulta el estado actual del job/spec y se muestra el resultado si ya terminó, o se reconecta al stream si aún está en progreso.
+
+### C3 — API key de Anthropic inválida o cuota agotada
+
+**Pregunta**: Si la API key de Anthropic es inválida o se recibe 429 (cuota agotada), ¿qué hacer?
+
+**Decisión**: **Reintentos con backoff + error descriptivo**. Se aplican hasta 3 reintentos con backoff exponencial (1s, 2s, 4s). Si persisten los errores:
+- **401/403 (key inválida)**: Error inmediato sin reintentos → `ANTHROPIC_AUTH_ERROR` con mensaje "La API key de Anthropic no es válida. Verifique la configuración."
+- **429 (rate limit)**: Reintentos con backoff. Si falla tras 3 intentos → `ANTHROPIC_RATE_LIMIT` con mensaje "Servicio temporalmente no disponible. Intente en unos minutos."
+- **500+ (error servidor)**: Reintentos con backoff. Si falla → `ANTHROPIC_SERVICE_ERROR` con mensaje "Error del servicio de IA. Intente nuevamente."
 
 ---
 

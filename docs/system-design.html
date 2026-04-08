@@ -969,8 +969,21 @@ body>*{position:relative;z-index:1}
       <div class="erd-field"><span class="fname ffk">project_id</span><span class="ftype">uuid FK</span></div>
       <div class="erd-field"><span class="fname">version</span><span class="ftype">integer</span></div>
       <div class="erd-field"><span class="fname">content</span><span class="ftype">jsonb</span></div>
+      <div class="erd-field"><span class="fname">source</span><span class="ftype">varchar(20) ai|manual</span></div>
+      <div class="erd-field"><span class="fname">valid</span><span class="ftype">boolean</span></div>
       <div class="erd-field"><span class="fname">created_at</span><span class="ftype">timestamptz</span></div>
       <div class="erd-field"><span class="fname" style="color:var(--muted)">UQ: (project_id, version)</span><span class="ftype"></span></div>
+    </div>
+
+    <div class="erd-table">
+      <div class="erd-header" style="color:#a78bfa">templates <span>M3</span></div>
+      <div class="erd-field"><span class="fname fpk">id</span><span class="ftype">uuid PK</span></div>
+      <div class="erd-field"><span class="fname">name</span><span class="ftype">varchar(100) UQ</span></div>
+      <div class="erd-field"><span class="fname">description</span><span class="ftype">text</span></div>
+      <div class="erd-field"><span class="fname">stack</span><span class="ftype">varchar(50)</span></div>
+      <div class="erd-field"><span class="fname">icon</span><span class="ftype">varchar(50)</span></div>
+      <div class="erd-field"><span class="fname">config</span><span class="ftype">jsonb</span></div>
+      <div class="erd-field"><span class="fname">created_at</span><span class="ftype">timestamptz</span></div>
     </div>
 
     <div class="erd-table">

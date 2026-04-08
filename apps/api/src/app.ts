@@ -4,6 +4,8 @@ import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import { authRoutes } from './modules/auth/auth.routes.js';
 import { projectRoutes } from './modules/projects/project.routes.js';
+import { templateRoutes } from './modules/templates/template.routes.js';
+import { specRoutes } from './modules/spec/spec.routes.js';
 import { initDummyHash } from './lib/hash.js';
 
 export async function buildApp() {
@@ -45,6 +47,8 @@ export async function buildApp() {
   // Routes
   await app.register(authRoutes, { prefix: '/api/auth' });
   await app.register(projectRoutes, { prefix: '/api' });
+  await app.register(templateRoutes, { prefix: '/api' });
+  await app.register(specRoutes, { prefix: '/api' });
 
   // Health check
   app.get('/health', async () => ({ status: 'ok' }));

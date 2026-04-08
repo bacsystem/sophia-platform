@@ -85,6 +85,8 @@ model ProjectSpec {
   projectId String   @map("project_id")
   version   Int
   content   Json
+  source    String   @default("generated") @db.VarChar(20)
+  valid     Boolean  @default(true)
   createdAt DateTime @default(now()) @map("created_at")
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -92,4 +94,17 @@ model ProjectSpec {
   @@unique([projectId, version], name: "uq_project_specs_version")
   @@index([projectId], name: "idx_project_specs_project_id")
   @@map("project_specs")
+}
+
+model Template {
+  id          String   @id @default(uuid())
+  name        String   @db.VarChar(255)
+  description String
+  icon        String   @db.VarChar(50)
+  stack       String   @db.VarChar(50)
+  tags        String[]
+  defaults    Json
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("templates")
 }
