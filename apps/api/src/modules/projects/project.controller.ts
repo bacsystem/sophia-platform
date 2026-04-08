@@ -25,7 +25,8 @@ export async function createProjectHandler(
   if (!parsed.success) {
     reply.status(422).send({
       error: 'VALIDATION_ERROR',
-      errors: parsed.error.errors.map((e) => ({ path: e.path.map(String), message: e.message })),
+      message: 'Request validation failed',
+      errors: parsed.error.errors,
     });
     return;
   }
@@ -43,7 +44,8 @@ export async function listProjectsHandler(
   if (!parsed.success) {
     reply.status(422).send({
       error: 'VALIDATION_ERROR',
-      errors: parsed.error.errors.map((e) => ({ path: e.path.map(String), message: e.message })),
+      message: 'Request validation failed',
+      errors: parsed.error.errors,
     });
     return;
   }
@@ -74,7 +76,8 @@ export async function updateProjectHandler(
   if (!parsed.success) {
     reply.status(422).send({
       error: 'VALIDATION_ERROR',
-      errors: parsed.error.errors.map((e) => ({ path: e.path.map(String), message: e.message })),
+      message: 'Request validation failed',
+      errors: parsed.error.errors,
     });
     return;
   }
@@ -157,7 +160,7 @@ export async function downloadProjectHandler(
   _request: FastifyRequest,
   reply: FastifyReply,
 ): Promise<void> {
-  reply.status(501).send({
+  reply.status(500).send({
     error: 'NOT_IMPLEMENTED',
     message: 'Descarga de archivos implementada en M6',
   });

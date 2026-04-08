@@ -43,7 +43,7 @@ running → error   (automático via agente)
 
 **Razón:** Dataset pequeño (< 100 proyectos por usuario). Full-text search es over-engineering para MVP.
 
-**Trade-off:** Performance < 100ms garantizada a escala de usuario individual.
+**Trade-off:** Performance ≤ 300ms p95 a escala de usuario individual.
 
 ### 4. Soft Delete
 

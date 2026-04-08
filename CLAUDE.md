@@ -47,7 +47,7 @@ sophia-platform/
 | Sprint | Módulo | HUs | Estado |
 |--------|--------|-----|--------|
 | 1 | M1 Auth | HU-01→05 | ✅ v1.3 completado |
-| 1 | M2 Projects | HU-06→10 | 📋 Spec ready |
+| 1 | M2 Projects | HU-06→10 | ✅ v0.2.0 completado |
 | 2 | M3 Spec Engine | HU-11→13 | 📋 Spec ready |
 | 3 | M4 Agent Runner | HU-14→17 | 📋 Spec ready |
 | 4 | M5 Dashboard, M6 File Manager, M7 Settings | HU-18→28 | 📋 Spec ready |

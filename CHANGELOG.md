@@ -63,3 +63,12 @@ Versionado semántico a nivel de proyecto: `MAJOR.MINOR.PATCH`.
 - 7 specs (M1-M7, 28 HUs) con constitución v1.0.0
 - CLAUDE.md con convenciones, patrones y reglas de arquitectura
 - 9 agent skills (DBA → Integration)
+
+### Changed
+- N/A
+
+### Fixed
+- N/A
+
+### Removed
+- N/A

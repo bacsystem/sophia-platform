@@ -17,7 +17,7 @@ CRUD completo de proyectos con máquina de estados (idle→running→paused→do
 **Project Type**: web-service + web-app (monorepo Turborepo)
 **Performance Goals**: ≤ 300ms p95 listado con hasta 100 proyectos del usuario
 **Constraints**: Cookies httpOnly auth, Prisma directo, 9 agentes en pipeline, pnpm exclusivo
-**Scale/Scope**: MVP — 5 HUs, 10 endpoints, 2 tablas, 3 páginas frontend
+**Scale/Scope**: MVP — 5 HUs, 10 endpoints, 2 tablas, 4 páginas frontend
 
 ## Constitution Check
 

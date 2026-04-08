@@ -95,7 +95,7 @@ model ProjectSpec {
 
 ## Relaciones
 
-```
+```text
 users (M1)
   └──< projects (M2)
          └──< project_specs (M2)

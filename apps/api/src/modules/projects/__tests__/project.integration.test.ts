@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { buildApp } from '../../../app.js';
 import type { FastifyInstance } from 'fastify';
 
@@ -41,6 +41,10 @@ beforeAll(async () => {
   const loginCookies = loginRes.cookies as { name: string; value: string }[];
   const tokenCookie = loginCookies.find((c) => c.name === 'access_token');
   accessToken = tokenCookie?.value ?? '';
+});
+
+afterAll(async () => {
+  if (app) await app.close();
 });
 
 describe('Projects API Integration', () => {
