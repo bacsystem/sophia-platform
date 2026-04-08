@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 
 const registerFormSchema = z
   .object({
@@ -28,6 +29,8 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 export function RegisterForm() {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const {
     register,
@@ -65,85 +68,104 @@ export function RegisterForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {serverError && (
-        <div className="rounded-md bg-red-50 p-4 text-sm text-red-700">
-          {serverError}
+        <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-4">
+          <p className="text-sm text-red-400">{serverError}</p>
         </div>
       )}
 
-      <div className="space-y-4">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-            Nombre completo
-          </label>
-          <input
-            id="name"
-            type="text"
-            autoComplete="name"
-            {...register('name')}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-          />
-          {errors.name && (
-            <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
-          )}
-        </div>
+      <div>
+        <label htmlFor="name" className="label-premium block mb-1.5">
+          Nombre completo
+        </label>
+        <input
+          id="name"
+          type="text"
+          autoComplete="name"
+          placeholder="Tu nombre"
+          {...register('name')}
+          className="glass-input w-full rounded-xl px-4 py-3 text-sm"
+        />
+        {errors.name && <p className="error-text">{errors.name.message}</p>}
+      </div>
 
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            autoComplete="email"
-            {...register('email')}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-          />
-          {errors.email && (
-            <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-          )}
-        </div>
+      <div>
+        <label htmlFor="email" className="label-premium block mb-1.5">
+          Email
+        </label>
+        <input
+          id="email"
+          type="email"
+          autoComplete="email"
+          placeholder="tu@email.com"
+          {...register('email')}
+          className="glass-input w-full rounded-xl px-4 py-3 text-sm"
+        />
+        {errors.email && <p className="error-text">{errors.email.message}</p>}
+      </div>
 
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-            Contraseña
-          </label>
+      <div>
+        <label htmlFor="password" className="label-premium block mb-1.5">
+          Contraseña
+        </label>
+        <div className="relative">
           <input
             id="password"
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             autoComplete="new-password"
+            placeholder="Mínimo 8 caracteres"
             {...register('password')}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="glass-input w-full rounded-xl px-4 py-3 pr-11 text-sm"
           />
-          {errors.password && (
-            <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
-          )}
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
+          >
+            {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+          </button>
         </div>
+        {errors.password && <p className="error-text">{errors.password.message}</p>}
+      </div>
 
-        <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-            Confirmar contraseña
-          </label>
+      <div>
+        <label htmlFor="confirmPassword" className="label-premium block mb-1.5">
+          Confirmar contraseña
+        </label>
+        <div className="relative">
           <input
             id="confirmPassword"
-            type="password"
+            type={showConfirm ? 'text' : 'password'}
             autoComplete="new-password"
+            placeholder="Repite tu contraseña"
             {...register('confirmPassword')}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="glass-input w-full rounded-xl px-4 py-3 pr-11 text-sm"
           />
-          {errors.confirmPassword && (
-            <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
-          )}
+          <button
+            type="button"
+            onClick={() => setShowConfirm((v) => !v)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
+          >
+            {showConfirm ? <EyeOff size={17} /> : <Eye size={17} />}
+          </button>
         </div>
+        {errors.confirmPassword && <p className="error-text">{errors.confirmPassword.message}</p>}
       </div>
 
       <button
         type="submit"
         disabled={isSubmitting}
-        className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50"
+        className="btn-primary w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white mt-2"
       >
-        {isSubmitting ? 'Registrando...' : 'Crear cuenta'}
+        {isSubmitting ? (
+          <>
+            <Loader2 size={16} className="animate-spin" />
+            Creando cuenta...
+          </>
+        ) : (
+          'Crear cuenta gratis'
+        )}
       </button>
     </form>
   );

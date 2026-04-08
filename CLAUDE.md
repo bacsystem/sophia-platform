@@ -44,12 +44,21 @@ sophia-platform/
 
 ### Modules (28 HUs total)
 
-| Sprint | Módulo | HUs |
-|--------|--------|-----|
-| 1 | M1 Auth, M2 Projects | HU-01→10 |
-| 2 | M3 Spec Engine | HU-11→13 |
-| 3 | M4 Agent Runner | HU-14→17 |
-| 4 | M5 Dashboard, M6 File Manager, M7 Settings | HU-18→28 |
+| Sprint | Módulo | HUs | Estado |
+|--------|--------|-----|--------|
+| 1 | M1 Auth | HU-01→05 | ✅ v1.3 completado |
+| 1 | M2 Projects | HU-06→10 | 📋 Spec ready |
+| 2 | M3 Spec Engine | HU-11→13 | 📋 Spec ready |
+| 3 | M4 Agent Runner | HU-14→17 | 📋 Spec ready |
+| 4 | M5 Dashboard, M6 File Manager, M7 Settings | HU-18→28 | 📋 Spec ready |
+
+### Sprint Status (actualización al iniciar sesión)
+
+| Módulo | Branch | Tareas | Versión | Último commit |
+|--------|--------|--------|---------|---------------|
+| M1 Auth | `001-m1-auth` | 46/46 | v1.3 | feat(M1): implement M1-Auth complete + UI premium |
+| M2 Projects | — | 0/35 | v1.0 | pendiente |
+| M3–M7 | — | 0/131 | — | pendiente |
 
 ### Key Commands
 
@@ -295,3 +304,28 @@ Reglas:
 2. Actualizar `docs/task-tracker.md` con el nuevo conteo
 3. Si hubo cambios en spec/plan, incrementar versión y agregar entrada en `CHANGELOG.md`
 4. Si se agregaron dependencias cross-module, actualizar `docs/context-map.md`
+
+### Release por Módulo
+
+Al completar **todas** las tareas de un módulo (100% ✅):
+
+```bash
+# 1. Commit de cierre del módulo
+git add -A
+git commit -m "release(MX): vX.Y — <nombre módulo> complete"
+
+# 2. Tag semántico
+git tag -a mX-<nombre>-vX.Y -m "MX <Nombre> vX.Y — <descripción breve>"
+
+# 3. Push (cuando haya remote configurado)
+git push origin <branch> --tags
+```
+
+**Convención de tags:**
+- Formato: `m<N>-<nombre-kebab>-v<MAJOR>.<MINOR>`
+- Ejemplo: `m1-auth-v1.3`, `m2-projects-v1.0`
+- El tag apunta al commit de release, no al merge
+
+**Versión del módulo:**
+- `MINOR` sube con cada iteración completa (implementación, tests, build ✅)
+- `MAJOR` sube solo si hay rediseño de spec (breaking change en HUs o modelo de datos)

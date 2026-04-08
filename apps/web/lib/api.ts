@@ -46,8 +46,8 @@ export async function api<T = unknown>(
       res = await fetch(url, opts);
     } else {
       // Redirect to login
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login';
+      if (globalThis.window !== undefined) {
+        globalThis.window.location.href = '/login';
       }
       throw new Error('Session expired');
     }
@@ -56,7 +56,10 @@ export async function api<T = unknown>(
   const body = await res.json();
 
   if (!res.ok) {
-    throw { ...body, status: res.status };
+    const err = new Error((body.message as string | undefined) ?? 'Request failed') as Error & { status: number; error?: string };
+    err.status = res.status;
+    if (body.error) err.error = body.error as string;
+    throw err;
   }
 
   return { data: body.data as T, status: res.status };
