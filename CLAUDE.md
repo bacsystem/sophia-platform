@@ -58,7 +58,8 @@ sophia-platform/
 |--------|--------|--------|---------|---------------|
 | M1 Auth | `001-m1-auth` | 46/46 | v0.1.0 | fix(coderabbit): resolve PR review findings |
 | M2 Projects | `002-m2-projects` | 49/49 | v0.2.0 | feat(M2): implement projects module — all 49 tasks complete |
-| M3–M7 | — | 0/131 | — | pendiente |
+| M3 Spec Engine | `003-m3-spec-engine` | 33/33 | v0.3.0 | feat(M3): implement spec engine — all 33 tasks complete |
+| M4–M7 | — | 0/106 | — | pendiente |
 
 ### Key Commands
 
@@ -166,12 +167,19 @@ specs/<módulo>/
 ### Module Execution Order
 
 Dentro de cada módulo, el orden de implementación es:
+0. **Pre-implementación automática** (ver regla abajo)
 1. Schema Prisma (tablas nuevas)
 2. Backend: routes → controller → service → schema → **lint** → **build** (`tsc --noEmit`)
 3. Frontend: pages → components → hooks → stores → **lint** → **build** (`next build`)
 4. Tests (unit + integration)
 5. **Validación de rutas** (ver regla abajo)
 6. Documentación
+
+> **Pre-implementación obligatoria**: al iniciar cualquier módulo, feature, o fix que tenga artefactos speckit (`spec.md`, `plan.md`, `tasks.md`):
+> 1. Ejecutar `/speckit.clarify` — responder **todas** las preguntas automáticamente eligiendo la opción recomendada (marcada como `recommended`) sin preguntar al usuario
+> 2. Ejecutar `/speckit.analyze` — análisis de consistencia cross-artefacto
+> 3. **Remediar todos los findings** automáticamente (editar `spec.md`, `tasks.md`, `plan.md` según corresponda) — no preguntar al usuario, aplicar todas las correcciones
+> 4. Solo entonces proceder con la implementación
 
 > **Lint obligatorio**: ejecutar `pnpm --filter @sophia/web lint` y `pnpm --filter @sophia/api lint` después de cada cambio en `apps/web/` o `apps/api/` respectivamente.
 > **Build obligatorio**: ejecutar `pnpm --filter @sophia/api build` y `pnpm --filter @sophia/web build` para verificar que compila sin errores antes de commit.

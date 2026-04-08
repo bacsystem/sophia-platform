@@ -51,12 +51,22 @@ const MODEL_OPTIONS: { value: ProjectModel; label: string; description: string }
   { value: 'claude-haiku-4-5', label: 'Claude Haiku 4.5', description: 'Más rápido · Proyectos simples' },
 ];
 
+/** Values pre-filled from a template selection */
+export interface TemplateFormValues {
+  name: string;
+  description: string;
+  stack: string;
+  model: string;
+  agents: string[];
+}
+
 interface ProjectFormProps {
   project?: Project;
+  templateValues?: Partial<TemplateFormValues>;
 }
 
 /** @description Controlled form for creating or editing a Sophia project */
-export function ProjectForm({ project }: ProjectFormProps) {
+export function ProjectForm({ project, templateValues }: ProjectFormProps) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -79,11 +89,11 @@ export function ProjectForm({ project }: ProjectFormProps) {
           agents: project.config.agents as AgentName[],
         }
       : {
-          name: '',
-          description: '',
-          stack: 'node-nextjs',
-          model: 'claude-sonnet-4-6',
-          agents: REQUIRED_AGENTS,
+          name: templateValues?.name ?? '',
+          description: templateValues?.description ?? '',
+          stack: (templateValues?.stack as ProjectStack) ?? 'node-nextjs',
+          model: (templateValues?.model as ProjectModel) ?? 'claude-sonnet-4-6',
+          agents: (templateValues?.agents as AgentName[]) ?? REQUIRED_AGENTS,
         },
   });
 

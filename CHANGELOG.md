@@ -6,6 +6,42 @@ Versionado semántico a nivel de proyecto: `MAJOR.MINOR.PATCH`.
 
 ---
 
+## [v0.3.0] — 2026-04-09 ✅ M3 Spec Engine
+
+### Added
+- M3 Spec Engine (HU-11→13): generación IA de specs técnicas con streaming SSE
+- Backend: `spec.validator.ts` — validador de secciones requeridas por tipo de documento
+- Backend: `spec.stream.ts` — utilidades SSE (initSseStream, sendSseEvent, endSseStream)
+- Backend: `spec.service.ts` — generación secuencial con 3 llamadas Claude, reintentos (C1/C3), versionamiento
+- Backend: `spec.controller.ts` + `spec.routes.ts` — 6 rutas (POST generate, GET stream, GET spec, GET versions, GET :version, PUT spec)
+- Backend: `template.service.ts` + `template.controller.ts` + `template.routes.ts` — GET /api/templates
+- Prisma: modelo `Template` + campos `source`/`valid` en `ProjectSpec`
+- Migration: 20260409_m3_spec_engine
+- Skills: `skills/spec-agent/` — 4 archivos de prompt (system.md, spec.md, data-model.md, api-design.md)
+- Frontend: `TemplateGallery` — galería de 5 templates predefinidos con íconos Lucide
+- Frontend: `NewProjectSection` — wrapper que conecta TemplateGallery con ProjectForm (key remounting)
+- Frontend: `useSpecStream` — SSE hook con reconexión (C2 — buffered event replay)
+- Frontend: `SpecStream` — indicadores de progreso en tiempo real por archivo
+- Frontend: `SpecViewer` — viewer markdown 3 sub-tabs (spec.md/data-model.md/api-design.md), badge incompletitud (C1)
+- Frontend: `SpecEditor` — editor @uiw/react-md-editor con dynamic SSR-safe import
+- Frontend: `SpecVersionSelector` — dropdown de versiones con indicador de validez
+- Frontend: `ProjectSpecViewer` — reemplazado placeholder M2 con orquestador completo (generate/stream/view/edit/version)
+- Tests: `spec.validator.test.ts` (12 tests), `spec.service.test.ts` (20 tests), `template.service.test.ts` (4 tests)
+- CLAUDE.md: regla de pre-implementación (Step 0) — `/speckit.clarify` + `/speckit.analyze` automático
+
+### Changed
+- `apps/web/components/projects/project-form.tsx`: exporta `TemplateFormValues`, acepta prop `templateValues`
+- `apps/web/app/(dashboard)/projects/new/page.tsx`: usa `NewProjectSection` en lugar de `ProjectForm` directo
+- `apps/api/src/app.ts`: registra `templateRoutes` y `specRoutes`
+
+### Fixed
+- N/A
+
+### Removed
+- N/A
+
+---
+
 ## [v0.2.0] — 2026-04-09 ✅ M2 Projects
 
 ### Added
