@@ -19,7 +19,7 @@
 - [ ] T002 Ensure PostgreSQL and Redis are running locally, then run Prisma migration: `pnpm db:migrate` to create auth tables
 - [ ] T003 [P] Create JWT utility (`sign`, `verify`, `decode`) in `apps/api/src/lib/jwt.ts`
 - [ ] T004 [P] Create bcrypt utility (`hash`, `compare`, cost 12) in `apps/api/src/lib/hash.ts`
-- [ ] T005 [P] Create Redis client + rate limiting helpers in `apps/api/src/lib/redis.ts`
+- [ ] T005 [P] Create Redis client + rate limiting helpers in `apps/api/src/lib/redis.ts` — fail-open design: if Redis is unavailable, allow requests through (log warning, don't block auth)
 - [ ] T006 Create auth middleware (extract + validate access_token cookie) in `apps/api/src/modules/auth/auth.middleware.ts`
 - [ ] T042 Configure @fastify/helmet on Fastify instance with CSP, HSTS, X-Frame-Options in `apps/api/src/app.ts`
 - [ ] T043 Configure CORS on Fastify instance (`origin: [FRONTEND_URL]`, `credentials: true`) in `apps/api/src/app.ts`
@@ -65,7 +65,7 @@
 
 **Goal**: Sesiones se mantienen activas automáticamente con rotación de tokens
 
-- [ ] T019 Create `refresh()` in `apps/api/src/modules/auth/auth.service.ts` — validate refresh cookie, rotate tokens, invalidate old
+- [ ] T019 Create `refresh()` in `apps/api/src/modules/auth/auth.service.ts` — validate refresh cookie, rotate tokens, invalidate old. Concurrent refresh strategy: first-wins (second request with already-revoked token returns 401)
 - [ ] T020 Create refresh handler in `apps/api/src/modules/auth/auth.controller.ts`
 - [ ] T021 Add POST /api/auth/refresh route in `apps/api/src/modules/auth/auth.routes.ts`
 - [ ] T022 Create API client with automatic refresh interceptor in `apps/web/lib/api.ts`
@@ -98,8 +98,8 @@
 - [ ] T030 Add POST /api/auth/forgot-password and POST /api/auth/reset-password routes in `apps/api/src/modules/auth/auth.routes.ts`
 - [ ] T031 [P] Create forgot-password page at `apps/web/app/(auth)/forgot-password/page.tsx`
 - [ ] T032 [P] Create ForgotPasswordForm in `apps/web/components/auth/forgot-password-form.tsx`
-- [ ] T033 [P] Create reset-password page at `apps/web/app/(auth)/reset-password/page.tsx`
-- [ ] T034 [P] Create ResetPasswordForm in `apps/web/components/auth/reset-password-form.tsx`
+- [ ] T033 [P] Create reset-password page at `apps/web/app/(auth)/reset-password/page.tsx` — read token from URL query param, show error state if token is missing/invalid/expired
+- [ ] T034 [P] Create ResetPasswordForm in `apps/web/components/auth/reset-password-form.tsx` — handle 3 states: form (valid token), success, error (invalid/expired token with link back to forgot-password)
 
 **Checkpoint**: Full password recovery flow (forgot + reset) functional
 

@@ -60,10 +60,13 @@ apps/api/
 │   │   ├── auth.service.ts
 │   │   ├── auth.schema.ts
 │   │   └── auth.middleware.ts
-│   └── lib/
-│       ├── jwt.ts
-│       ├── hash.ts
-│       └── redis.ts
+│   ├── lib/
+│   │   ├── jwt.ts
+│   │   ├── hash.ts
+│   │   ├── redis.ts
+│   │   └── __tests__/       # Unit tests para jwt.ts, hash.ts
+│   └── modules/auth/
+│       └── __tests__/       # Unit, integration, perf tests
 └── prisma/
     └── schema.prisma        # users, refresh_tokens, password_reset_tokens
 
@@ -77,11 +80,16 @@ apps/web/
 │   ├── login-form.tsx
 │   ├── register-form.tsx
 │   ├── forgot-password-form.tsx
-│   └── reset-password-form.tsx
+│   ├── reset-password-form.tsx
+│   └── logout-button.tsx
 ├── lib/
 │   ├── api.ts               # Cliente HTTP con interceptor refresh
 │   └── auth.ts              # Helpers: getSession, isAuthenticated
 └── middleware.ts             # Protección de rutas (JWT cookie validation)
+
+packages/shared/
+└── types/
+    └── auth.ts              # Tipos compartidos: User, AuthResponse, AuthError
 ```
 
 **Structure Decision**: Monorepo Turborepo con `apps/api/` (Fastify) y `apps/web/` (Next.js). Módulo auth en `src/modules/auth/` siguiendo patrón backend estricto (Principio V).
