@@ -5,6 +5,31 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
+## [M2-Projects v1.0.0] — 2026-04-09 ✅ RELEASE
+
+### Added
+- Backend: project.schema.ts — Zod schemas (CreateProjectSchema con dual-refine para agentes requeridos/válidos, UpdateProjectSchema, ListProjectsQuerySchema)
+- Backend: project.service.ts — CRUD + transiciones de estado (createProject, listProjects, getProject, updateProject, deleteProject, startProject, pauseProject, continueProject, retryProject)
+- Backend: project.controller.ts — 10 handlers HTTP thin (delegan a service)
+- Backend: project.routes.ts — 10 rutas Fastify autenticadas con JWT cookie
+- Backend: project.service.test.ts — 15+ tests unitarios con Vitest + vi.mock Prisma
+- Backend: project.integration.test.ts — tests de integración completos con buildApp() + app.inject()
+- Frontend: (dashboard)/layout.tsx — nav wrapper con Sophia brand + link Projects
+- Frontend: (dashboard)/projects/page.tsx — página lista con ProjectGrid (server component)
+- Frontend: (dashboard)/projects/new/page.tsx — página creación con ProjectForm
+- Frontend: (dashboard)/projects/[id]/page.tsx — página detalle con fetch + notFound()
+- Frontend: (dashboard)/projects/[id]/edit/page.tsx — página edición (solo proyectos idle)
+- Frontend: components/projects/ — ProjectForm, StackSelector, AgentSelector, ProjectCard, ProjectGrid, ProjectEmptyState, ProjectDetail, ProjectHeader, ProjectActions, ProjectTabs, ProjectSpecViewer, DeleteProjectDialog, date-utils
+- Frontend: hooks/use-projects.ts — HTTP client hook (8 operaciones con credentials: include)
+- Shared: packages/shared/src/types/projects.ts — tipos M2 (AgentName, Project, ProjectSpec, CreateProjectInput, etc.)
+- Prisma: modelo Project + ProjectSpec con índices compuestos
+- Migration: 20260408153434_m2_projects
+
+### Fixed
+- .gitignore: `projects/` → `/projects/` para evitar ignorar código fuente en apps/*/src/modules/projects/ y components/projects/
+
+---
+
 ## [M1-Auth v1.3.1] — 2026-04-08
 
 ### Fixed

@@ -57,7 +57,7 @@ sophia-platform/
 | Módulo | Branch | Tareas | Versión | Último commit |
 |--------|--------|--------|---------|---------------|
 | M1 Auth | `001-m1-auth` | 46/46 | v1.3.1 | fix(coderabbit): resolve PR review findings |
-| M2 Projects | `002-m2-projects` | 0/49 | v1.0.0 | 🚧 En desarrollo |
+| M2 Projects | `002-m2-projects` | 49/49 | v1.0.0 | feat(M2): implement projects module — all 49 tasks complete |
 | M3–M7 | — | 0/131 | — | pendiente |
 
 ### Key Commands
