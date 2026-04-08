@@ -128,6 +128,8 @@ export function ResetPasswordForm({ searchParams }: ResetPasswordFormProps) {
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}
+            aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+            aria-pressed={showPassword}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
           >
             {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
@@ -152,6 +154,8 @@ export function ResetPasswordForm({ searchParams }: ResetPasswordFormProps) {
           <button
             type="button"
             onClick={() => setShowConfirm((v) => !v)}
+            aria-label={showConfirm ? 'Ocultar confirmación de contraseña' : 'Mostrar confirmación de contraseña'}
+            aria-pressed={showConfirm}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
           >
             {showConfirm ? <EyeOff size={17} /> : <Eye size={17} />}

@@ -5,7 +5,22 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
 ---
 
-## [M1-Auth v1.3] — 2026-04-08 ✅ RELEASE
+## [M1-Auth v1.3.1] — 2026-04-08
+
+### Fixed
+- spec.md: versión `1.3` → `1.3.0` (MAJOR.MINOR.PATCH — CodeRabbit finding #1)
+- CHANGELOG.md: sección `### Removed` añadida a entrada v1.3 (CodeRabbit finding #2)
+- login-form.tsx: `aria-label` + `aria-pressed` en botón toggle contraseña (CodeRabbit finding #5)
+- register-form.tsx: `aria-label` + `aria-pressed` en ambos toggles contraseña (CodeRabbit finding #4)
+- reset-password-form.tsx: `aria-label` + `aria-pressed` en ambos toggles contraseña (CodeRabbit finding #3)
+
+### Added
+- CLAUDE.md: sección "Release por Módulo" con convención de tags y versionamiento MAJOR.MINOR.PATCH
+- CLAUDE.md: sección "CodeRabbit Review Protocol" con checklist obligatorio (Docstring Coverage ≥ 80%, a11y, SemVer)
+
+---
+
+## [M1-Auth v1.3.0] — 2026-04-08 ✅ RELEASE
 
 ### Added
 - UI/UX premium completa: dark glassmorphism, gradientes violet/indigo, animaciones slide-up/fade-in
@@ -31,6 +46,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 - tsconfig web: `@/*` alias `./src/*` → `./` (no existe directorio src/)
 - postcss/tailwind configs: renombrados a `.cjs` (conflicto ESM/CJS)
 - Código duplicado eliminado en register-form, forgot-password-form, reset-password-form
+- Aria-labels en botones de visibilidad de contraseña (login, register, reset-password)
+
+### Removed
+- Ninguno
 
 ---
 

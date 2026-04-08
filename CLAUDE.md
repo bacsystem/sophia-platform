@@ -327,5 +327,28 @@ git push origin <branch> --tags
 - El tag apunta al commit de release, no al merge
 
 **Versión del módulo:**
+- Formato: `MAJOR.MINOR.PATCH` (Semantic Versioning completo)
+- `PATCH` sube con fixes post-release (bugs, a11y, docs, CodeRabbit findings)
 - `MINOR` sube con cada iteración completa (implementación, tests, build ✅)
 - `MAJOR` sube solo si hay rediseño de spec (breaking change en HUs o modelo de datos)
+
+### CodeRabbit Review Protocol
+
+Cada PR pasa por revisión automática de CodeRabbit. Al recibir findings:
+
+1. **Verificar** cada finding contra el código actual antes de aplicar el fix
+2. **Prioridad:** Critical > Major > Minor > Warning
+3. **Aplicar** solo los fixes necesarios (no aplicar si el código ya cumple)
+4. **Actualizar** CHANGELOG.md con los fixes en la sección `### Fixed`
+5. **Commit:** `fix(coderabbit): resolve PR review findings` con lista de issues
+
+**Checks obligatorios que deben pasar en verde:**
+- Docstring Coverage ≥ 80% — todas las funciones públicas (`export function`, `export const`) deben tener JSDoc en frontend y TSDoc en backend
+- Semantic Versioning — versiones en `spec.md` usan `MAJOR.MINOR.PATCH`
+- CHANGELOG estructura — cada entrada incluye `Added/Changed/Fixed/Removed`
+- Accessibility — botones icon-only deben tener `aria-label` dinámico + `aria-pressed` para toggles
+
+**Regla de docstrings:**
+- Backend (`apps/api/src/**`): JSDoc en todas las funciones exported de `*.service.ts`, `*.controller.ts`, `*.routes.ts`
+- Frontend (`apps/web/**`): JSDoc en todos los componentes React exported y hooks custom
+- Formato mínimo: `/** @description ... */` o `/** descripción de una línea */`
