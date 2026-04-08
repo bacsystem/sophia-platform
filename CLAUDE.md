@@ -35,7 +35,8 @@ sophia-platform/
 │   ├── security-agent/    #   Layer 4.5: Security Audit
 │   ├── docs-agent/        #   Layer 5: Documentation
 │   ├── deploy-agent/      #   Layer 6: Deployment
-│   └── integration-agent/ #   Layer 7: Cross-layer Validation
+│   ├── integration-agent/ #   Layer 7: Cross-layer Validation
+│   └── spec-agent/        #   M3: Prompts para generación de spec (system.md + spec.md + data-model.md + api-design.md)
 ├── specs/                 # Specs de módulos M1-M7
 ├── deployment/            # Dockerfiles, Railway config
 ├── projects/              # Código generado (gitignored, runtime)
@@ -89,6 +90,7 @@ REDIS_URL=redis://localhost:6379
 JWT_ACCESS_SECRET=<random-32-chars>
 JWT_REFRESH_SECRET=<random-32-chars>
 ENCRYPTION_KEY=<64-hex-chars>          # AES-256-GCM para API keys
+ANTHROPIC_API_KEY=sk-ant-...           # Requerido desde M3 (generación de specs)
 RESEND_API_KEY=re_xxxxx                # Solo prod (dev usa console.log)
 FRONTEND_URL=http://localhost:3000
 PORT=3001
