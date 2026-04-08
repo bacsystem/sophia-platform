@@ -28,7 +28,8 @@
 **Índices:**
 - `idx_projects_user_id` — búsqueda por usuario
 - `idx_projects_status` — filtrado por status
-- `idx_projects_deleted_at` — donde `deleted_at IS NULL` en WHERE común
+- `idx_projects_user_deleted` — composite `(user_id, deleted_at)` para queries de listado
+- `idx_projects_user_status_deleted` — composite `(user_id, status, deleted_at)` para queries con filtro de estado
 
 ### `project_specs`
 
@@ -70,7 +71,8 @@ model Project {
 
   @@index([userId], name: "idx_projects_user_id")
   @@index([status], name: "idx_projects_status")
-  @@index([deletedAt], name: "idx_projects_deleted_at")
+  @@index([userId, deletedAt], name: "idx_projects_user_deleted")
+  @@index([userId, status, deletedAt], name: "idx_projects_user_status_deleted")
   @@map("projects")
 }
 

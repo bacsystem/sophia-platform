@@ -55,7 +55,10 @@ apps/web/
 ├── app/(dashboard)/
 │   ├── projects/page.tsx              # Listado (HU-07)
 │   ├── projects/new/page.tsx          # Crear proyecto (HU-06)
-│   └── projects/[id]/page.tsx         # Detalle con tabs (HU-08)
+│   └── projects/[id]/
+│       ├── layout.tsx                 # Layout estructural (breadcrumb, nav)
+│       ├── page.tsx                   # Detalle con tabs (HU-08)
+│       └── edit/page.tsx              # Editar proyecto (HU-09)
 ├── components/projects/
 │   ├── project-card.tsx
 │   ├── project-grid.tsx

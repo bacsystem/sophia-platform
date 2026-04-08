@@ -2,7 +2,7 @@
 
 **Input**: Design documents from `/specs/002-m2-projects/`
 **Prerequisites**: plan.md ✅ | spec.md ✅ | data-model.md ✅ | contracts/ ✅ | research.md ✅ | quickstart.md ✅
-**Last analyze**: 2026-04-08 — 12 findings resolved (C1, H1, H2, H3, M1–M5, L1–L3)
+**Last analyze**: 2026-04-08 — Pass 4: 3M+1L (indexes sync, api-spec regen, plan.md tree, metadata)
 
 ## Format: `[ID] [P?] [Story] Description`
 
