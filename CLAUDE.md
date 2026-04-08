@@ -85,7 +85,7 @@ pnpm --filter @sophia/api build # Build backend (tsc)
 # apps/api/.env
 DATABASE_URL=postgresql://user:pass@localhost:5432/sophia_dev
 REDIS_URL=redis://localhost:6379
-JWT_SECRET=<random-32-chars>
+JWT_ACCESS_SECRET=<random-32-chars>
 JWT_REFRESH_SECRET=<random-32-chars>
 ENCRYPTION_KEY=<64-hex-chars>          # AES-256-GCM para API keys
 RESEND_API_KEY=re_xxxxx                # Solo prod (dev usa console.log)
