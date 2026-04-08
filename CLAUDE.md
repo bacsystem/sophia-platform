@@ -303,6 +303,16 @@ Reglas:
 3. Si hubo cambios en spec/plan, incrementar versión y agregar entrada en `CHANGELOG.md`
 4. Si se agregaron dependencias cross-module, actualizar `docs/context-map.md`
 
+### Regla de Módulo Completado
+
+**Al completar todas las tareas de un módulo (100% ✅):**
+1. Ejecutar lint + build + verificar que todo pasa
+2. Bump versión en `package.json` raíz (MINOR)
+3. Actualizar `CHANGELOG.md` y `CLAUDE.md` (Sprint Status)
+4. Commit y push la feature branch
+5. **Preguntar al usuario:** "Módulo MX completado. ¿Deseas continuar con el módulo M(X+1)?"
+6. Solo iniciar el siguiente módulo si el usuario lo confirma
+
 ### Release
 
 El release se gestiona mediante **GitHub Actions** — no se crean tags manualmente.
