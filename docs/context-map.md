@@ -62,13 +62,33 @@ Dependencias explícitas:
 ```
 Lee:
   specs/005-m5-dashboard/spec.md
-  skills/frontend-agent/system.md
-  apps/web/src/app/dashboard/
-  apps/web/src/components/dashboard/agent-canvas.tsx  → Canvas API nativo
-  apps/web/src/hooks/use-agent-events.ts              → WebSocket listener
-  apps/web/src/stores/agent-store.ts                  → Zustand
+  apps/web/app/(dashboard)/projects/[id]/dashboard/page.tsx  → Server component (página)
+  apps/web/components/dashboard/                             → 13 componentes:
+    agent-canvas.tsx              → Canvas API nativo con rAF + ResizeObserver
+    agent-canvas-renderer.ts      → drawNode, drawConnection, clearCanvas
+    agent-canvas-events.ts        → hit-testing circular
+    agent-particles.ts            → sistema de partículas animadas
+    agent-detail-panel.tsx        → panel lateral del agente seleccionado
+    agent-log-panel.tsx           → logs en tiempo real con filtro y auto-scroll
+    agent-files-panel.tsx         → archivos generados con Framer Motion
+    file-preview-modal.tsx        → vista previa con shiki syntax highlighting
+    agent-metrics-bar.tsx         → 5 indicadores + barra de progreso
+    agent-controls.tsx            → pausar/continuar/reintentar
+    dashboard-layout.tsx          → layout responsive (desktop canvas + mobile list)
+    agent-list-mobile.tsx         → lista vertical de agentes para mobile
+    dashboard-empty.tsx           → estado idle
+  apps/web/hooks/use-dashboard-store.ts   → Zustand store (agentes, logs, files, métricas)
+  apps/web/hooks/use-websocket.ts         → WebSocket hook con reconexión y replay
+  apps/web/hooks/use-elapsed-time.ts      → timer mm:ss
+  apps/web/lib/agent-config.ts            → configuración de 10 agentes (posición, color)
+  apps/web/lib/ws-events.ts               → 7 tipos de eventos WebSocket
+  packages/shared/constants/file-icons.ts → mapa de íconos SVG para Canvas
 
-NO leas: nada del backend salvo tipos compartidos
+Dependencias explícitas:
+  apps/api/src/websocket/ws.emitter.ts    → tipos de eventos (contract)
+  packages/shared/src/types/projects.ts   → ProjectStatus, AgentName
+
+NO leas: nada del backend salvo tipos compartidos y contract de WS events
 ```
 
 ## M6 — File Manager (HU-23→25)

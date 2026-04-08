@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Play, Pause, RotateCcw, Download, Loader2, Pencil, Trash2 } from 'lucide-react';
+import { Play, Pause, RotateCcw, Download, Loader2, Pencil, Trash2, LayoutDashboard } from 'lucide-react';
 import type { Project } from '@sophia/shared';
 import { DeleteProjectDialog } from './delete-project-dialog';
 
@@ -102,6 +102,18 @@ export function ProjectActions({ project }: ProjectActionsProps) {
             <Download className="w-4 h-4" />
             Descargar ZIP
           </button>
+        )}
+
+        {/* Dashboard — visible when generation has started */}
+        {project.status !== 'idle' && (
+          <a
+            href={`/projects/${project.id}/dashboard`}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-blue-400/80 border border-blue-500/20 hover:border-blue-500/40 hover:text-blue-400 hover:bg-blue-500/10 transition-colors"
+            aria-label="Ver dashboard de agentes"
+          >
+            <LayoutDashboard className="w-4 h-4" />
+            Dashboard
+          </a>
         )}
 
         {/* Edit — only when idle (T036.5) */}

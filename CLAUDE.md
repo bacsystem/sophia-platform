@@ -61,6 +61,7 @@ sophia-platform/
 | M2 Projects | `002-m2-projects` | 49/49 | v0.2.0 | feat(M2): implement projects module — all 49 tasks complete |
 | M3 Spec Engine | `003-m3-spec-engine` | 33/33 | v0.3.0 | feat(M3): implement spec engine — all 33 tasks complete |
 | M4 Agent Runner | `004-m4-agent-runner` | 38/38 | v0.4.0 | feat(M4): agent runner complete — all 38 tasks done |
+| M5 Dashboard | `005-m5-dashboard` | 22/22 | v0.5.0 | feat(M5): dashboard module complete — all 22 tasks done |
 
 ### Key Commands
 
