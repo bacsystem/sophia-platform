@@ -21,6 +21,8 @@ Versionado semántico a nivel de proyecto: `MAJOR.MINOR.PATCH`.
 
 ### Fixed
 - .gitignore: `projects/` → `/projects/` (evitaba indexar código fuente en modules/projects/ y components/projects/)
+- Login redirect: `router.push('/')` → `router.push('/projects')` (la página raíz era un placeholder sin navbar)
+- app/page.tsx: reemplazado placeholder estático con `redirect('/projects')` para acceso directo al módulo activo
 
 ---
 

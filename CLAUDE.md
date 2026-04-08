@@ -170,11 +170,26 @@ Dentro de cada módulo, el orden de implementación es:
 2. Backend: routes → controller → service → schema → **lint** → **build** (`tsc --noEmit`)
 3. Frontend: pages → components → hooks → stores → **lint** → **build** (`next build`)
 4. Tests (unit + integration)
-5. Documentación
+5. **Validación de rutas** (ver regla abajo)
+6. Documentación
 
 > **Lint obligatorio**: ejecutar `pnpm --filter @sophia/web lint` y `pnpm --filter @sophia/api lint` después de cada cambio en `apps/web/` o `apps/api/` respectivamente.
 > **Build obligatorio**: ejecutar `pnpm --filter @sophia/api build` y `pnpm --filter @sophia/web build` para verificar que compila sin errores antes de commit.
 > **Test obligatorio**: ejecutar `pnpm --filter @sophia/api test` antes de commit para verificar que todos los tests pasan.
+
+### Validación de Rutas y Navegación (Post-Implementación)
+
+Al completar un módulo, feature, o fix que involucre frontend:
+
+1. **Verificar que las rutas nuevas son accesibles** desde la navegación principal (navbar, sidebar, links internos)
+2. **Verificar el flujo post-login**: el redirect después del login (`router.push(...)`) debe llevar a una página funcional con navbar visible
+3. **Verificar que `app/page.tsx`** (raíz) redirige a la página principal activa del sistema (actualmente `/projects`)
+4. **Verificar que el layout `(dashboard)/layout.tsx`** incluye links a todas las secciones implementadas
+5. **Checklist rápido:**
+   - [ ] Login → redirect → página con navbar ✅
+   - [ ] Todas las rutas nuevas aparecen en la navegación
+   - [ ] Rutas públicas vs protegidas correctamente configuradas en `middleware.ts`
+   - [ ] No hay páginas placeholder huérfanas (sin navbar ni links de acceso)
 
 ### Token Optimization
 
@@ -308,11 +323,12 @@ Reglas:
 
 **Al completar todas las tareas de un módulo (100% ✅):**
 1. Ejecutar lint + build + verificar que todo pasa
-2. Bump versión en `package.json` raíz (MINOR)
-3. Actualizar `CHANGELOG.md` y `CLAUDE.md` (Sprint Status)
-4. Commit y push la feature branch
-5. **Preguntar al usuario:** "Módulo MX completado. ¿Deseas continuar con el módulo M(X+1)?"
-6. Solo iniciar el siguiente módulo si el usuario lo confirma
+2. **Validación de rutas**: ejecutar checklist de "Validación de Rutas y Navegación" (ver sección Module Execution Order)
+3. Bump versión en `package.json` raíz (MINOR)
+4. Actualizar `CHANGELOG.md` y `CLAUDE.md` (Sprint Status)
+5. Commit y push la feature branch
+6. **Preguntar al usuario:** "Módulo MX completado. ¿Deseas continuar con el módulo M(X+1)?"
+7. Solo iniciar el siguiente módulo si el usuario lo confirma
 
 ### Release
 
