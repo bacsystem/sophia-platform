@@ -188,6 +188,7 @@ DELETE /api/projects/:id            → Soft delete proyecto
 POST   /api/projects/:id/start      → Stub: cambia status a running (M4 encola job)
 POST   /api/projects/:id/pause      → Stub: cambia status a paused (M4 señala agentes)
 POST   /api/projects/:id/continue   → Stub: cambia status a running (M4 retoma)
+POST   /api/projects/:id/retry      → Stub: cambia status a running desde error (M4)
 GET    /api/projects/:id/download   → Descargar ZIP (implementado en M6, M2 solo declara ruta)
 ```
 
@@ -250,7 +251,7 @@ GET    /api/projects/:id/download   → Descargar ZIP (implementado en M6, M2 so
 }
 
 // Response 422
-{ "errors": { "name": ["Mínimo 3 caracteres"] } }
+{ "error": "VALIDATION_ERROR", "errors": [{ "path": ["name"], "message": "Mínimo 3 caracteres" }] }
 ```
 
 ### PATCH /api/projects/:id
@@ -302,6 +303,16 @@ GET    /api/projects/:id/download   → Descargar ZIP (implementado en M6, M2 so
 { "error": "INVALID_STATE_TRANSITION", "message": "Solo se puede continuar un proyecto pausado" }
 ```
 
+### POST /api/projects/:id/retry
+
+```json
+// Response 200
+{ "data": { "id": "uuid", "status": "running" } }
+
+// Response 400
+{ "error": "INVALID_STATE_TRANSITION", "message": "Solo se puede reintentar desde estado 'error'" }
+```
+
 ### DELETE /api/projects/:id
 
 ```json
@@ -318,14 +329,8 @@ GET    /api/projects/:id/download   → Descargar ZIP (implementado en M6, M2 so
 ### GET /api/projects/:id/download
 
 ```json
-// Response 200 — Content-Type: application/zip, Transfer-Encoding: chunked
-// Streaming del ZIP
-
-// Response 400
-{ "error": "NOT_DOWNLOADABLE", "message": "El proyecto debe estar al menos en capa 3 (Backend)" }
-
-// Response 404
-{ "error": "NO_FILES", "message": "No hay archivos generados para descargar" }
+// Response 501 (implementado en M6)
+{ "error": "NOT_IMPLEMENTED", "message": "Descarga de archivos implementada en M6" }
 ```
 
 ---
@@ -437,7 +442,7 @@ GET    /api/projects/:id/download   → Descargar ZIP (implementado en M6, M2 so
 ## Páginas Frontend
 
 ```
-/                          → Lista de proyectos (dashboard principal)
+/projects                  → Lista de proyectos (dashboard principal)
 /projects/new              → Crear nuevo proyecto
 /projects/[id]             → Detalle + tabs (Dashboard, Archivos, Logs, Spec)
 ```
@@ -460,11 +465,12 @@ src/modules/projects/
 
 ```
 app/(dashboard)/
-├── page.tsx                          → Lista de proyectos
-├── projects/new/page.tsx             → Crear proyecto
-└── projects/[id]/
-    ├── page.tsx                      → Detalle del proyecto (tabs)
-    └── layout.tsx                    → Layout con header del proyecto
+└── projects/
+    ├── page.tsx                      → Lista de proyectos
+    ├── new/page.tsx                  → Crear proyecto
+    └── [id]/
+        ├── page.tsx                  → Detalle del proyecto (tabs)
+        └── layout.tsx                → Layout con header del proyecto
 
 components/projects/
 ├── project-card.tsx                  → Card de proyecto en grid

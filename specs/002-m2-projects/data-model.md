@@ -19,6 +19,7 @@
 | `progress` | `Int @default(0)` | INTEGER | NOT NULL | Progreso 0-100 |
 | `currentLayer` | `Float @default(1) @map("current_layer")` | REAL | NOT NULL | Capa actual del pipeline |
 | `config` | `Json` | JSONB | NOT NULL | `{ model: string, agents: string[] }` |
+| `tokensUsed` | `Int @default(0) @map("tokens_used")` | INTEGER | NOT NULL | Tokens acumulados (actualizado por M4) |
 | `deletedAt` | `DateTime? @map("deleted_at")` | TIMESTAMPTZ | nullable | Soft delete timestamp |
 | `createdAt` | `DateTime @default(now()) @map("created_at")` | TIMESTAMPTZ | NOT NULL | |
 | `updatedAt` | `DateTime @updatedAt @map("updated_at")` | TIMESTAMPTZ | NOT NULL | |
@@ -36,8 +37,6 @@
 | `projectId` | `String @map("project_id")` | UUID | FK → projects(id) CASCADE | |
 | `version` | `Int` | INTEGER | NOT NULL | Auto-incremental por proyecto |
 | `content` | `Json` | JSONB | NOT NULL | `{ spec, dataModel, apiDesign }` |
-| `source` | `String` | VARCHAR(20) | NOT NULL | "manual", "agent", "import" |
-| `valid` | `Boolean @default(false)` | BOOLEAN | NOT NULL | Si pasó validación |
 | `createdAt` | `DateTime @default(now()) @map("created_at")` | TIMESTAMPTZ | NOT NULL | |
 
 **Índices:**
@@ -59,6 +58,7 @@ model Project {
   progress     Int       @default(0)
   currentLayer Float     @default(1) @map("current_layer")
   config       Json
+  tokensUsed   Int       @default(0) @map("tokens_used")
   deletedAt    DateTime? @map("deleted_at")
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
@@ -77,8 +77,6 @@ model ProjectSpec {
   projectId String   @map("project_id")
   version   Int
   content   Json
-  source    String   @db.VarChar(20)
-  valid     Boolean  @default(false)
   createdAt DateTime @default(now()) @map("created_at")
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)

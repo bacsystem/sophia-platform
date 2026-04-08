@@ -29,6 +29,8 @@
 - [ ] T007 Wire POST /api/projects route in `project.routes.ts`
 - [ ] T008 [P] Create project creation page at `apps/web/app/(dashboard)/projects/new/page.tsx`
 - [ ] T009 [P] Create ProjectForm component in `apps/web/components/projects/project-form.tsx` ("use client", React Hook Form + Zod, agent checkboxes with mandatory 3)
+- [ ] T009.5 [P] Create StackSelector component in `apps/web/components/projects/stack-selector.tsx` — stack options with icons/badges
+- [ ] T009.6 [P] Create AgentSelector component in `apps/web/components/projects/agent-selector.tsx` — checkboxes with seed/security/integration locked
 
 **Checkpoint**: Project creation flow functional with Zod dual refine
 
@@ -43,7 +45,8 @@
 - [ ] T012 Wire GET /api/projects route
 - [ ] T013 [P] Create projects list page at `apps/web/app/(dashboard)/projects/page.tsx`
 - [ ] T014 [P] Create ProjectCard component in `apps/web/components/projects/project-card.tsx` — status badge, progress, layer name
-- [ ] T015 [P] Create ProjectList component in `apps/web/components/projects/project-list.tsx` — grid, pagination, search, filters
+- [ ] T015 [P] Create ProjectGrid component in `apps/web/components/projects/project-grid.tsx` — grid, pagination, search, filters
+- [ ] T015.5 [P] Create ProjectEmptyState component in `apps/web/components/projects/project-empty-state.tsx` — illustration + "Crear primer proyecto" CTA button
 
 **Checkpoint**: Projects listing with pagination and filtering
 
@@ -58,7 +61,10 @@
 - [ ] T018 Wire GET /api/projects/:id route
 - [ ] T019 Create project detail page at `apps/web/app/(dashboard)/projects/[id]/page.tsx`
 - [ ] T020 [P] Create ProjectDetail component in `apps/web/components/projects/project-detail.tsx` — header, status, progress bar
+- [ ] T020.5 [P] Create ProjectHeader component in `apps/web/components/projects/project-header.tsx` — name, stack badge, status color, progress bar, current layer
+- [ ] T020.6 [P] Create ProjectActions component in `apps/web/components/projects/project-actions.tsx` — action buttons per state (start/pause/continue/retry/download)
 - [ ] T021 [P] Create ProjectTabs component in `apps/web/components/projects/project-tabs.tsx` — Dashboard/Archivos/Logs/Spec tabs (placeholders for M5/M6)
+- [ ] T021.5 [P] Create ProjectSpecViewer component in `apps/web/components/projects/project-spec-viewer.tsx` — read-only markdown render of project spec
 
 **Checkpoint**: Project detail page with tabs and action buttons
 
@@ -83,7 +89,7 @@
 - [ ] T025 Create `deleteProject()` in `project.service.ts` — validate not running, set deleted_at
 - [ ] T026 Create delete handler in `project.controller.ts`
 - [ ] T027 Wire DELETE /api/projects/:id route
-- [ ] T028 Create DeleteProjectModal in `apps/web/components/projects/delete-project-modal.tsx` — type project name to confirm
+- [ ] T028 Create DeleteProjectDialog in `apps/web/components/projects/delete-project-dialog.tsx` — type project name to confirm
 
 **Checkpoint**: Soft delete with confirmation modal
 
@@ -93,9 +99,9 @@
 
 **Purpose**: Stubs start/pause/continue que M4 reemplazará
 
-- [ ] T029 Create `startProject()`, `pauseProject()`, `continueProject()` stubs in `project.service.ts` — validate state transitions, update status
+- [ ] T029 Create `startProject()`, `pauseProject()`, `continueProject()`, `retryProject()` stubs in `project.service.ts` — validate state transitions, update status
 - [ ] T030 Create start/pause/continue handlers in `project.controller.ts`
-- [ ] T031 Wire POST /api/projects/:id/start, /pause, /continue routes
+- [ ] T031 Wire POST /api/projects/:id/start, /pause, /continue, /retry routes
 - [ ] T032 Declare GET /api/projects/:id/download route stub (returns 501 "Implementado en M6")
 
 **Checkpoint**: State machine transitions working via stubs
