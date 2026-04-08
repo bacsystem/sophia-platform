@@ -305,28 +305,26 @@ Reglas:
 
 ### Release
 
-Al completar **todas** las tareas de un módulo (100% ✅):
+El release se gestiona mediante **GitHub Actions** — no se crean tags manualmente.
 
-```bash
-# 1. Bump versión en package.json raíz (MINOR por módulo nuevo)
-# 2. Commit de cierre
-git add -A
-git commit -m "release: vX.Y.Z — <nombre módulo> complete"
+**Flujo completo:**
+1. Completar todas las tareas del módulo en la feature branch (`XXX-mN-nombre`)
+2. Bump versión en `package.json` raíz (MINOR por módulo nuevo, PATCH por hotfix)
+3. Actualizar `CHANGELOG.md` con la nueva versión
+4. Push la feature branch y crear/actualizar el PR hacia `main`
+5. CI (`ci.yml`) ejecuta: lint → build → test — debe pasar en verde
+6. Tú apruebas y mergeas el PR
+7. `release.yml` detecta el merge a `main`, lee `package.json`, crea tag `vX.Y.Z` y GitHub Release automáticamente
 
-# 3. Tag semántico de proyecto
-git tag -a vX.Y.Z -m "vX.Y.Z — <descripción breve>"
+**NO hacer manualmente:**
+- `git tag` — lo hace GitHub Actions al merge
+- `git push --tags` — lo hace GitHub Actions
 
-# 4. Push rama + tags (obligatorio)
-git push origin <branch> --tags
-```
+**Workflows:**
+- `.github/workflows/ci.yml` — PR quality gate (lint, build, test con Postgres+Redis)
+- `.github/workflows/release.yml` — Tag + GitHub Release automático al merge a `main`
 
-**Convención de tags:**
-- Formato: `vMAJOR.MINOR.PATCH`
-- Ejemplo: `v0.1.0`, `v0.2.0`, `v0.2.1`
-- El tag apunta al commit de release
-- **Push obligatorio:** `git push origin <branch> --tags` después de cada tag
-
-**Cuándo subir versión:**
+**Cuándo subir versión en `package.json`:**
 - `PATCH`: hotfixes post-release (bugs, a11y, docs, CodeRabbit findings)
 - `MINOR`: módulo completo implementado (implementación, tests, build ✅)
 - `MAJOR`: rediseño de arquitectura global o cambio de alcance mayor
