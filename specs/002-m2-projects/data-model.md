@@ -20,6 +20,7 @@
 | `currentLayer` | `Float @default(1) @map("current_layer")` | REAL | NOT NULL | Capa actual del pipeline |
 | `config` | `Json` | JSONB | NOT NULL | `{ model: string, agents: string[] }` |
 | `tokensUsed` | `Int @default(0) @map("tokens_used")` | INTEGER | NOT NULL | Tokens acumulados (actualizado por M4) |
+| `errorMessage` | `String? @map("error_message")` | TEXT | nullable | Mensaje del último error (actualizado por M4) |
 | `deletedAt` | `DateTime? @map("deleted_at")` | TIMESTAMPTZ | nullable | Soft delete timestamp |
 | `createdAt` | `DateTime @default(now()) @map("created_at")` | TIMESTAMPTZ | NOT NULL | |
 | `updatedAt` | `DateTime @updatedAt @map("updated_at")` | TIMESTAMPTZ | NOT NULL | |
@@ -59,6 +60,7 @@ model Project {
   currentLayer Float     @default(1) @map("current_layer")
   config       Json
   tokensUsed   Int       @default(0) @map("tokens_used")
+  errorMessage String?   @map("error_message")
   deletedAt    DateTime? @map("deleted_at")
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
