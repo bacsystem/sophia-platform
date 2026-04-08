@@ -176,6 +176,7 @@ Dentro de cada módulo, el orden de implementación es:
 > **Lint obligatorio**: ejecutar `pnpm --filter @sophia/web lint` y `pnpm --filter @sophia/api lint` después de cada cambio en `apps/web/` o `apps/api/` respectivamente.
 > **Build obligatorio**: ejecutar `pnpm --filter @sophia/api build` y `pnpm --filter @sophia/web build` para verificar que compila sin errores antes de commit.
 > **Test obligatorio**: ejecutar `pnpm --filter @sophia/api test` antes de commit para verificar que todos los tests pasan.
+> **Clean build obligatorio**: si se cambia la estructura de páginas (`app/**/page.tsx`, `app/**/layout.tsx`) o se elimina/renombra una ruta, ejecutar `rm -rf apps/web/.next && pnpm --filter @sophia/web build` para evitar cache corrupto (`Cannot find module './XXX.js'`).
 
 ### Validación de Rutas y Navegación (Post-Implementación)
 
