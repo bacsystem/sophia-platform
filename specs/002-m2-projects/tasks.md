@@ -48,7 +48,7 @@
 - [ ] T007 [US1] Create `createProjectHandler` in `apps/api/src/modules/projects/project.controller.ts` — extract userId from JWT cookie, call service, return 201
 - [ ] T008 [US1] Wire `POST /api/projects` route to handler in `project.routes.ts`
 - [ ] T009 [P] [US1] Create project creation page at `apps/web/app/(dashboard)/projects/new/page.tsx` — server component, renders ProjectForm
-- [ ] T010 [P] [US1] Create `ProjectForm` in `apps/web/components/projects/project-form.tsx` — "use client", React Hook Form + Zod, preview colapsable del prompt, botón "Usar template" con valores predefinidos (node-nextjs / claude-sonnet-4-6 / todos los agentes), redirect a /projects/[id] on success
+- [ ] T010 [P] [US1] Create `ProjectForm` in `apps/web/components/projects/project-form.tsx` — "use client", React Hook Form + Zod, preview colapsable del prompt, botón "Usar template" con valores predefinidos (node-nextjs / claude-sonnet-4-6 / todos los agentes), redirect a /projects/[id] on success; acepta prop opcional `project?: Project` para modo edición (pre-popula `defaultValues` de RHF)
 - [ ] T011 [P] [US1] Create `StackSelector` in `apps/web/components/projects/stack-selector.tsx` — opciones: node-nextjs | laravel-nextjs | python-nextjs con iconos/badges
 - [ ] T012 [P] [US1] Create `AgentSelector` in `apps/web/components/projects/agent-selector.tsx` — checkboxes para 6 agentes opcionales (dba/backend/frontend/qa/docs/deploy); seed/security/integration siempre activos y deshabilitados
 
@@ -87,11 +87,11 @@
 - [ ] T024 [US3] Create stub handlers (`startHandler`, `pauseHandler`, `continueHandler`, `retryHandler`) in `project.controller.ts`
 - [ ] T025 [US3] Wire `POST /api/projects/:id/start`, `/pause`, `/continue`, `/retry` routes in `project.routes.ts`
 - [ ] T026 [US3] Wire `GET /api/projects/:id/download` route — handler retorna 501 `{ error: "NOT_IMPLEMENTED", message: "Descarga de archivos implementada en M6" }`
-- [ ] T027 [P] [US3] Create detail layout at `apps/web/app/(dashboard)/projects/[id]/layout.tsx` — layout con ProjectHeader
+- [ ] T027 [P] [US3] Create detail layout at `apps/web/app/(dashboard)/projects/[id]/layout.tsx` — wrapper estructural (nav, breadcrumb); NO hace fetch del proyecto. Los datos del proyecto los obtiene `[id]/page.tsx` y los pasa como props a los componentes hijos
 - [ ] T028 [P] [US3] Create detail page at `apps/web/app/(dashboard)/projects/[id]/page.tsx` — server component, fetch proyecto, render ProjectDetail + ProjectTabs
 - [ ] T029 [P] [US3] Create `ProjectDetail` in `apps/web/components/projects/project-detail.tsx` — wrapper que compone ProjectHeader + ProjectActions + ProjectTabs
 - [ ] T030 [P] [US3] Create `ProjectHeader` in `apps/web/components/projects/project-header.tsx` — nombre, stack badge, status color, barra de progreso, capa actual; si `status === "error"` mostrar alert rojo con `errorMessage` debajo del header
-- [ ] T031 [P] [US3] Create `ProjectActions` in `apps/web/components/projects/project-actions.tsx` — "use client", botón por estado: idle→"▶ Iniciar" | running→"⏸ Pausar" | paused→"▶ Continuar" | done→"⬇ Descargar ZIP" (deshabilitado) | error→"↺ Reintentar"; llama a POST stub endpoints
+- [ ] T031 [US3] Create `ProjectActions` in `apps/web/components/projects/project-actions.tsx` — "use client", botón por estado: idle→"▶ Iniciar" | running→"⏸ Pausar" | paused→"▶ Continuar" | done→"⬇ Descargar ZIP" (deshabilitado) | error→"↺ Reintentar"; llama a POST stub endpoints. ⚠️ T036.5 y T040.5 también modifican este archivo — implementar secuencialmente (T031 → T036.5 → T040.5)
 - [ ] T032 [P] [US3] Create `ProjectTabs` in `apps/web/components/projects/project-tabs.tsx` — "use client", 4 tabs: Dashboard (placeholder M5) | Archivos (placeholder M6) | Logs (placeholder M4) | Spec (render ProjectSpecViewer)
 - [ ] T033 [P] [US3] Create `ProjectSpecViewer` in `apps/web/components/projects/project-spec-viewer.tsx` — render markdown read-only del spec del proyecto (usa librería markdown existente o `<pre>` si no hay)
 
@@ -108,8 +108,8 @@
 - [ ] T034 [US4] Create `updateProject(userId, id, input)` in `project.service.ts` — 404/403 checks, validar `status === "idle"` (400 si no), Zod partial parse, `prisma.project.update`
 - [ ] T035 [US4] Create `updateProjectHandler` in `project.controller.ts` — return 200 `{ data: updatedProject }`
 - [ ] T036 [US4] Wire `PATCH /api/projects/:id` route to handler in `project.routes.ts`
-- [ ] T036.5 [P] [US4] Add edit button to `apps/web/components/projects/project-actions.tsx` — visible solo cuando `status === "idle"`, navega a `/projects/[id]/edit`
-- [ ] T036.6 [P] [US4] Create edit page at `apps/web/app/(dashboard)/projects/[id]/edit/page.tsx` — server component; reutiliza `ProjectForm` pre-populated con datos del proyecto, PATCH on submit, toast de éxito via hook, redirect back a `/projects/[id]`
+- [ ] T036.5 [US4] Add edit button to `apps/web/components/projects/project-actions.tsx` — visible solo cuando `status === "idle"`, navega a `/projects/[id]/edit`. ⚠️ Depende de T031 (mismo archivo)
+- [ ] T036.6 [P] [US4] Create edit page at `apps/web/app/(dashboard)/projects/[id]/edit/page.tsx` — server component; fetch del proyecto, pasa prop `project` a `ProjectForm` (modo edición, pre-populated vía `defaultValues`), PATCH on submit via `useProjects.updateProject()`, toast de éxito, redirect back a `/projects/[id]`
 
 **Checkpoint**: Update bloqueado en estados non-idle; edit button solo visible en idle; toast de éxito tras guardar
 
@@ -125,7 +125,7 @@
 - [ ] T038 [US5] Create `deleteProjectHandler` in `project.controller.ts` — return 200 `{ data: { message: "Proyecto eliminado" } }`
 - [ ] T039 [US5] Wire `DELETE /api/projects/:id` route to handler in `project.routes.ts`
 - [ ] T040 [P] [US5] Create `DeleteProjectDialog` in `apps/web/components/projects/delete-project-dialog.tsx` — "use client", modal shadcn Dialog, input para escribir nombre del proyecto, botón confirmar (disabled si nombre no coincide), llama a DELETE endpoint y redirige a /projects
-- [ ] T040.5 [P] [US5] Wire `DeleteProjectDialog` en vista de detalle: añadir opción "Eliminar" al menú ⋯ de `apps/web/components/projects/project-actions.tsx` o en `apps/web/app/(dashboard)/projects/[id]/page.tsx` — visible cuando `status !== "running"`
+- [ ] T040.5 [US5] Wire `DeleteProjectDialog` en vista de detalle: añadir opción "Eliminar" al menú ⋯ de `apps/web/components/projects/project-actions.tsx` — visible cuando `status !== "running"`. ⚠️ Depende de T031 y T036.5 (mismo archivo)
 
 **Checkpoint**: Soft delete funcional; GET en proyecto eliminado retorna 404; modal requiere nombre exacto; trigger de eliminación accesible desde card Y desde vista de detalle
 
