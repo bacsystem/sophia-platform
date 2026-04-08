@@ -56,8 +56,8 @@ sophia-platform/
 
 | Módulo | Branch | Tareas | Versión | Último commit |
 |--------|--------|--------|---------|---------------|
-| M1 Auth | `001-m1-auth` | 46/46 | v1.3.1 | fix(coderabbit): resolve PR review findings |
-| M2 Projects | `002-m2-projects` | 49/49 | v1.0.0 | feat(M2): implement projects module — all 49 tasks complete |
+| M1 Auth | `001-m1-auth` | 46/46 | v0.1.0 | fix(coderabbit): resolve PR review findings |
+| M2 Projects | `002-m2-projects` | 49/49 | v0.2.0 | feat(M2): implement projects module — all 49 tasks complete |
 | M3–M7 | — | 0/131 | — | pendiente |
 
 ### Key Commands
@@ -257,32 +257,30 @@ All skills check `.specify/extensions.yml` for `hooks.before_<command>` and `hoo
 
 ### Versionamiento Semántico
 
-Todos los artefactos de spec usan **Semantic Versioning** (`MAJOR.MINOR.PATCH`):
+El **proyecto** usa una única versión semántica (`MAJOR.MINOR.PATCH`) en `package.json` raíz:
 
-- **MAJOR**: Cambio de alcance (agregar/quitar HUs, rediseño de arquitectura)
-- **MINOR**: Nuevos endpoints, tablas, componentes, o correcciones de `/speckit.analyze`
-- **PATCH**: Correcciones de typos, clarificaciones de redacción, ajustes de formato
+- **MAJOR**: Rediseño de arquitectura o cambio de alcance global (>50% de HUs)
+- **MINOR**: Módulo completo implementado y en producción (M1, M2, M3...)
+- **PATCH**: Hotfixes, correcciones de bugs, mejoras de a11y, docs post-release
 
-Cada `spec.md` debe incluir `# Versión: X.Y` en su header. Al editar, incrementar la versión correspondiente.
+Los `spec.md` individuales usan `# Versión: X.Y` como referencia interna del artefacto (no del proyecto).
 
 ### Changelog
 
 Mantener `CHANGELOG.md` (raíz del proyecto) actualizado con cada cambio relevante. Formato:
 
 ```markdown
-## [M1-Auth v1.3] — 2026-04-08
-### Changed
-- Fix 422 response format to match constitution V
-- Add Helmet.js, CORS, shared types tasks
-- Clarify Zod schemas as frontend-only
+## [v0.3.0] — 2026-04-XX ✅ M3 Spec Engine
 ### Added
-- T042-T046: security headers, CORS, shared types, logout UI, perf test
+- ...
+### Fixed
+- ...
 ```
 
 Reglas:
-- Una entrada por módulo/sprint modificado
+- Una entrada por versión de proyecto (no por módulo)
+- La versión coincide con `package.json` y el tag git
 - Agrupar por `Added`, `Changed`, `Fixed`, `Removed`
-- Incluir IDs de tareas cuando aplique
 
 ### Archivos de Tracking
 
@@ -305,33 +303,33 @@ Reglas:
 3. Si hubo cambios en spec/plan, incrementar versión y agregar entrada en `CHANGELOG.md`
 4. Si se agregaron dependencias cross-module, actualizar `docs/context-map.md`
 
-### Release por Módulo
+### Release
 
 Al completar **todas** las tareas de un módulo (100% ✅):
 
 ```bash
-# 1. Commit de cierre del módulo
+# 1. Bump versión en package.json raíz (MINOR por módulo nuevo)
+# 2. Commit de cierre
 git add -A
-git commit -m "release(MX): vX.Y.Z — <nombre módulo> complete"
+git commit -m "release: vX.Y.Z — <nombre módulo> complete"
 
-# 2. Tag semántico
-git tag -a mX-<nombre>-vX.Y.Z -m "MX <Nombre> vX.Y.Z — <descripción breve>"
+# 3. Tag semántico de proyecto
+git tag -a vX.Y.Z -m "vX.Y.Z — <descripción breve>"
 
-# 3. Push rama + tags (obligatorio)
+# 4. Push rama + tags (obligatorio)
 git push origin <branch> --tags
 ```
 
 **Convención de tags:**
-- Formato: `m<N>-<nombre-kebab>-v<MAJOR>.<MINOR>.<PATCH>`
-- Ejemplo: `m1-auth-v1.3.1`, `m2-projects-v1.0.0`
-- El tag apunta al commit de release, no al merge
+- Formato: `vMAJOR.MINOR.PATCH`
+- Ejemplo: `v0.1.0`, `v0.2.0`, `v0.2.1`
+- El tag apunta al commit de release
 - **Push obligatorio:** `git push origin <branch> --tags` después de cada tag
 
-**Versión del módulo:**
-- Formato: `MAJOR.MINOR.PATCH` (Semantic Versioning completo)
-- `PATCH` sube con fixes post-release (bugs, a11y, docs, CodeRabbit findings)
-- `MINOR` sube con cada iteración completa (implementación, tests, build ✅)
-- `MAJOR` sube solo si hay rediseño de spec (breaking change en HUs o modelo de datos)
+**Cuándo subir versión:**
+- `PATCH`: hotfixes post-release (bugs, a11y, docs, CodeRabbit findings)
+- `MINOR`: módulo completo implementado (implementación, tests, build ✅)
+- `MAJOR`: rediseño de arquitectura global o cambio de alcance mayor
 
 ### CodeRabbit Review Protocol
 
