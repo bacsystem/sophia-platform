@@ -2,7 +2,7 @@
 
 Resumen de progreso por módulo. Actualizar al completar cada fase o sprint.
 
-> Última actualización: 2026-04-09
+> Última actualización: 2026-04-08
 
 ---
 
@@ -12,12 +12,12 @@ Resumen de progreso por módulo. Actualizar al completar cada fase o sprint.
 |--------|--------|-----|--------|-------------|---|--------|
 | 1 | M1 Auth | HU-01→05 | 46 | 46 | 100% | ✅ Complete |
 | 1 | M2 Projects | HU-06→10 | 49 | 49 | 100% | ✅ Complete |
-| 2 | M3 Spec Engine | HU-11→13 | 33 | 33 | 100% | ✅ Complete |
+| 2 | M3 Spec Engine | HU-11→13 | 31 | 31 | 100% | ✅ Complete |
 | 3 | M4 Agent Runner | HU-14→17 | 38 | 0 | 0% | 📋 Spec ready |
 | 4 | M5 Dashboard | HU-18→22 | 22 | 0 | 0% | 📋 Spec ready |
 | 4 | M6 File Manager | HU-23→25 | 22 | 0 | 0% | 📋 Spec ready |
 | 4 | M7 Settings | HU-26→28 | 24 | 0 | 0% | 📋 Spec ready |
-| **—** | **TOTAL** | **28** | **234** | **128** | **55%** | |
+| **—** | **TOTAL** | **28** | **232** | **126** | **54%** | |
 
 ### Leyenda de estados
 
@@ -43,28 +43,28 @@ Resumen de progreso por módulo. Actualizar al completar cada fase o sprint.
 | Phase 7 | GET /me + Middleware Frontend | 4 | 4 | ✅ |
 | Phase 8 | Polish & Cross-Cutting | 4 | 4 | ✅ |
 
-### M2 Projects (35 tareas)
+### M2 Projects (49 tareas)
 
 | Fase | Descripción | Tareas | Completadas | Estado |
 |------|-------------|--------|-------------|--------|
-| Phase 1 | Setup (Schema + Base Module) | 4 | 0 | ⬜ |
-| Phase 2 | HU-06 Crear Proyecto | 5 | 0 | ⬜ |
-| Phase 3 | HU-07 Listar Proyectos | 6 | 0 | ⬜ |
-| Phase 4 | HU-08 Ver Detalle del Proyecto | 6 | 0 | ⬜ |
-| Phase 5 | HU-09 Actualizar Proyecto | 3 | 0 | ⬜ |
-| Phase 6 | HU-10 Eliminar Proyecto | 4 | 0 | ⬜ |
-| Phase 7 | Stubs de Ejecución | 4 | 0 | ⬜ |
-| Phase 8 | Hooks + Polish | 3 | 0 | ⬜ |
+| Phase 1 | Setup (Schema + Base Module) | 3 | 3 | ✅ |
+| Phase 2 | Foundational (Blocking Prerequisites) | 3 | 3 | ✅ |
+| Phase 3 | HU-06 Crear Proyecto | 7 | 7 | ✅ |
+| Phase 4 | HU-07 Listar Proyectos | 7 | 7 | ✅ |
+| Phase 5 | HU-08 Ver Detalle del Proyecto | 14 | 14 | ✅ |
+| Phase 6 | HU-09 Actualizar Proyecto | 5 | 5 | ✅ |
+| Phase 7 | HU-10 Eliminar Proyecto | 5 | 5 | ✅ |
+| Phase 8 | Polish & Cross-cutting | 5 | 5 | ✅ |
 
-### M3 Spec Engine (25 tareas)
+### M3 Spec Engine (31 tareas)
 
 | Fase | Descripción | Tareas | Completadas | Estado |
 |------|-------------|--------|-------------|--------|
-| Phase 1 | Setup (Schema + Anthropic Client) | 5 | 0 | ⬜ |
-| Phase 2 | HU-13 Templates Predefinidos | 4 | 0 | ⬜ |
-| Phase 3 | HU-11 Generar Spec | 7 | 0 | ⬜ |
-| Phase 4 | HU-12 Ver y Editar Spec | 6 | 0 | ⬜ |
-| Phase 5 | Polish & Tests | 3 | 0 | ⬜ |
+| Phase 1 | Setup (Schema + Anthropic Client) | 5 | 5 | ✅ |
+| Phase 2 | HU-13 Templates Predefinidos | 6 | 6 | ✅ |
+| Phase 3 | HU-11 Generar Spec | 9 | 9 | ✅ |
+| Phase 4 | HU-12 Ver y Editar Spec | 8 | 8 | ✅ |
+| Phase 5 | Polish & Tests | 3 | 3 | ✅ |
 
 ### M4 Agent Runner (38 tareas)
 
