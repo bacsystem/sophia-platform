@@ -11,8 +11,6 @@ jobs:
   release:
     name: Tag Release
     runs-on: ubuntu-latest
-    # Only run when the merge commit is NOT from the release workflow itself
-    if: "!startsWith(github.event.head_commit.message, 'chore(release):')"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -22,27 +20,32 @@ jobs:
         id: version
         run: |
           VERSION=$(node -p "require('./package.json').version")
+          TAG="v$VERSION"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
-      - name: Check if tag already exists
-        id: check
+      - name: Push tag (idempotent)
         run: |
-          if git rev-parse "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
+          TAG="${{ steps.version.outputs.tag }}"
+          if git ls-remote --tags origin "$TAG" | grep -q "$TAG"; then
+            echo "Tag $TAG already exists on remote — skipping push."
           else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
+            git tag -a "$TAG" -m "$TAG"
+            git push origin "$TAG"
+            echo "Tag $TAG created and pushed."
           fi
 
-      - name: Create tag and GitHub Release
-        if: steps.check.outputs.exists == 'false'
+      - name: Create GitHub Release (idempotent)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG="v${{ steps.version.outputs.version }}"
-          git tag -a "$TAG" -m "$TAG"
-          git push origin "$TAG"
-          gh release create "$TAG" \
-            --title "$TAG" \
-            --generate-notes \
-            --latest
+          TAG="${{ steps.version.outputs.tag }}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists — skipping creation."
+          else
+            gh release create "$TAG" \
+              --title "$TAG" \
+              --generate-notes \
+              --latest
+            echo "Release $TAG created."
+          fi

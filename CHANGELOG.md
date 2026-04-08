@@ -19,10 +19,16 @@ Versionado semántico a nivel de proyecto: `MAJOR.MINOR.PATCH`.
 - Prisma: modelos Project + ProjectSpec con índices compuestos
 - Migration: 20260408153434_m2_projects
 
+### Changed
+- N/A
+
 ### Fixed
 - .gitignore: `projects/` → `/projects/` (evitaba indexar código fuente en modules/projects/ y components/projects/)
 - Login redirect: `router.push('/')` → `router.push('/projects')` (la página raíz era un placeholder sin navbar)
 - app/page.tsx: reemplazado placeholder estático con `redirect('/projects')` para acceso directo al módulo activo
+
+### Removed
+- N/A
 
 ---
 
@@ -55,6 +61,9 @@ Versionado semántico a nivel de proyecto: `MAJOR.MINOR.PATCH`.
 - postcss/tailwind configs: renombrados a `.cjs` (conflicto ESM/CJS)
 - Aria-labels + aria-pressed en botones de visibilidad de contraseña (a11y)
 - .gitignore: añadido `*.tsbuildinfo`; eliminado tsconfig.tsbuildinfo trackeado
+
+### Removed
+- N/A
 
 ---
 

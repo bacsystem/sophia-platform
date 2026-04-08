@@ -81,7 +81,7 @@ running → error   (automático via agente)
 
 ## Librerías
 
-| Libería | Versión | Propósito |
+| Librería | Versión | Propósito |
 |---------|---------|-----------|
 | Prisma | ^6.x | ORM (ya instalado en M1) |
 | Zod | ^3.x | Validación (ya instalado) |
