@@ -6,6 +6,16 @@
 
 ---
 
+## Clarifications
+
+### Session 2026-04-08
+
+- Q: Concurrent refresh con mismo token (múltiples tabs) → A: First-wins. La primera request rota el token, la segunda recibe 401 y redirige a login.
+- Q: Navegar a /reset-password sin token o con token inválido → A: Mostrar mensaje "Token inválido o expirado" con link a /forgot-password (no redirect silencioso).
+- Q: Comportamiento de rate limiting si Redis no está disponible → A: Fail-open. Permitir el request sin rate limit y loguear warning. No bloquear login/registro por caída de Redis.
+
+---
+
 ## Descripción
 
 Módulo de autenticación y gestión de sesión de usuario. Permite registro, login, logout, refresh de tokens y recuperación de contraseña.
@@ -17,7 +27,7 @@ Módulo de autenticación y gestión de sesión de usuario. Permite registro, lo
 - Frontend: Next.js 15 + React Hook Form + Zod
 - Backend: Node.js 22 + Fastify + JWT (access + refresh) + bcryptjs (cost 12)
 - DB: PostgreSQL 16 (tablas users, refresh_tokens, password_reset_tokens via Prisma)
-- Cache: Redis 7 (rate limiting de intentos de login)
+- Cache: Redis 7 (rate limiting de intentos de login) — **fail-open**: si Redis no está disponible, permitir request sin rate limit (log warning)
 - Email: Resend (producción) | console.log (desarrollo)
 
 > **Decisión**: Se elimina NextAuth.js v5. El backend Fastify es el único auth server. Next.js consume el JWT almacenado en cookie httpOnly.
@@ -71,7 +81,7 @@ Set-Cookie: refresh_token=<opaque>; HttpOnly; Secure; SameSite=Strict; Path=/api
 - [ ] Muestra errores inline bajo cada campo
 - [ ] Rate limit: máximo 3 registros por IP por hora
 
-**Validaciones Zod:**
+**Validaciones Zod (frontend-only — el backend NO valida confirmPassword, solo recibe name/email/password):**
 
 ```ts
 z.object({
@@ -115,7 +125,7 @@ TTL:    15 minutos (auto-expira)
 Límite: 5 intentos
 ```
 
-**Validaciones Zod:**
+**Validaciones Zod (frontend-only — el backend recibe solo email/password/rememberMe):**
 
 ```ts
 z.object({
@@ -156,6 +166,7 @@ z.object({
 - [ ] El refresh token anterior se invalida en BD
 - [ ] Si el refresh token expiró o fue revocado → redirige a /login
 - [ ] El refresh es transparente para el usuario (no ve interrupción)
+- [ ] Concurrent refresh (ej. múltiples tabs): first-wins — la primera request rota el token, las siguientes reciben 401 y redirigen a /login
 
 ---
 
@@ -176,6 +187,7 @@ z.object({
 - [ ] Formulario de reset con: nueva contraseña, confirmar contraseña
 - [ ] Al resetear exitosamente → redirige a /login con mensaje de éxito
 - [ ] Token expirado o ya usado → mensaje de error con opción de solicitar nuevo
+- [ ] Acceso a /reset-password sin token o con token inválido → mostrar "Token inválido o expirado" con link a /forgot-password
 - [ ] Rate limit: máximo 3 solicitudes por email por hora
 
 ---
@@ -205,7 +217,7 @@ GET  /api/auth/me              → Obtener usuario autenticado
 { "error": "EMAIL_ALREADY_EXISTS", "message": "El email ya está registrado" }
 
 // Response 422
-{ "errors": { "password": ["Mínimo 8 caracteres"] } }
+{ "error": "VALIDATION_ERROR", "message": "Error de validación", "errors": [{"path": ["password"], "message": "Mínimo 8 caracteres"}] }
 
 // Response 429
 { "error": "TOO_MANY_REQUESTS", "message": "Demasiados registros, intenta más tarde", "retryAfter": 3600 }

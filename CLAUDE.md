@@ -55,10 +55,29 @@ sophia-platform/
 
 ```bash
 pnpm dev                    # Dev (turbo: web + api)
-pnpm docker:up              # PostgreSQL 16 + Redis 7
 pnpm db:migrate             # Prisma migrations
 pnpm build                  # Build all
 pnpm test                   # Tests all
+```
+
+### Local Development
+
+- PostgreSQL 16 y Redis 7 corren **nativos** (instalados localmente, no Docker)
+- `pnpm dev` levanta web + api con Turborepo
+- Hot reload via tsx watch en el API
+
+### Environment Variables
+
+```bash
+# apps/api/.env
+DATABASE_URL=postgresql://user:pass@localhost:5432/sophia_dev
+REDIS_URL=redis://localhost:6379
+JWT_SECRET=<random-32-chars>
+JWT_REFRESH_SECRET=<random-32-chars>
+ENCRYPTION_KEY=<64-hex-chars>          # AES-256-GCM para API keys
+RESEND_API_KEY=re_xxxxx                # Solo prod (dev usa console.log)
+FRONTEND_URL=http://localhost:3000
+PORT=3001
 ```
 
 ### Architecture Rules
@@ -96,12 +115,15 @@ src/modules/{nombre}/
 └── {nombre}.schema.ts      → Schemas Zod de validación
 ```
 
+Módulos con autenticación agregan `{nombre}.middleware.ts` (hooks de auth/rate-limit).
+
 - **NO repository layer** — Prisma se usa directo en el service
 - Auth: JWT cookies httpOnly (`access_token`) — **NO Bearer token**
 - Respuesta éxito: `{ data: result }`
 - Respuesta error: `{ error: 'ERROR_CODE', message: 'descripción' }`
+- Error rate limit: `{ error: 'ERROR_CODE', message: 'descripción', retryAfter: seconds }`
 - Error validación: `{ error: 'VALIDATION_ERROR', errors: zodError.errors }`
-- HTTP codes: 200, 201, 400, 401, 404, 422, 500
+- HTTP codes: 200, 201, 400, 401, 404, 409, 422, 429, 500
 
 ### Frontend Pattern
 
@@ -110,6 +132,22 @@ src/modules/{nombre}/
 - Siempre manejar 3 estados: loading, error, data
 - API calls con `fetch(url, { credentials: 'include' })` — cookies, NO Bearer
 - Tipos compartidos desde `@sophia/shared`
+
+### Speckit Artifacts per Module
+
+Cada módulo debe tener los siguientes artefactos en `specs/<módulo>/`. Si alguno no existe, **créalo antes de implementar**:
+
+```
+specs/<módulo>/
+├── spec.md              # Requisitos de negocio (obligatorio)
+├── plan.md              # Plan de implementación (obligatorio)
+├── tasks.md             # Checklist de tareas (obligatorio)
+├── research.md          # Investigación técnica (decisiones, libs, trade-offs)
+├── data-model.md        # Modelo de datos (tablas, índices, relaciones, Prisma schema)
+├── quickstart.md        # Guía rápida para empezar a implementar
+└── contracts/
+    └── api-spec.json    # Contrato OpenAPI 3.0 de los endpoints del módulo
+```
 
 ### Module Execution Order
 
@@ -163,8 +201,8 @@ Features move through this ordered sequence — each step gates the next:
 2. `/speckit.clarify` — Refines the spec interactively (max 5 questions); run before planning
 3. `/speckit.plan` — Generates `plan.md`, `research.md`, `data-model.md`, and `contracts/`; runs `.specify/scripts/bash/setup-plan.sh --json`
 4. `/speckit.checklist <domain>` — Creates quality checklists (e.g., `ux.md`, `security.md`) under `specs/<branch>/checklists/`
-5. `/speckit.analyze` — Cross-artifact consistency analysis across `spec.md`, `plan.md`, `tasks.md` (read-only)
-6. `/speckit.tasks` — Generates `tasks.md` with dependency-ordered, user-story-grouped tasks
+5. `/speckit.tasks` — Generates `tasks.md` with dependency-ordered, user-story-grouped tasks
+6. `/speckit.analyze` — Cross-artifact consistency analysis across `spec.md`, `plan.md`, `tasks.md` (read-only)
 7. `/speckit.implement` — Executes tasks from `tasks.md` phase by phase; marks tasks `[X]` as completed
 8. `/speckit.constitution` — Creates/updates the project constitution at `.specify/memory/constitution.md`
 9. `/speckit.taskstoissues` — Converts `tasks.md` tasks into GitHub Issues (only for GitHub remotes)
@@ -177,15 +215,6 @@ All scripts are in `.specify/scripts/bash/` and source `common.sh` for shared pa
 - `check-prerequisites.sh` — Validates feature context (current branch → feature dir → required docs). Used by most skills at startup. Flags: `--json`, `--require-tasks`, `--include-tasks`, `--paths-only`.
 - `setup-plan.sh` — Copies the plan template into the feature dir. Called by `/speckit.plan`.
 - `update-agent-context.sh` — Parses `plan.md` and updates agent context files (CLAUDE.md, AGENTS.md, etc.) with tech stack info. Called with agent type: `update-agent-context.sh claude`.
-
-## Directory Structure
-
-Feature specs live at `specs/<branch-name>/` and contain:
-- `spec.md` — Business requirements (tech-agnostic)
-- `plan.md` — Implementation plan (tech stack, architecture)
-- `research.md`, `data-model.md`, `contracts/`, `quickstart.md` — Optional design artifacts
-- `tasks.md` — Ordered implementation checklist
-- `checklists/` — Requirements quality checklists
 
 ## Constitution
 
@@ -204,3 +233,57 @@ After `/speckit.plan`, run `.specify/scripts/bash/update-agent-context.sh claude
 ## Extension Hooks
 
 All skills check `.specify/extensions.yml` for `hooks.before_<command>` and `hooks.after_<command>` entries. Hooks with `optional: false` execute automatically; `optional: true` hooks are presented to the user for manual invocation.
+
+---
+
+## Project Tracking & Versioning
+
+### Versionamiento Semántico
+
+Todos los artefactos de spec usan **Semantic Versioning** (`MAJOR.MINOR.PATCH`):
+
+- **MAJOR**: Cambio de alcance (agregar/quitar HUs, rediseño de arquitectura)
+- **MINOR**: Nuevos endpoints, tablas, componentes, o correcciones de `/speckit.analyze`
+- **PATCH**: Correcciones de typos, clarificaciones de redacción, ajustes de formato
+
+Cada `spec.md` debe incluir `# Versión: X.Y` en su header. Al editar, incrementar la versión correspondiente.
+
+### Changelog
+
+Mantener `CHANGELOG.md` (raíz del proyecto) actualizado con cada cambio relevante. Formato:
+
+```markdown
+## [M1-Auth v1.3] — 2026-04-08
+### Changed
+- Fix 422 response format to match constitution V
+- Add Helmet.js, CORS, shared types tasks
+- Clarify Zod schemas as frontend-only
+### Added
+- T042-T046: security headers, CORS, shared types, logout UI, perf test
+```
+
+Reglas:
+- Una entrada por módulo/sprint modificado
+- Agrupar por `Added`, `Changed`, `Fixed`, `Removed`
+- Incluir IDs de tareas cuando aplique
+
+### Archivos de Tracking
+
+| Archivo | Propósito | Cuándo actualizar |
+|---------|-----------|-------------------|
+| `docs/context-map.md` | Mapa de dependencias entre módulos — qué archivos lee cada módulo | Al agregar dependencias cross-module o nuevos archivos compartidos |
+| `docs/task-tracker.md` | Resumen de progreso global — tareas completadas vs pendientes por módulo | Al completar una fase o sprint |
+| `specs/<módulo>/spec.md` | Versión en header | Al modificar requisitos, endpoints, o modelo de datos |
+| `specs/<módulo>/plan.md` | Constitution Check table | Al cambiar decisiones de arquitectura |
+| `specs/<módulo>/tasks.md` | Checkboxes `[X]` | Inmediatamente al completar cada tarea |
+| `.specify/memory/constitution.md` | Version field | Al enmendar principios (requiere actualizar CLAUDE.md también) |
+| `CHANGELOG.md` | Entradas por módulo | Al cerrar un sprint, completar analyze, o hacer cambios significativos |
+| `docs/system-design.html` | Documento visual de arquitectura (HTML standalone) | Al cambiar capas, agentes, ERD, decisiones técnicas o infraestructura |
+
+### Regla de Actualización
+
+**Al completar cualquier tarea o grupo de tareas:**
+1. Marcar `[X]` en `tasks.md`
+2. Actualizar `docs/task-tracker.md` con el nuevo conteo
+3. Si hubo cambios en spec/plan, incrementar versión y agregar entrada en `CHANGELOG.md`
+4. Si se agregaron dependencias cross-module, actualizar `docs/context-map.md`

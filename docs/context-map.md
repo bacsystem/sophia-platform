@@ -6,7 +6,7 @@ Mapa de qué archivos leer para cada situación. Minimiza contexto, maximiza pre
 
 ```
 Lee:
-  specs/m1-auth/spec.md
+  specs/001-m1-auth/spec.md
   skills/backend-agent/system.md
   apps/api/src/modules/auth/          → solo los archivos existentes
   apps/api/src/plugins/auth.ts        → plugin JWT cookies
@@ -19,7 +19,7 @@ NO leas: nada de apps/web/ salvo que la tarea sea frontend de auth
 
 ```
 Lee:
-  specs/m2-projects/spec.md
+  specs/002-m2-projects/spec.md
   skills/backend-agent/system.md
   apps/api/src/modules/projects/
   packages/shared/src/types/projects.ts
@@ -31,7 +31,7 @@ NO leas: nada de auth salvo el plugin de autenticación
 
 ```
 Lee:
-  specs/m3-spec-engine/spec.md
+  specs/003-m3-spec-engine/spec.md
   skills/backend-agent/system.md
   apps/api/src/modules/specs/
   packages/shared/src/types/specs.ts
@@ -43,7 +43,7 @@ NO leas: módulos de auth o projects (solo se importa el service si hay dependen
 
 ```
 Lee:
-  specs/m4-agent-runner/spec.md
+  specs/004-m4-agent-runner/spec.md
   skills/backend-agent/system.md
   apps/api/src/modules/agents/        → orquestador, base-agent, 6 agent runners
   apps/api/src/modules/websocket/     → eventos en tiempo real
@@ -59,7 +59,7 @@ Dependencias explícitas:
 
 ```
 Lee:
-  specs/m5-dashboard/spec.md
+  specs/005-m5-dashboard/spec.md
   skills/frontend-agent/system.md
   apps/web/src/app/dashboard/
   apps/web/src/components/dashboard/agent-canvas.tsx  → Canvas API nativo
@@ -73,7 +73,7 @@ NO leas: nada del backend salvo tipos compartidos
 
 ```
 Lee:
-  specs/m6-file-manager/spec.md
+  specs/006-m6-file-manager/spec.md
   skills/frontend-agent/system.md
   apps/web/src/components/files/       → tree view, code viewer
   apps/api/src/modules/files/          → endpoints de archivos generados
@@ -85,7 +85,7 @@ NO leas: dashboard ni agents
 
 ```
 Lee:
-  specs/m7-settings/spec.md
+  specs/007-m7-settings/spec.md
   apps/web/src/app/settings/
   apps/api/src/modules/settings/
   apps/api/src/modules/users/          → perfil del usuario
@@ -122,7 +122,7 @@ Lee:
   skills/<agente>-agent/system.md + task.md  → prompt del agente
   apps/api/src/modules/agents/base-agent.ts  → clase base
   apps/api/src/modules/agents/dba-agent.ts   → ejemplo de implementación
-  specs/m4-agent-runner/spec.md
+  specs/004-m4-agent-runner/spec.md
 
 NO existe "spec-agent" — los 6 agentes son: dba, backend, frontend, qa, docs, deploy
 ```

@@ -39,9 +39,14 @@ Módulo de autenticación completo: registro, login, logout, refresh tokens y re
 
 ```text
 specs/001-m1-auth/
-├── spec.md              # Spec del módulo (existente)
+├── spec.md              # Requisitos de negocio
 ├── plan.md              # This file
-└── tasks.md             # Task list (pendiente /speckit.tasks)
+├── tasks.md             # Task list (generated)
+├── research.md          # Investigación técnica (decisiones, libs)
+├── data-model.md        # Modelo de datos (tablas, Prisma schema)
+├── quickstart.md        # Guía rápida de implementación
+└── contracts/
+    └── api-spec.json    # Contrato OpenAPI 3.0
 ```
 
 ### Source Code (repository root)

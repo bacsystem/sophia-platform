@@ -13,36 +13,52 @@
   --accent:#1D4ED8;--accent2:#7c3aed;--green:#10b981;
   --amber:#f59e0b;--text:#dde4f5;--muted:#3d4f6e;--muted2:#5a6e8e;
   --mono:'Geist Mono',monospace;--display:'Cabinet Grotesk',sans-serif;
+  --grid-line:rgba(255,255,255,0.018);
+  --grad-1:rgba(29,78,216,0.08);--grad-2:rgba(124,58,237,0.06);--grad-3:rgba(16,185,129,0.03);
+  --card-hover-bg:rgba(20,24,36,0.9);
+  --selection:rgba(29,78,216,0.3);
+  --scrollbar:rgba(61,79,110,0.35);--scrollbar-hover:rgba(90,110,142,0.5);
+}
+[data-theme="light"]{
+  --bg:#eef1f6;--bg2:#e6e9f0;--panel:#ffffff;--panel2:#f5f6fa;
+  --border:rgba(0,0,0,0.10);--border2:rgba(0,0,0,0.16);
+  --accent:#2563eb;--accent2:#7c3aed;--green:#059669;
+  --amber:#d97706;--text:#1a1d2b;--muted:#7a87a0;--muted2:#5a677d;
+  --grid-line:rgba(0,0,0,0.04);
+  --grad-1:rgba(37,99,235,0.06);--grad-2:rgba(124,58,237,0.04);--grad-3:rgba(16,185,129,0.03);
+  --card-hover-bg:#ffffff;
+  --selection:rgba(37,99,235,0.15);
+  --scrollbar:rgba(0,0,0,0.15);--scrollbar-hover:rgba(0,0,0,0.25);
 }
 html,body{background:var(--bg);color:var(--text);font-family:var(--display);line-height:1.6}
-body{padding:40px 24px 100px;max-width:1000px;margin:0 auto}
+body{padding:40px 32px 100px;max-width:1320px;margin:0 auto}
 
 /* HEADER */
 .hero{text-align:center;padding:60px 0 50px;border-bottom:1px solid var(--border);margin-bottom:60px}
-.eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(29,78,216,.08);border:1px solid rgba(29,78,216,.2);border-radius:100px;padding:6px 16px;font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:20px}
-.hero h1{font-size:clamp(2.2rem,6vw,4rem);font-weight:900;letter-spacing:-.04em;line-height:1.05;margin-bottom:12px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(29,78,216,.08);border:1px solid rgba(29,78,216,.2);border-radius:100px;padding:7px 20px;font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:20px}
+.hero h1{font-size:clamp(2.8rem,7vw,5rem);font-weight:900;letter-spacing:-.04em;line-height:1.05;margin-bottom:14px}
 .hero h1 span{color:var(--accent)}
-.hero p{font-size:13px;color:var(--muted2);font-family:var(--mono);max-width:500px;margin:0 auto}
-.hero-version{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:12px}
+.hero p{font-size:15px;color:var(--muted2);font-family:var(--mono);max-width:600px;margin:0 auto}
+.hero-version{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:12px}
 
 /* SECTION */
 .section{margin-bottom:60px}
-.section-label{font-family:var(--mono);font-size:9px;color:var(--accent);letter-spacing:.2em;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:12px}
+.section-label{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.2em;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:12px}
 .section-label::after{content:'';flex:1;height:1px;background:var(--border)}
-.section-title{font-size:20px;font-weight:800;letter-spacing:-.02em;margin-bottom:8px}
-.section-desc{font-size:13px;color:var(--muted2);line-height:1.7;margin-bottom:24px}
+.section-title{font-size:24px;font-weight:800;letter-spacing:-.02em;margin-bottom:8px}
+.section-desc{font-size:15px;color:var(--muted2);line-height:1.7;margin-bottom:24px}
 
 /* ARCH LAYERS */
 .arch{border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:20px}
 .arch-layer{border-bottom:1px solid var(--border);display:grid;gap:0}
 .arch-layer:last-child{border-bottom:none}
-.layer-label{background:rgba(255,255,255,.02);padding:10px 20px;font-family:var(--mono);font-size:9px;color:var(--muted2);letter-spacing:.15em;text-transform:uppercase;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
-.layer-label span{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.layer-nodes{display:flex;gap:12px;padding:16px 20px;flex-wrap:wrap}
-.node{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;flex:1;min-width:140px}
-.node-name{font-size:12px;font-weight:700;margin-bottom:4px}
-.node-desc{font-size:10px;font-family:var(--mono);color:var(--muted2);line-height:1.5}
-.node-badge{display:inline-block;font-size:8px;font-family:var(--mono);padding:2px 7px;border-radius:4px;margin-top:6px}
+.layer-label{background:rgba(255,255,255,.02);padding:12px 22px;font-family:var(--mono);font-size:11px;color:var(--muted2);letter-spacing:.15em;text-transform:uppercase;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.layer-label span{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.layer-nodes{display:flex;gap:14px;padding:18px 22px;flex-wrap:wrap}
+.node{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;flex:1;min-width:160px}
+.node-name{font-size:14px;font-weight:700;margin-bottom:5px}
+.node-desc{font-size:12px;font-family:var(--mono);color:var(--muted2);line-height:1.6}
+.node-badge{display:inline-block;font-size:10px;font-family:var(--mono);padding:3px 9px;border-radius:4px;margin-top:6px}
 
 .layer-user .layer-label span{background:#06d6a0}
 .layer-user .node{border-color:rgba(6,214,160,.15)}
@@ -61,15 +77,15 @@ body{padding:40px 24px 100px;max-width:1000px;margin:0 auto}
 .flow{display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:16px;overflow:hidden}
 .flow-step{display:grid;grid-template-columns:40px 1fr;border-bottom:1px solid var(--border)}
 .flow-step:last-child{border-bottom:none}
-.flow-num{display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.02);border-right:1px solid var(--border);font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent)}
-.flow-content{padding:14px 18px}
-.flow-title{font-size:12px;font-weight:700;margin-bottom:3px}
-.flow-desc{font-size:11px;font-family:var(--mono);color:var(--muted2);line-height:1.5}
-.flow-tag{display:inline-block;font-size:9px;font-family:var(--mono);padding:1px 7px;border-radius:4px;margin-top:5px;background:rgba(29,78,216,.1);border:1px solid rgba(29,78,216,.2);color:var(--accent)}
+.flow-num{display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.02);border-right:1px solid var(--border);font-family:var(--mono);font-size:13px;font-weight:600;color:var(--accent)}
+.flow-content{padding:16px 20px}
+.flow-title{font-size:14px;font-weight:700;margin-bottom:3px}
+.flow-desc{font-size:12px;font-family:var(--mono);color:var(--muted2);line-height:1.6}
+.flow-tag{display:inline-block;font-size:10px;font-family:var(--mono);padding:2px 9px;border-radius:4px;margin-top:5px;background:rgba(29,78,216,.1);border:1px solid rgba(29,78,216,.2);color:var(--accent)}
 
 /* MODULES */
-.modules{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
-.module-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative;overflow:hidden}
+.modules{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.module-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px;position:relative;overflow:hidden}
 .module-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
 .m1::before{background:#5b8dee}
 .m2::before{background:#8b5cf6}
@@ -78,18 +94,18 @@ body{padding:40px 24px 100px;max-width:1000px;margin:0 auto}
 .m5::before{background:#ec4899}
 .m6::before{background:#10b981}
 .m7::before{background:#ef4444}
-.module-num{font-family:var(--mono);font-size:9px;color:var(--muted2);margin-bottom:6px;letter-spacing:.1em}
-.module-name{font-size:13px;font-weight:700;margin-bottom:4px}
-.module-desc{font-size:10px;color:var(--muted2);font-family:var(--mono);line-height:1.5;margin-bottom:8px}
-.module-stack{display:flex;gap:4px;flex-wrap:wrap}
-.stack-tag{font-size:8px;font-family:var(--mono);padding:2px 6px;border-radius:4px;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--muted2)}
+.module-num{font-family:var(--mono);font-size:10px;color:var(--muted2);margin-bottom:6px;letter-spacing:.1em}
+.module-name{font-size:15px;font-weight:700;margin-bottom:5px}
+.module-desc{font-size:12px;color:var(--muted2);font-family:var(--mono);line-height:1.6;margin-bottom:10px}
+.module-stack{display:flex;gap:5px;flex-wrap:wrap}
+.stack-tag{font-size:10px;font-family:var(--mono);padding:3px 8px;border-radius:4px;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--muted2)}
 
 /* ERD */
-.erd{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.erd{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
 .erd-table{background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden}
-.erd-header{padding:10px 14px;font-size:11px;font-weight:700;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px}
-.erd-header span{font-size:9px;font-family:var(--mono);color:var(--muted2);margin-left:auto}
-.erd-field{padding:5px 14px;font-family:var(--mono);font-size:9px;display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid rgba(255,255,255,.03)}
+.erd-header{padding:11px 16px;font-size:13px;font-weight:700;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px}
+.erd-header span{font-size:10px;font-family:var(--mono);color:var(--muted2);margin-left:auto}
+.erd-field{padding:6px 16px;font-family:var(--mono);font-size:11px;display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid rgba(255,255,255,.03)}
 .erd-field:last-child{border-bottom:none}
 .erd-field .fname{color:var(--text)}
 .erd-field .ftype{color:var(--muted2)}
@@ -98,33 +114,33 @@ body{padding:40px 24px 100px;max-width:1000px;margin:0 auto}
 
 /* DECISIONS */
 .decisions{display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:16px;overflow:hidden}
-.decision-row{display:grid;grid-template-columns:160px 1fr 1fr;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:10px}
+.decision-row{display:grid;grid-template-columns:180px 1fr 1fr;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:12px}
 .decision-row:last-child{border-bottom:none}
 .decision-row.header{background:rgba(255,255,255,.02);font-weight:600;color:var(--text)}
-.decision-topic{padding:10px 14px;border-right:1px solid var(--border);color:var(--accent)}
-.decision-chosen{padding:10px 14px;border-right:1px solid var(--border);color:var(--green)}
-.decision-why{padding:10px 14px;color:var(--muted2)}
+.decision-topic{padding:12px 16px;border-right:1px solid var(--border);color:var(--accent)}
+.decision-chosen{padding:12px 16px;border-right:1px solid var(--border);color:var(--green)}
+.decision-why{padding:12px 16px;color:var(--muted2)}
 
 /* WEBSOCKET EVENTS */
 .events{background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden}
-.event-row{display:grid;grid-template-columns:180px 1fr;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:10px}
+.event-row{display:grid;grid-template-columns:200px 1fr;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:12px}
 .event-row:last-child{border-bottom:none}
-.event-name{padding:10px 14px;color:var(--accent);border-right:1px solid var(--border);background:rgba(29,78,216,.04)}
-.event-desc{padding:10px 14px;color:var(--muted2)}
+.event-name{padding:12px 16px;color:var(--accent);border-right:1px solid var(--border);background:rgba(29,78,216,.04)}
+.event-desc{padding:12px 16px;color:var(--muted2)}
 
 /* INFRA */
 .infra-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .infra-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px}
 .infra-icon{margin-bottom:10px;line-height:0}
 .infra-icon svg{width:24px;height:24px;stroke-width:1.5}
-.infra-name{font-size:12px;font-weight:700;margin-bottom:4px}
-.infra-desc{font-size:10px;font-family:var(--mono);color:var(--muted2);line-height:1.5}
+.infra-name{font-size:14px;font-weight:700;margin-bottom:5px}
+.infra-desc{font-size:12px;font-family:var(--mono);color:var(--muted2);line-height:1.6}
 
 /* SECURITY */
 .sec-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .sec-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px}
-.sec-title{font-size:11px;font-weight:700;font-family:var(--mono);color:var(--amber);margin-bottom:8px;text-transform:uppercase;letter-spacing:.1em}
-.sec-item{font-size:10px;font-family:var(--mono);color:var(--muted2);line-height:1.8}
+.sec-title{font-size:12px;font-weight:700;font-family:var(--mono);color:var(--amber);margin-bottom:8px;text-transform:uppercase;letter-spacing:.1em}
+.sec-item{font-size:12px;font-family:var(--mono);color:var(--muted2);line-height:1.8}
 
 /* C4 DIAGRAMS */
 .c4-context{display:flex;flex-direction:column;align-items:center;gap:16px;padding:24px;border:1px solid var(--border);border-radius:16px}
@@ -133,10 +149,10 @@ body{padding:40px 24px 100px;max-width:1000px;margin:0 auto}
 .c4-box.primary{border-color:rgba(29,78,216,.3);background:rgba(29,78,216,.06)}
 .c4-box.external{border-color:rgba(124,58,237,.2);background:rgba(124,58,237,.04)}
 .c4-box.user{border-color:rgba(6,214,160,.2);background:rgba(6,214,160,.04)}
-.c4-box-name{font-size:12px;font-weight:700;margin-bottom:4px}
-.c4-box-type{font-size:9px;font-family:var(--mono);color:var(--muted2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.1em}
-.c4-box-desc{font-size:10px;font-family:var(--mono);color:var(--muted2);line-height:1.5}
-.c4-arrow{font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;padding:4px 0;letter-spacing:.05em}
+.c4-box-name{font-size:14px;font-weight:700;margin-bottom:4px}
+.c4-box-type{font-size:10px;font-family:var(--mono);color:var(--muted2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.1em}
+.c4-box-desc{font-size:12px;font-family:var(--mono);color:var(--muted2);line-height:1.6}
+.c4-arrow{font-family:var(--mono);font-size:10px;color:var(--muted);text-align:center;padding:4px 0;letter-spacing:.05em}
 .c4-arrow::before{content:'↓ '}
 
 /* CONTAINER DETAIL */
@@ -149,40 +165,41 @@ body{padding:40px 24px 100px;max-width:1000px;margin:0 auto}
 .cc-pg::before{background:#10b981}
 .cc-redis::before{background:#ef4444}
 .cc-fs::before{background:#06d6a0}
-.container-name{font-size:12px;font-weight:700;margin-bottom:4px;padding-left:10px}
-.container-tech{font-size:9px;font-family:var(--mono);color:var(--muted2);padding-left:10px;margin-bottom:8px}
+.container-name{font-size:14px;font-weight:700;margin-bottom:4px;padding-left:10px}
+.container-tech{font-size:10px;font-family:var(--mono);color:var(--muted2);padding-left:10px;margin-bottom:8px}
 .container-items{list-style:none;padding-left:10px}
-.container-items li{font-size:10px;font-family:var(--mono);color:var(--muted2);line-height:1.8;padding-left:12px;position:relative}
+.container-items li{font-size:12px;font-family:var(--mono);color:var(--muted2);line-height:1.8;padding-left:12px;position:relative}
 .container-items li::before{content:'›';position:absolute;left:0;color:var(--muted)}
 
 /* AGENT FLOW */
 .agent-flow{display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:16px;overflow:hidden}
-.af-step{display:grid;grid-template-columns:36px 1fr 1fr;border-bottom:1px solid var(--border)}
+.af-step{display:grid;grid-template-columns:42px 1fr 1fr;border-bottom:1px solid var(--border)}
 .af-step:last-child{border-bottom:none}
-.af-num{display:flex;align-items:center;justify-content:center;background:rgba(245,158,11,.04);border-right:1px solid var(--border);font-family:var(--mono);font-size:10px;font-weight:600;color:#f59e0b}
-.af-action{padding:12px 16px;border-right:1px solid var(--border)}
-.af-detail{padding:12px 16px}
-.af-label{font-size:11px;font-weight:700;margin-bottom:2px}
-.af-desc{font-size:10px;font-family:var(--mono);color:var(--muted2);line-height:1.5}
-.af-loop{background:rgba(245,158,11,.03);border:1px dashed rgba(245,158,11,.2);border-radius:10px;padding:12px 16px;margin-top:16px;text-align:center}
-.af-loop-label{font-size:10px;font-family:var(--mono);color:#f59e0b;font-weight:600;margin-bottom:4px}
-.af-loop-desc{font-size:10px;font-family:var(--mono);color:var(--muted2)}
+.af-num{display:flex;align-items:center;justify-content:center;background:rgba(245,158,11,.04);border-right:1px solid var(--border);font-family:var(--mono);font-size:12px;font-weight:600;color:#f59e0b}
+.af-action{padding:14px 18px;border-right:1px solid var(--border)}
+.af-detail{padding:14px 18px}
+.af-label{font-size:13px;font-weight:700;margin-bottom:2px}
+.af-desc{font-size:12px;font-family:var(--mono);color:var(--muted2);line-height:1.6}
+.af-loop{background:rgba(245,158,11,.03);border:1px dashed rgba(245,158,11,.2);border-radius:10px;padding:14px 18px;margin-top:16px;text-align:center}
+.af-loop-label{font-size:12px;font-family:var(--mono);color:#f59e0b;font-weight:600;margin-bottom:4px}
+.af-loop-desc{font-size:12px;font-family:var(--mono);color:var(--muted2)}
 
 /* ERD RELATIONSHIPS */
 .erd-relations{display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-top:16px}
-.erd-rel{display:grid;grid-template-columns:140px 60px 140px 1fr;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:10px;align-items:center}
+.erd-rel{display:grid;grid-template-columns:160px 70px 160px 1fr;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:12px;align-items:center}
 .erd-rel:last-child{border-bottom:none}
-.erd-rel-from{padding:8px 12px;color:var(--accent)}
-.erd-rel-type{padding:8px 6px;text-align:center;color:var(--muted)}
-.erd-rel-to{padding:8px 12px;color:var(--green)}
-.erd-rel-fk{padding:8px 12px;color:var(--muted2)}
+.erd-rel-header{background:rgba(255,255,255,.02)}
+.erd-rel-from{padding:10px 14px;color:var(--accent)}
+.erd-rel-type{padding:10px 8px;text-align:center;color:var(--muted)}
+.erd-rel-to{padding:10px 14px;color:var(--green)}
+.erd-rel-fk{padding:10px 14px;color:var(--muted2)}
 
 /* SCALE */
 .scale-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .scale-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px}
-.scale-label{font-size:9px;font-family:var(--mono);color:var(--amber);text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px}
-.scale-title{font-size:12px;font-weight:700;margin-bottom:6px}
-.scale-desc{font-size:10px;font-family:var(--mono);color:var(--muted2);line-height:1.7}
+.scale-label{font-size:10px;font-family:var(--mono);color:var(--amber);text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px}
+.scale-title{font-size:14px;font-weight:700;margin-bottom:6px}
+.scale-desc{font-size:12px;font-family:var(--mono);color:var(--muted2);line-height:1.7}
 
 /* DEPLOY PIPELINE */
 .pipeline{display:flex;gap:0;border:1px solid var(--border);border-radius:16px;overflow:hidden}
@@ -192,17 +209,17 @@ body{padding:40px 24px 100px;max-width:1000px;margin:0 auto}
 .pipe-stage:last-child::after{content:''}
 .pipe-icon{margin-bottom:8px;line-height:0}
 .pipe-icon svg{width:20px;height:20px;stroke-width:1.5}
-.pipe-name{font-size:11px;font-weight:700;margin-bottom:4px}
-.pipe-desc{font-size:9px;font-family:var(--mono);color:var(--muted2);line-height:1.5}
+.pipe-name{font-size:13px;font-weight:700;margin-bottom:4px}
+.pipe-desc{font-size:11px;font-family:var(--mono);color:var(--muted2);line-height:1.6}
 
 /* LIMITS TABLE */
 .limits{border:1px solid var(--border);border-radius:12px;overflow:hidden}
-.limit-row{display:grid;grid-template-columns:200px 120px 1fr;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:10px}
+.limit-row{display:grid;grid-template-columns:220px 140px 1fr;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:12px}
 .limit-row:last-child{border-bottom:none}
 .limit-row.lheader{background:rgba(255,255,255,.02);font-weight:600}
-.limit-what{padding:8px 14px;border-right:1px solid var(--border);color:var(--text)}
-.limit-val{padding:8px 14px;border-right:1px solid var(--border);color:var(--amber)}
-.limit-note{padding:8px 14px;color:var(--muted2)}
+.limit-what{padding:10px 16px;border-right:1px solid var(--border);color:var(--text)}
+.limit-val{padding:10px 16px;border-right:1px solid var(--border);color:var(--amber)}
+.limit-note{padding:10px 16px;color:var(--muted2)}
 
 @media(max-width:600px){
   .infra-grid{grid-template-columns:1fr}
@@ -222,22 +239,384 @@ body{padding:40px 24px 100px;max-width:1000px;margin:0 auto}
   .limit-row{grid-template-columns:1fr}
 }
 </style>
+<style>
+/* ========== PREMIUM UI OVERRIDES ========== */
+html{scroll-behavior:smooth}
+
+/* Background: layered gradient + grid */
+body{
+  background:
+    radial-gradient(ellipse at 15% -5%, var(--grad-1) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 105%, var(--grad-2) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, var(--grad-3) 0%, transparent 60%),
+    var(--bg) !important;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size:64px 64px;
+  pointer-events:none;z-index:0;
+  -webkit-mask-image:radial-gradient(ellipse at center,black 20%,transparent 70%);
+  mask-image:radial-gradient(ellipse at center,black 20%,transparent 70%);
+}
+body>*{position:relative;z-index:1}
+
+/* Keyframes */
+@keyframes gradient-shift{
+  0%,100%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+}
+@keyframes fade-up{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes pulse-glow{
+  0%,100%{border-color:rgba(29,78,216,0.15);box-shadow:0 0 0 rgba(29,78,216,0)}
+  50%{border-color:rgba(29,78,216,0.35);box-shadow:0 0 20px rgba(29,78,216,0.06)}
+}
+@keyframes shimmer{
+  0%{background-position:-200% 0}
+  100%{background-position:200% 0}
+}
+
+/* Hero premium */
+.hero{
+  border-bottom:1px solid transparent !important;
+  border-image:linear-gradient(90deg,transparent,rgba(29,78,216,0.3),rgba(124,58,237,0.3),transparent) 1;
+  animation:fade-up .8s ease-out both;
+  padding-bottom:60px !important;
+}
+.hero h1 span{
+  background:linear-gradient(135deg,#3b82f6,#8b5cf6,#06d6a0,#3b82f6) !important;
+  background-size:300% 300% !important;
+  -webkit-background-clip:text !important;
+  -webkit-text-fill-color:transparent !important;
+  background-clip:text !important;
+  animation:gradient-shift 6s ease infinite;
+}
+.eyebrow{animation:pulse-glow 3s ease-in-out infinite}
+.hero-version{
+  margin-top:16px !important;
+  background:rgba(255,255,255,0.03);
+  display:inline-block;
+  padding:4px 16px;
+  border-radius:100px;
+  border:1px solid rgba(255,255,255,0.06);
+}
+
+/* Cards: glass + hover */
+.node,.module-card,.sec-card,.infra-card,.scale-card,.container-card,.c4-box,.erd-table{
+  transition:transform .35s cubic-bezier(.4,0,.2,1),border-color .35s ease,box-shadow .35s ease,background .35s ease;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+}
+.node:hover,.sec-card:hover,.infra-card:hover,.scale-card:hover,.container-card:hover,.c4-box:hover,.erd-table:hover{
+  transform:translateY(-3px);
+  border-color:rgba(255,255,255,0.12);
+  box-shadow:0 16px 48px rgba(0,0,0,0.35),0 0 0 1px rgba(255,255,255,0.06);
+  background:var(--card-hover-bg);
+}
+.module-card{transition:transform .35s cubic-bezier(.4,0,.2,1),border-color .35s ease,box-shadow .35s ease}
+.module-card:hover{
+  transform:translateY(-4px);
+  border-color:rgba(255,255,255,0.12);
+}
+
+/* Module card colored glow */
+.m1:hover{box-shadow:0 16px 48px rgba(91,141,238,0.12),0 -2px 0 0 #5b8dee inset,0 0 24px rgba(91,141,238,0.06)}
+.m2:hover{box-shadow:0 16px 48px rgba(139,92,246,0.12),0 -2px 0 0 #8b5cf6 inset,0 0 24px rgba(139,92,246,0.06)}
+.m3:hover{box-shadow:0 16px 48px rgba(6,214,160,0.12),0 -2px 0 0 #06d6a0 inset,0 0 24px rgba(6,214,160,0.06)}
+.m4:hover{box-shadow:0 16px 48px rgba(245,158,11,0.12),0 -2px 0 0 #f59e0b inset,0 0 24px rgba(245,158,11,0.06)}
+.m5:hover{box-shadow:0 16px 48px rgba(236,72,153,0.12),0 -2px 0 0 #ec4899 inset,0 0 24px rgba(236,72,153,0.06)}
+.m6:hover{box-shadow:0 16px 48px rgba(16,185,129,0.12),0 -2px 0 0 #10b981 inset,0 0 24px rgba(16,185,129,0.06)}
+.m7:hover{box-shadow:0 16px 48px rgba(239,68,68,0.12),0 -2px 0 0 #ef4444 inset,0 0 24px rgba(239,68,68,0.06)}
+
+/* Arch layer shimmer on hover */
+.arch-layer:hover .layer-label{color:var(--text)}
+.arch-layer{transition:background .3s ease}
+.arch-layer:hover{background:rgba(255,255,255,0.01)}
+
+/* Tables/panels hover */
+.arch,.flow,.decisions,.events,.erd-relations,.agent-flow,.limits{
+  transition:border-color .3s ease,box-shadow .3s ease;
+}
+.arch:hover,.flow:hover,.decisions:hover,.events:hover,
+.erd-relations:hover,.agent-flow:hover,.limits:hover{
+  border-color:rgba(255,255,255,0.1);
+  box-shadow:0 4px 32px rgba(0,0,0,0.25);
+}
+
+/* Row hover effects */
+.flow-step,.af-step,.decision-row,.event-row,.limit-row,.erd-rel,.erd-field{
+  transition:background .2s ease;
+}
+.flow-step:hover,.af-step:hover,.decision-row:hover:not(.header),
+.event-row:hover,.limit-row:hover:not(.lheader),.erd-rel:hover:not(:first-child){
+  background:rgba(255,255,255,0.025);
+}
+.erd-field:hover{background:rgba(255,255,255,0.02)}
+
+/* Pipeline stages */
+.pipe-stage{transition:background .3s ease,transform .3s ease}
+.pipe-stage:hover{background:rgba(255,255,255,0.03);transform:translateY(-1px)}
+
+/* Flow tags */
+.flow-tag{transition:all .2s ease;cursor:default}
+.flow-tag:hover{background:rgba(29,78,216,0.2);border-color:rgba(29,78,216,0.4)}
+
+/* Node badge shimmer */
+.node-badge{transition:all .3s ease}
+.node:hover .node-badge{border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.06)}
+
+/* Section reveal */
+.section{
+  opacity:0;transform:translateY(20px);
+  transition:opacity .7s cubic-bezier(.4,0,.2,1),transform .7s cubic-bezier(.4,0,.2,1);
+}
+.section.revealed{opacity:1;transform:translateY(0)}
+.section:nth-child(even).revealed{transition-delay:0.05s}
+
+/* Section title interaction */
+.section-title{transition:color .3s ease;cursor:default}
+.section-title:hover{color:#fff}
+.section-label{transition:color .3s ease}
+.section:hover .section-label{color:#3b82f6}
+
+/* AF loop glow */
+.af-loop{transition:border-color .3s ease,box-shadow .3s ease}
+.af-loop:hover{
+  border-color:rgba(245,158,11,0.4);
+  box-shadow:0 0 24px rgba(245,158,11,0.08);
+}
+
+/* C4 arrows */
+.c4-arrow{transition:color .3s ease;letter-spacing:.05em}
+
+/* Floating nav */
+.floating-nav{
+  position:fixed;right:16px;top:50%;transform:translateY(-50%);z-index:1000;
+  display:flex;flex-direction:column;gap:5px;
+  padding:10px 5px;
+  background:rgba(16,20,31,0.65);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid var(--border);
+  border-radius:20px;
+  transition:opacity .3s ease;
+}
+[data-theme="light"] .floating-nav{background:rgba(255,255,255,0.7)}
+.floating-nav a{
+  width:5px;height:5px;border-radius:50%;
+  background:rgba(255,255,255,0.15);
+  transition:all .3s cubic-bezier(.4,0,.2,1);
+  display:block;position:relative;
+}
+.floating-nav a:hover,.floating-nav a.active{
+  background:var(--accent);
+  transform:scale(2);
+  box-shadow:0 0 10px rgba(29,78,216,0.5);
+}
+.floating-nav a:hover::after{
+  content:attr(data-label);
+  position:absolute;right:16px;top:50%;transform:translateY(-50%);
+  white-space:nowrap;
+  font-family:var(--mono);font-size:9px;color:var(--text);
+  background:rgba(16,20,31,0.92);
+  border:1px solid var(--border2);
+  padding:4px 10px;border-radius:6px;
+  pointer-events:none;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  animation:fade-up .2s ease-out both;
+}
+[data-theme="light"] .floating-nav a:hover::after{background:rgba(255,255,255,0.92)}
+
+/* Theme toggle */
+.theme-toggle{
+  position:fixed;top:20px;right:20px;z-index:1001;
+  display:flex;align-items:center;gap:2px;
+  background:rgba(16,20,31,0.65);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid var(--border);
+  border-radius:100px;
+  padding:3px;
+}
+[data-theme="light"] .theme-toggle{background:rgba(255,255,255,0.7)}
+.theme-toggle button{
+  background:none;border:none;cursor:pointer;
+  width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--muted2);
+  transition:all .25s ease;
+  padding:0;
+}
+.theme-toggle button:hover{color:var(--text)}
+.theme-toggle button.active{
+  background:var(--accent);color:#fff;
+  box-shadow:0 0 10px rgba(29,78,216,0.3);
+}
+.theme-toggle button svg{width:14px;height:14px;stroke-width:2}
+
+/* Light mode overrides */
+[data-theme="light"] .hero{border-image:linear-gradient(90deg,transparent,rgba(37,99,235,0.2),rgba(124,58,237,0.2),transparent) 1}
+[data-theme="light"] .eyebrow{background:rgba(37,99,235,0.06);border-color:rgba(37,99,235,0.15);color:var(--accent)}
+[data-theme="light"] .hero h1 span{
+  background:linear-gradient(135deg,#1d4ed8,#6d28d9,#047857,#1d4ed8) !important;
+  background-size:300% 300% !important;
+  -webkit-background-clip:text !important;
+  background-clip:text !important;
+  -webkit-text-fill-color:transparent !important;
+}
+[data-theme="light"] .node,[data-theme="light"] .module-card,
+[data-theme="light"] .sec-card,[data-theme="light"] .infra-card,
+[data-theme="light"] .scale-card,[data-theme="light"] .container-card,
+[data-theme="light"] .c4-box,[data-theme="light"] .erd-table,
+[data-theme="light"] .events{
+  box-shadow:0 1px 3px rgba(0,0,0,0.04),0 1px 2px rgba(0,0,0,0.06);
+}
+[data-theme="light"] .node:hover,[data-theme="light"] .sec-card:hover,
+[data-theme="light"] .infra-card:hover,[data-theme="light"] .scale-card:hover,
+[data-theme="light"] .container-card:hover,[data-theme="light"] .c4-box:hover,
+[data-theme="light"] .erd-table:hover{
+  box-shadow:0 8px 24px rgba(0,0,0,0.10),0 0 0 1px rgba(0,0,0,0.06);
+  border-color:rgba(0,0,0,0.14);
+}
+[data-theme="light"] .m1:hover{box-shadow:0 12px 32px rgba(91,141,238,0.1),0 -2px 0 0 #5b8dee inset}
+[data-theme="light"] .m2:hover{box-shadow:0 12px 32px rgba(139,92,246,0.1),0 -2px 0 0 #8b5cf6 inset}
+[data-theme="light"] .m3:hover{box-shadow:0 12px 32px rgba(6,214,160,0.1),0 -2px 0 0 #06d6a0 inset}
+[data-theme="light"] .m4:hover{box-shadow:0 12px 32px rgba(245,158,11,0.1),0 -2px 0 0 #f59e0b inset}
+[data-theme="light"] .m5:hover{box-shadow:0 12px 32px rgba(236,72,153,0.1),0 -2px 0 0 #ec4899 inset}
+[data-theme="light"] .m6:hover{box-shadow:0 12px 32px rgba(16,185,129,0.1),0 -2px 0 0 #10b981 inset}
+[data-theme="light"] .m7:hover{box-shadow:0 12px 32px rgba(239,68,68,0.1),0 -2px 0 0 #ef4444 inset}
+[data-theme="light"] .module-card:hover{border-color:rgba(0,0,0,0.14)}
+[data-theme="light"] .arch-layer:hover{background:rgba(0,0,0,0.015)}
+[data-theme="light"] .flow-step:hover,[data-theme="light"] .af-step:hover,
+[data-theme="light"] .decision-row:hover:not(.header),[data-theme="light"] .event-row:hover,
+[data-theme="light"] .limit-row:hover:not(.lheader),[data-theme="light"] .erd-rel:hover:not(:first-child){
+  background:rgba(0,0,0,0.025);
+}
+[data-theme="light"] .erd-field:hover{background:rgba(0,0,0,0.02)}
+[data-theme="light"] .flow-tag:hover{background:rgba(37,99,235,0.1);border-color:rgba(37,99,235,0.25)}
+[data-theme="light"] .node:hover .node-badge{border-color:rgba(0,0,0,0.08);background:rgba(0,0,0,0.03)}
+[data-theme="light"] .module-card:hover .stack-tag{border-color:rgba(0,0,0,0.08);background:rgba(0,0,0,0.03)}
+[data-theme="light"] .af-loop:hover{border-color:rgba(217,119,6,0.3);box-shadow:0 0 20px rgba(217,119,6,0.05)}
+[data-theme="light"] .sec-card:hover .sec-title{text-shadow:0 0 12px rgba(217,119,6,0.15)}
+[data-theme="light"] .erd-table:hover .erd-header{background:rgba(0,0,0,0.02)}
+[data-theme="light"] .arch,[data-theme="light"] .flow,[data-theme="light"] .decisions,
+[data-theme="light"] .erd-relations,[data-theme="light"] .agent-flow,[data-theme="light"] .limits{
+  box-shadow:0 1px 3px rgba(0,0,0,0.04),0 1px 2px rgba(0,0,0,0.06);
+}
+[data-theme="light"] .arch:hover,[data-theme="light"] .flow:hover,[data-theme="light"] .decisions:hover,
+[data-theme="light"] .events:hover,[data-theme="light"] .erd-relations:hover,
+[data-theme="light"] .agent-flow:hover,[data-theme="light"] .limits:hover{
+  border-color:rgba(0,0,0,0.16);box-shadow:0 8px 24px rgba(0,0,0,0.08);
+}
+[data-theme="light"] .layer-label{color:var(--muted2)}
+[data-theme="light"] .decision-row.header{background:rgba(0,0,0,0.03)}
+[data-theme="light"] .limit-row.lheader{background:rgba(0,0,0,0.03)}
+[data-theme="light"] .event-name{background:rgba(37,99,235,0.06)}
+[data-theme="light"] .c4-box.primary{border-color:rgba(37,99,235,0.25);background:rgba(37,99,235,0.05)}
+[data-theme="light"] .c4-box.external{border-color:rgba(124,58,237,0.20);background:rgba(124,58,237,0.04)}
+[data-theme="light"] .c4-box.user{border-color:rgba(5,150,105,0.20);background:rgba(5,150,105,0.04)}
+
+/* Light mode — base CSS hardcoded overrides */
+[data-theme="light"] .layer-label{background:rgba(0,0,0,0.025)}
+[data-theme="light"] .flow-num{background:rgba(0,0,0,0.025)}
+[data-theme="light"] .stack-tag{background:rgba(0,0,0,0.04);border-color:rgba(0,0,0,0.10)}
+[data-theme="light"] .erd-field{border-bottom-color:rgba(0,0,0,0.06)}
+[data-theme="light"] .af-num{background:rgba(245,158,11,0.08)}
+[data-theme="light"] .af-loop{background:rgba(245,158,11,0.05);border-color:rgba(245,158,11,0.25)}
+[data-theme="light"] .hero-version{background:rgba(0,0,0,0.04);border-color:rgba(0,0,0,0.10)}
+[data-theme="light"] .pipe-stage:hover{background:rgba(0,0,0,0.03)}
+[data-theme="light"] .section-title:hover{color:var(--text)}
+[data-theme="light"] .floating-nav a{background:rgba(0,0,0,0.15)}
+[data-theme="light"] .floating-nav a:hover,[data-theme="light"] .floating-nav a.active{background:var(--accent)}
+[data-theme="light"] .layer-user .node{border-color:rgba(6,214,160,0.30)}
+[data-theme="light"] .layer-web .node{border-color:rgba(37,99,235,0.30)}
+[data-theme="light"] .layer-api .node{border-color:rgba(124,58,237,0.30)}
+[data-theme="light"] .layer-agents .node{border-color:rgba(245,158,11,0.30)}
+[data-theme="light"] .layer-data .node{border-color:rgba(16,185,129,0.30)}
+[data-theme="light"] .layer-infra .node{border-color:rgba(239,68,68,0.30)}
+[data-theme="light"] .erd-rel-header{background:rgba(0,0,0,0.025)}
+[data-theme="light"] .flow-tag{background:rgba(37,99,235,0.08);border-color:rgba(37,99,235,0.20)}
+[data-theme="light"] .node-badge{border-color:rgba(0,0,0,0.08)}
+[data-theme="light"] .arch-layer:hover .layer-label{color:var(--text)}
+[data-theme="light"] .section:hover .section-label{color:#2563eb}
+[data-theme="light"] .module-card:hover .stack-tag{border-color:rgba(0,0,0,0.12);background:rgba(0,0,0,0.05)}
+[data-theme="light"] .erd-table:hover .erd-header{background:rgba(0,0,0,0.025)}
+[data-theme="light"] .pipeline{box-shadow:0 1px 3px rgba(0,0,0,0.04),0 1px 2px rgba(0,0,0,0.06)}
+[data-theme="light"] .c4-context{box-shadow:0 1px 3px rgba(0,0,0,0.04),0 1px 2px rgba(0,0,0,0.06)}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--scrollbar);border-radius:10px}
+::-webkit-scrollbar-thumb:hover{background:var(--scrollbar-hover)}
+
+/* Selection */
+::selection{background:var(--selection);color:var(--text)}
+
+/* Stack tags hover */
+.stack-tag{transition:all .2s ease}
+.module-card:hover .stack-tag{
+  border-color:rgba(255,255,255,0.08);
+  background:rgba(255,255,255,0.06);
+}
+
+/* Security card title glow on hover */
+.sec-card:hover .sec-title{text-shadow:0 0 12px rgba(245,158,11,0.3)}
+.sec-title{transition:text-shadow .3s ease}
+
+/* Infra icon rotate on hover */
+.infra-card:hover .infra-icon{transform:scale(1.1)}
+.infra-icon{transition:transform .3s ease}
+
+/* Container card left bar glow */
+.container-card:hover::before{width:3px !important;filter:brightness(1.3)}
+.container-card::before{transition:all .3s ease}
+
+/* Scale card label */
+.scale-label{transition:color .3s ease}
+.scale-card:hover .scale-label{color:#fbbf24}
+
+/* ERD header glow on hover */
+.erd-table:hover .erd-header{background:rgba(255,255,255,0.03)}
+.erd-header{transition:background .3s ease}
+
+@media(max-width:768px){
+  .floating-nav{display:none}
+  .theme-toggle{top:12px;right:12px}
+}
+</style>
 </head>
 <body>
+
+<nav class="floating-nav" id="floatingNav"></nav>
+
+<div class="theme-toggle" id="themeToggle">
+  <button data-theme-val="light" title="Modo Claro">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+  </button>
+  <button data-theme-val="dark" title="Modo Oscuro">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+  <button data-theme-val="system" title="Seguir Sistema">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+  </button>
+</div>
 
 <!-- HERO -->
 <div class="hero">
   <div class="eyebrow">System Design</div>
   <h1>Sophia <span>Platform</span></h1>
   <p>Plataforma web de generación autónoma de software con agentes IA especializados — Claude Tool Use</p>
-  <div class="hero-version">v1.3 · 7 módulos · 28 HUs · 6 capas secuenciales</div>
+  <div class="hero-version">v1.4 · 7 módulos · 28 HUs · 9 capas secuenciales</div>
 </div>
 
 <!-- 1. ARQUITECTURA DE CAPAS -->
 <div class="section">
   <div class="section-label">01</div>
   <div class="section-title">Arquitectura de Capas</div>
-  <div class="section-desc">Vista completa del sistema desde el usuario hasta la infraestructura. Monorepo Turborepo con frontend en Vercel y backend + worker en Railway.</div>
+  <div class="section-desc">Vista completa del sistema desde el usuario hasta la infraestructura. Monorepo Turborepo con frontend en Vercel y backend + worker en Railway. Pipeline de 9 agentes secuenciales.</div>
 
   <div class="arch">
 
@@ -305,15 +684,19 @@ body{padding:40px 24px 100px;max-width:1000px;margin:0 auto}
     </div>
 
     <div class="arch-layer layer-agents">
-      <div class="layer-label"><span></span>Capa de Agentes IA — Claude Tool Use (6 capas secuenciales)</div>
+      <div class="layer-label"><span></span>Capa de Agentes IA — Claude Tool Use (9 capas secuenciales)</div>
       <div class="layer-nodes">
         <div class="node">
           <div class="node-name">Orchestrator</div>
-          <div class="node-desc">Coordina 6 capas<br>secuencialmente<br>BullMQ worker</div>
+          <div class="node-desc">Coordina 9 capas<br>secuencialmente<br>BullMQ worker</div>
         </div>
         <div class="node">
           <div class="node-name">DBA Agent</div>
-          <div class="node-desc">Layer 1: Database<br>schema.prisma<br>migraciones, seeds</div>
+          <div class="node-desc">Layer 1: Database<br>schema.prisma<br>migraciones</div>
+        </div>
+        <div class="node">
+          <div class="node-name">Seed Agent</div>
+          <div class="node-desc">Layer 1.5: Seed Data<br>datos iniciales<br>fixtures de prueba</div>
         </div>
         <div class="node">
           <div class="node-name">Backend Agent</div>
@@ -328,12 +711,20 @@ body{padding:40px 24px 100px;max-width:1000px;margin:0 auto}
           <div class="node-desc">Layer 4: Testing<br>unit tests<br>integration tests</div>
         </div>
         <div class="node">
+          <div class="node-name">Security Agent</div>
+          <div class="node-desc">Layer 4.5: Security<br>audit, vulnerabilities<br>OWASP compliance</div>
+        </div>
+        <div class="node">
           <div class="node-name">Docs Agent</div>
           <div class="node-desc">Layer 5: Docs<br>README, API docs<br>architecture</div>
         </div>
         <div class="node">
           <div class="node-name">Deploy Agent</div>
-          <div class="node-desc">Layer 6: Deployment<br>Dockerfile, CI/CD<br>docker-compose</div>
+          <div class="node-desc">Layer 6: Deployment<br>Dockerfile, CI/CD<br>Railway config</div>
+        </div>
+        <div class="node">
+          <div class="node-name">Integration Agent</div>
+          <div class="node-desc">Layer 7: Validation<br>cross-layer checks<br>consistency audit</div>
         </div>
       </div>
     </div>
@@ -414,9 +805,9 @@ body{padding:40px 24px 100px;max-width:1000px;margin:0 auto}
     <div class="flow-step">
       <div class="flow-num">4</div>
       <div class="flow-content">
-        <div class="flow-title">Orchestrator ejecuta 6 capas secuencialmente</div>
-        <div class="flow-desc">El worker BullMQ lee el spec y ejecuta: Database → Backend → Frontend → Testing → Docs → Deployment. Cada capa recibe contexto de las anteriores. Sin paralelismo en MVP.</div>
-        <span class="flow-tag">BullMQ Worker → Orchestrator → Layer 1…6 sequential</span>
+        <div class="flow-title">Orchestrator ejecuta 9 capas secuencialmente</div>
+        <div class="flow-desc">El worker BullMQ lee el spec y ejecuta: DBA → Seed → Backend → Frontend → QA → Security → Docs → Deploy → Integration. Cada capa recibe contexto de las anteriores. Sin paralelismo en MVP.</div>
+        <span class="flow-tag">BullMQ Worker → Orchestrator → Layer 1…9 sequential</span>
       </div>
     </div>
     <div class="flow-step">
@@ -431,7 +822,7 @@ body{padding:40px 24px 100px;max-width:1000px;margin:0 auto}
       <div class="flow-num">6</div>
       <div class="flow-content">
         <div class="flow-title">Proyecto completado</div>
-        <div class="flow-desc">Al completar Layer 6, status cambia a done. Emite project:done via WebSocket. El usuario descarga el ZIP con toda la estructura.</div>
+        <div class="flow-desc">Al completar Layer 7 (Integration), status cambia a done. Emite project:done via WebSocket. El usuario descarga el ZIP con toda la estructura.</div>
         <span class="flow-tag">project:done → GET /api/projects/:id/download → ZIP stream</span>
       </div>
     </div>
@@ -442,7 +833,7 @@ body{padding:40px 24px 100px;max-width:1000px;margin:0 auto}
 <div class="section">
   <div class="section-label">03</div>
   <div class="section-title">Módulos del Sistema</div>
-  <div class="section-desc">7 módulos con specs en specs/m[n]-[nombre]/spec.md. 28 historias de usuario distribuidas en 4 sprints.</div>
+  <div class="section-desc">7 módulos con specs en specs/00N-mN-nombre/. 28 historias de usuario distribuidas en 4 sprints.</div>
 
   <div class="modules">
     <div class="module-card m1">
@@ -543,7 +934,7 @@ body{padding:40px 24px 100px;max-width:1000px;margin:0 auto}
       <div class="erd-field"><span class="fname ffk">user_id</span><span class="ftype">uuid FK</span></div>
       <div class="erd-field"><span class="fname">token</span><span class="ftype">varchar hash</span></div>
       <div class="erd-field"><span class="fname">expires_at</span><span class="ftype">timestamptz</span></div>
-      <div class="erd-field"><span class="fname">revoked</span><span class="ftype">boolean</span></div>
+      <div class="erd-field"><span class="fname">revoked_at</span><span class="ftype">timestamptz?</span></div>
       <div class="erd-field"><span class="fname">created_at</span><span class="ftype">timestamptz</span></div>
     </div>
 
@@ -553,7 +944,7 @@ body{padding:40px 24px 100px;max-width:1000px;margin:0 auto}
       <div class="erd-field"><span class="fname ffk">user_id</span><span class="ftype">uuid FK</span></div>
       <div class="erd-field"><span class="fname">token</span><span class="ftype">varchar hash</span></div>
       <div class="erd-field"><span class="fname">expires_at</span><span class="ftype">timestamptz</span></div>
-      <div class="erd-field"><span class="fname">used</span><span class="ftype">boolean</span></div>
+      <div class="erd-field"><span class="fname">used_at</span><span class="ftype">timestamptz?</span></div>
       <div class="erd-field"><span class="fname">created_at</span><span class="ftype">timestamptz</span></div>
     </div>
 
@@ -711,7 +1102,7 @@ body{padding:40px 24px 100px;max-width:1000px;margin:0 auto}
   <div class="events">
     <div class="event-row">
       <div class="event-name">agent:status</div>
-      <div class="event-desc">agentId, agentType (dba|backend|frontend|qa|docs|deploy), status (idle|working|done|error|paused), progress 0-100, currentTask</div>
+      <div class="event-desc">agentId, agentType (dba|seed|backend|frontend|qa|security|docs|deploy|integration), status (idle|working|done|error|paused), progress 0-100, currentTask</div>
     </div>
     <div class="event-row">
       <div class="event-name">agent:log</div>
@@ -772,7 +1163,8 @@ body{padding:40px 24px 100px;max-width:1000px;margin:0 auto}
         ● Registro: 3 por IP por hora<br>
         ● Password reset: 3 por email por hora<br>
         ● API key verify: 5 por usuario por hora<br>
-        ● Spec generation: 10/proyecto/hora, 50/usuario/día
+        ● Spec generation: 10/proyecto/hora, 50/usuario/día<br>
+        ● <strong>Fail-open</strong>: si Redis no está disponible, permitir request sin rate limit (log warning)
       </div>
     </div>
     <div class="sec-card">
@@ -795,7 +1187,7 @@ body{padding:40px 24px 100px;max-width:1000px;margin:0 auto}
 
   <div class="infra-grid">
     <div class="infra-card">
-      <div class="infra-icon" style="color:#fff"><i data-lucide="triangle"></i></div>
+      <div class="infra-icon" style="color:var(--text)"><i data-lucide="triangle"></i></div>
       <div class="infra-name">Vercel — Frontend</div>
       <div class="infra-desc">Next.js 15 App Router<br>Auto-deploy desde main<br>Edge network global<br>Env vars por entorno</div>
     </div>
@@ -806,8 +1198,8 @@ body{padding:40px 24px 100px;max-width:1000px;margin:0 auto}
     </div>
     <div class="infra-card">
       <div class="infra-icon" style="color:var(--accent)"><i data-lucide="container"></i></div>
-      <div class="infra-name">Docker Compose — Local</div>
-      <div class="infra-desc">PostgreSQL + Redis local<br>pnpm docker:up<br>Hot reload con tsx watch<br>Mismo config que prod</div>
+      <div class="infra-name">Local Dev — Nativo</div>
+      <div class="infra-desc">PostgreSQL + Redis locales<br>pnpm dev (Turborepo)<br>Hot reload con tsx watch<br>Sin Docker Compose</div>
     </div>
     <div class="infra-card">
       <div class="infra-icon" style="color:var(--amber)"><i data-lucide="zap"></i></div>
@@ -903,8 +1295,8 @@ body{padding:40px 24px 100px;max-width:1000px;margin:0 auto}
       <div class="container-name">BullMQ Worker</div>
       <div class="container-tech">Node.js 22 · TypeScript · Railway Proc 2</div>
       <ul class="container-items">
-        <li>Orchestrator (6 layers)</li>
-        <li>6 agent runners</li>
+        <li>Orchestrator (9 layers)</li>
+        <li>9 agent runners</li>
         <li>Tool handlers (FS ops)</li>
         <li>Anthropic SDK client</li>
         <li>WS event emitter</li>
@@ -956,7 +1348,7 @@ body{padding:40px 24px 100px;max-width:1000px;margin:0 auto}
       <div class="container-name">Auth Module</div>
       <div class="container-tech">/api/auth/*</div>
       <ul class="container-items">
-        <li>auth.routes.ts → POST /register, /login, /logout, /refresh, /forgot-password, /reset-password</li>
+        <li>auth.routes.ts → POST /register, /login, /logout, /refresh, /forgot-password, /reset-password, GET /me</li>
         <li>auth.controller.ts → thin handlers</li>
         <li>auth.service.ts → bcrypt, JWT, email</li>
         <li>auth.schema.ts → Zod validation</li>
@@ -1004,14 +1396,17 @@ body{padding:40px 24px 100px;max-width:1000px;margin:0 auto}
       <div class="container-name">Agent System</div>
       <div class="container-tech">BullMQ Worker Process</div>
       <ul class="container-items">
-        <li>orchestrator.ts → coordina 6 layers</li>
+        <li>orchestrator.ts → coordina 9 layers</li>
         <li>base-agent.ts → Tool Use loop</li>
         <li>dba-agent.ts → Layer 1</li>
+        <li>seed-agent.ts → Layer 1.5</li>
         <li>backend-agent.ts → Layer 2</li>
         <li>frontend-agent.ts → Layer 3</li>
         <li>qa-agent.ts → Layer 4</li>
+        <li>security-agent.ts → Layer 4.5</li>
         <li>docs-agent.ts → Layer 5</li>
         <li>deploy-agent.ts → Layer 6</li>
+        <li>integration-agent.ts → Layer 7</li>
         <li>tool-handlers.ts → createFile, readFile, listFiles, taskComplete</li>
       </ul>
     </div>
@@ -1022,14 +1417,14 @@ body{padding:40px 24px 100px;max-width:1000px;margin:0 auto}
 <div class="section">
   <div class="section-label">12</div>
   <div class="section-title">Flujo de Ejecución de un Agente</div>
-  <div class="section-desc">Detalle del Tool Use loop que cada agente ejecuta dentro de su capa. El agente no genera texto — crea archivos iterativamente hasta completar su tarea.</div>
+  <div class="section-desc">Detalle del Tool Use loop que cada agente ejecuta dentro de su capa. El agente no genera texto — crea archivos iterativamente hasta completar su tarea. Pipeline completo: DBA → Seed → Backend → Frontend → QA → Security → Docs → Deploy → Integration.</div>
 
   <div class="agent-flow">
     <div class="af-step">
       <div class="af-num">1</div>
       <div class="af-action">
         <div class="af-label">Orchestrator asigna capa</div>
-        <div class="af-desc">Worker BullMQ toma job de la cola. Orchestrator selecciona la siguiente capa pendiente (1→6) y crea el agente correspondiente.</div>
+        <div class="af-desc">Worker BullMQ toma job de la cola. Orchestrator selecciona la siguiente capa pendiente (1→9) y crea el agente correspondiente.</div>
       </div>
       <div class="af-detail">
         <div class="af-label">Datos de entrada</div>
@@ -1088,7 +1483,7 @@ body{padding:40px 24px 100px;max-width:1000px;margin:0 auto}
       </div>
       <div class="af-detail">
         <div class="af-label">Post-completion</div>
-        <div class="af-desc">Orchestrator actualiza progress, avanza a siguiente capa. Al completar Layer 6 → project:done.</div>
+        <div class="af-desc">Orchestrator actualiza progress, avanza a siguiente capa. Al completar Layer 7 (Integration) → project:done.</div>
       </div>
     </div>
   </div>
@@ -1106,7 +1501,7 @@ body{padding:40px 24px 100px;max-width:1000px;margin:0 auto}
   <div class="section-desc">Mapa de foreign keys y cardinalidad. Complementa la sección 04 (ERD) con las relaciones explícitas.</div>
 
   <div class="erd-relations">
-    <div class="erd-rel" style="background:rgba(255,255,255,.02);font-weight:600">
+    <div class="erd-rel erd-rel-header" style="font-weight:600">
       <div class="erd-rel-from" style="color:var(--text)">From</div>
       <div class="erd-rel-type" style="color:var(--text)">Card.</div>
       <div class="erd-rel-to" style="color:var(--text)">To</div>
@@ -1209,8 +1604,8 @@ body{padding:40px 24px 100px;max-width:1000px;margin:0 auto}
     </div>
     <div class="limit-row">
       <div class="limit-what">Capas de ejecución</div>
-      <div class="limit-val">6 (seq)</div>
-      <div class="limit-note">Database → Backend → Frontend → Testing → Docs → Deploy</div>
+      <div class="limit-val">9 (seq)</div>
+      <div class="limit-note">DBA → Seed → Backend → Frontend → QA → Security → Docs → Deploy → Integration</div>
     </div>
     <div class="limit-row">
       <div class="limit-what">Login attempts</div>
@@ -1270,7 +1665,7 @@ body{padding:40px 24px 100px;max-width:1000px;margin:0 auto}
     <div class="scale-card">
       <div class="scale-label">MVP — Actual</div>
       <div class="scale-title">Sequential Layers</div>
-      <div class="scale-desc">6 capas ejecutadas una tras otra. Tiempo total estimado por proyecto: 3-8 minutos. Sin paralelismo para evitar conflictos entre archivos generados.</div>
+      <div class="scale-desc">9 capas ejecutadas una tras otra (DBA → Seed → Backend → Frontend → QA → Security → Docs → Deploy → Integration). Tiempo total estimado por proyecto: 5-12 minutos. Sin paralelismo para evitar conflictos entre archivos generados.</div>
     </div>
     <div class="scale-card">
       <div class="scale-label">Post-MVP</div>
@@ -1280,7 +1675,7 @@ body{padding:40px 24px 100px;max-width:1000px;margin:0 auto}
     <div class="scale-card">
       <div class="scale-label">Post-MVP</div>
       <div class="scale-title">Partial Parallelism</div>
-      <div class="scale-desc">QA Agent (Layer 4) podría correr en paralelo con Docs Agent (Layer 5) ya que no modifican los mismos archivos. Deploy Agent (Layer 6) siempre último.</div>
+      <div class="scale-desc">QA Agent (Layer 4) podría correr en paralelo con Docs Agent (Layer 5) ya que no modifican los mismos archivos. Security Agent (Layer 4.5) también paralelizable con Docs. Integration Agent (Layer 7) siempre último.</div>
     </div>
     <div class="scale-card">
       <div class="scale-label">Post-MVP</div>
@@ -1342,6 +1737,68 @@ body{padding:40px 24px 100px;max-width:1000px;margin:0 auto}
 </div>
 
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-<script>lucide.createIcons();</script>
+<script>
+lucide.createIcons();
+
+/* --- Theme Toggle --- */
+(function(){
+  const root = document.documentElement;
+  const btns = document.querySelectorAll('#themeToggle button');
+  const mq = window.matchMedia('(prefers-color-scheme: light)');
+
+  function apply(mode) {
+    if (mode === 'system') {
+      root.setAttribute('data-theme', mq.matches ? 'light' : 'dark');
+    } else {
+      root.setAttribute('data-theme', mode);
+    }
+    btns.forEach(b => b.classList.toggle('active', b.dataset.themeVal === mode));
+  }
+
+  const saved = localStorage.getItem('sophia-theme') || 'dark';
+  apply(saved);
+
+  btns.forEach(b => b.addEventListener('click', () => {
+    const mode = b.dataset.themeVal;
+    localStorage.setItem('sophia-theme', mode);
+    apply(mode);
+  }));
+
+  mq.addEventListener('change', () => {
+    if (localStorage.getItem('sophia-theme') === 'system') apply('system');
+  });
+})();
+
+/* --- Scroll Reveal --- */
+const revealObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('revealed'); revealObs.unobserve(e.target); }
+  });
+}, { threshold: 0.08, rootMargin: '0px 0px -60px 0px' });
+document.querySelectorAll('.section').forEach(s => revealObs.observe(s));
+
+/* --- Floating Nav --- */
+const nav = document.getElementById('floatingNav');
+const sections = document.querySelectorAll('.section');
+const labels = ['Arquitectura','Flujo Principal','Módulos','ERD','Decisiones','WebSocket','Seguridad','Infraestructura','C4 Context','C4 Containers','C4 Components','Agent Flow','Relaciones','Límites','Escalabilidad','Deploy Pipeline'];
+sections.forEach((s, i) => {
+  s.id = 'sec-' + (i + 1);
+  const a = document.createElement('a');
+  a.href = '#sec-' + (i + 1);
+  a.dataset.label = labels[i] || 'Section ' + (i + 1);
+  nav.appendChild(a);
+});
+const dots = nav.querySelectorAll('a');
+const activeObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      dots.forEach(d => d.classList.remove('active'));
+      const idx = [...sections].indexOf(e.target);
+      if (dots[idx]) dots[idx].classList.add('active');
+    }
+  });
+}, { threshold: 0.25 });
+sections.forEach(s => activeObs.observe(s));
+</script>
 </body>
 </html>
