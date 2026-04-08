@@ -10,14 +10,14 @@ Resumen de progreso por módulo. Actualizar al completar cada fase o sprint.
 
 | Sprint | Módulo | HUs | Tareas | Completadas | % | Estado |
 |--------|--------|-----|--------|-------------|---|--------|
-| 1 | M1 Auth | HU-01→05 | 46 | 0 | 0% | 📋 Spec ready |
+| 1 | M1 Auth | HU-01→05 | 46 | 46 | 100% | ✅ Complete |
 | 1 | M2 Projects | HU-06→10 | 35 | 0 | 0% | 📋 Spec ready |
 | 2 | M3 Spec Engine | HU-11→13 | 25 | 0 | 0% | 📋 Spec ready |
 | 3 | M4 Agent Runner | HU-14→17 | 38 | 0 | 0% | 📋 Spec ready |
 | 4 | M5 Dashboard | HU-18→22 | 22 | 0 | 0% | 📋 Spec ready |
 | 4 | M6 File Manager | HU-23→25 | 22 | 0 | 0% | 📋 Spec ready |
 | 4 | M7 Settings | HU-26→28 | 24 | 0 | 0% | 📋 Spec ready |
-| **—** | **TOTAL** | **28** | **212** | **0** | **0%** | |
+| **—** | **TOTAL** | **28** | **212** | **46** | **22%** | |
 
 ### Leyenda de estados
 
@@ -34,14 +34,14 @@ Resumen de progreso por módulo. Actualizar al completar cada fase o sprint.
 
 | Fase | Descripción | Tareas | Completadas | Estado |
 |------|-------------|--------|-------------|--------|
-| Phase 1 | Setup (Shared Infrastructure) | 9 | 0 | ⬜ |
-| Phase 2 | HU-01 Registro | 6 | 0 | ⬜ |
-| Phase 3 | HU-02 Login | 6 | 0 | ⬜ |
-| Phase 4 | HU-04 Refresh Token | 4 | 0 | ⬜ |
-| Phase 5 | HU-03 Logout | 4 | 0 | ⬜ |
-| Phase 6 | HU-05 Recuperar Contraseña | 9 | 0 | ⬜ |
-| Phase 7 | GET /me + Middleware Frontend | 4 | 0 | ⬜ |
-| Phase 8 | Polish & Cross-Cutting | 4 | 0 | ⬜ |
+| Phase 1 | Setup (Shared Infrastructure) | 9 | 9 | ✅ |
+| Phase 2 | HU-01 Registro | 6 | 6 | ✅ |
+| Phase 3 | HU-02 Login | 6 | 6 | ✅ |
+| Phase 4 | HU-04 Refresh Token | 4 | 4 | ✅ |
+| Phase 5 | HU-03 Logout | 4 | 4 | ✅ |
+| Phase 6 | HU-05 Recuperar Contraseña | 9 | 9 | ✅ |
+| Phase 7 | GET /me + Middleware Frontend | 4 | 4 | ✅ |
+| Phase 8 | Polish & Cross-Cutting | 4 | 4 | ✅ |
 
 ### M2 Projects (35 tareas)
 

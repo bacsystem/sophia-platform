@@ -58,6 +58,10 @@ pnpm dev                    # Dev (turbo: web + api)
 pnpm db:migrate             # Prisma migrations
 pnpm build                  # Build all
 pnpm test                   # Tests all
+pnpm --filter @sophia/web lint  # ESLint frontend
+pnpm --filter @sophia/api lint  # ESLint backend
+pnpm --filter @sophia/web build # Build frontend (next build)
+pnpm --filter @sophia/api build # Build backend (tsc)
 ```
 
 ### Local Development
@@ -132,6 +136,7 @@ Módulos con autenticación agregan `{nombre}.middleware.ts` (hooks de auth/rate
 - Siempre manejar 3 estados: loading, error, data
 - API calls con `fetch(url, { credentials: 'include' })` — cookies, NO Bearer
 - Tipos compartidos desde `@sophia/shared`
+- **Lint obligatorio**: ejecutar `pnpm --filter @sophia/web lint` después de cada cambio en `apps/web/`
 
 ### Speckit Artifacts per Module
 
@@ -153,10 +158,13 @@ specs/<módulo>/
 
 Dentro de cada módulo, el orden de implementación es:
 1. Schema Prisma (tablas nuevas)
-2. Backend: routes → controller → service → schema
-3. Frontend: pages → components → hooks → stores
+2. Backend: routes → controller → service → schema → **lint** → **build** (`tsc --noEmit`)
+3. Frontend: pages → components → hooks → stores → **lint** → **build** (`next build`)
 4. Tests (unit + integration)
 5. Documentación
+
+> **Lint obligatorio**: ejecutar `pnpm --filter @sophia/web lint` y `pnpm --filter @sophia/api lint` después de cada cambio en `apps/web/` o `apps/api/` respectivamente.
+> **Build obligatorio**: ejecutar `pnpm --filter @sophia/api build` y `pnpm --filter @sophia/web build` para verificar que compila sin errores antes de commit.
 
 ### Token Optimization
 
