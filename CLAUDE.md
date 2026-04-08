@@ -312,19 +312,20 @@ Al completar **todas** las tareas de un módulo (100% ✅):
 ```bash
 # 1. Commit de cierre del módulo
 git add -A
-git commit -m "release(MX): vX.Y — <nombre módulo> complete"
+git commit -m "release(MX): vX.Y.Z — <nombre módulo> complete"
 
 # 2. Tag semántico
-git tag -a mX-<nombre>-vX.Y -m "MX <Nombre> vX.Y — <descripción breve>"
+git tag -a mX-<nombre>-vX.Y.Z -m "MX <Nombre> vX.Y.Z — <descripción breve>"
 
-# 3. Push (cuando haya remote configurado)
+# 3. Push rama + tags (obligatorio)
 git push origin <branch> --tags
 ```
 
 **Convención de tags:**
-- Formato: `m<N>-<nombre-kebab>-v<MAJOR>.<MINOR>`
-- Ejemplo: `m1-auth-v1.3`, `m2-projects-v1.0`
+- Formato: `m<N>-<nombre-kebab>-v<MAJOR>.<MINOR>.<PATCH>`
+- Ejemplo: `m1-auth-v1.3.1`, `m2-projects-v1.0.0`
 - El tag apunta al commit de release, no al merge
+- **Push obligatorio:** `git push origin <branch> --tags` después de cada tag
 
 **Versión del módulo:**
 - Formato: `MAJOR.MINOR.PATCH` (Semantic Versioning completo)
