@@ -2,7 +2,7 @@
 
 # Sophia Platform
 
-# Versión: 1.3 | Sprint: 3
+# Versión: 1.3.0 | Sprint: 3
 
 ---
 

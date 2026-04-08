@@ -6,7 +6,34 @@ Versionado semántico a nivel de proyecto: `MAJOR.MINOR.PATCH`.
 
 ---
 
-## [v0.3.0] — 2026-04-09 ✅ M3 Spec Engine
+## [v0.4.0] — 2026-05-07 ✅ M4 Agent Runner
+
+### Added
+- M4 Agent Runner (HU-14→17): orquestador de 9 agentes IA que generan código capa por capa
+- Backend: `encryption.service.ts` — AES-256-GCM encrypt/decrypt para API keys (Sprint 2.5 prereq)
+- Backend: `agent-queue.ts` — BullMQ Queue + `enqueueAgentRun` producer
+- Backend: `tool-definitions.ts` — 4 tools para Claude Tool Use: createFile, readFile, listFiles, taskComplete
+- Backend: `tool-executor.ts` — ejecutor de tools con path traversal prevention y límites de seguridad
+- Backend: `ws.auth.ts` — autenticación JWT en handshake WebSocket
+- Backend: `ws.emitter.ts` — emisor de 7 tipos de eventos WS con Map<projectId> connection registry
+- Backend: `ws.routes.ts` — ruta WebSocket `/ws/projects/:id` con auth + replay via `?since=`
+- Backend: `base-agent.ts` — Tool Use loop (claude-opus-4-5, MAX_TURNS=50, 10min timeout) con backoff exponencial para rate limits
+- Backend: `context-builder.ts` — construye prompts con spec.md + archivos de capas previas
+- Backend: `orchestrator.ts` — pipeline secuencial 9 capas con pause/resume Redis + retry desde capa fallida
+- Backend: 9 agent files (dba, seed, backend, frontend, qa, security, docs, deploy, integration)
+- Backend: `agent.service.ts` + `agent.controller.ts` + `agent.routes.ts` — CRUD agentes y logs
+- Backend: `agent-worker.ts` — BullMQ Worker concurrency=3 + `worker.ts` entry point
+- Prisma: modelos `UserSettings`, `Agent`, `AgentLog`, `GeneratedFile` + migration M4
+- Skills: `skills/{9 agents}/system.md + task.md` — prompts de sistema y tarea para cada agente
+- Redis: flag `project:pause:{id}` para pause/continue graceful entre capas
+- Tests: `tool-executor.test.ts` (12), `encryption.service.test.ts` (9), `orchestrator.test.ts` (5), `ws.auth.test.ts` (8), `agent.integration.test.ts` (3)
+
+### Changed
+- `project.service.ts`: `startProject` encola BullMQ, `pauseProject` sets Redis flag, `continueProject` clears Redis flag, `retryProject` re-encola desde capa fallida
+- `app.ts`: registra `@fastify/websocket` + `wsRoutes` + `agentRoutes`
+- `package.json` (api): añade script `"worker": "tsx src/worker.ts"`
+
+
 
 ### Added
 - M3 Spec Engine (HU-11→13): generación IA de specs técnicas con streaming SSE

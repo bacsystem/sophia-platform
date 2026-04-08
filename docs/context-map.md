@@ -44,15 +44,17 @@ NO leas: módulos de auth o projects (solo se importa el service si hay dependen
 ```
 Lee:
   specs/004-m4-agent-runner/spec.md
-  skills/backend-agent/system.md
-  apps/api/src/modules/agents/        → orquestador, base-agent, 6 agent runners
-  apps/api/src/modules/websocket/     → eventos en tiempo real
-  apps/api/src/worker/                → BullMQ worker (proceso separado)
-  packages/shared/src/types/agents.ts
+  skills/{agent}-agent/system.md + task.md   → prompts de los 9 agentes
+  apps/api/src/agents/                       → base-agent, orchestrator, context-builder, 9 agents
+  apps/api/src/queue/                        → agent-queue.ts, agent-worker.ts
+  apps/api/src/websocket/                    → ws.auth.ts, ws.emitter.ts, ws.routes.ts
+  apps/api/src/modules/agents/               → agent.service.ts, agent.controller.ts, agent.routes.ts
+  apps/api/src/lib/encryption.service.ts     → AES-256-GCM para API keys
+  apps/api/src/worker.ts                     → BullMQ worker entry point
 
 Dependencias explícitas:
-  apps/api/src/modules/projects/projects.service.ts  → cambiar status del proyecto
-  skills/*-agent/system.md + task.md                 → prompts de los 6 agentes
+  apps/api/src/modules/projects/project.service.ts  → cambiar status del proyecto
+  apps/api/prisma/schema.prisma                     → modelos Agent, AgentLog, GeneratedFile
 ```
 
 ## M5 — Dashboard Canvas (HU-18→22)
@@ -107,10 +109,9 @@ NO leas: ningún módulo de backend (el schema es independiente)
 
 ```
 Lee:
-  apps/api/src/plugins/websocket.ts         → plugin @fastify/websocket
-  apps/api/src/modules/websocket/websocket.routes.ts
-  apps/web/src/hooks/use-agent-events.ts    → hook del cliente
-  packages/shared/src/types/events.ts       → tipos de eventos compartidos
+  apps/api/src/websocket/ws.routes.ts       → ruta WebSocket /ws/projects/:id
+  apps/api/src/websocket/ws.emitter.ts      → 7 tipos de eventos, connection registry
+  apps/api/src/websocket/ws.auth.ts         → autenticación JWT en handshake
 
 NO leas: lógica de agentes ni dashboard (solo los tipos de eventos)
 ```
@@ -120,8 +121,9 @@ NO leas: lógica de agentes ni dashboard (solo los tipos de eventos)
 ```
 Lee:
   skills/<agente>-agent/system.md + task.md  → prompt del agente
-  apps/api/src/modules/agents/base-agent.ts  → clase base
-  apps/api/src/modules/agents/dba-agent.ts   → ejemplo de implementación
+  apps/api/src/agents/base-agent.ts          → Tool Use loop con backoff
+  apps/api/src/agents/orchestrator.ts        → pipeline secuencial, pause/retry
+  apps/api/src/agents/dba-agent.ts           → ejemplo (re-export de base-agent)
   specs/004-m4-agent-runner/spec.md
 
 NOTA: `skills/spec-agent/` existe pero NO es un agente del pipeline — es el agente de generación de specs de M3 (usa system.md + spec.md + data-model.md + api-design.md). Los 9 agentes del pipeline son: dba, seed, backend, frontend, qa, security, docs, deploy, integration

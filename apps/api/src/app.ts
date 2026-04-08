@@ -2,10 +2,13 @@ import Fastify from 'fastify';
 import cookie from '@fastify/cookie';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
+import websocket from '@fastify/websocket';
 import { authRoutes } from './modules/auth/auth.routes.js';
 import { projectRoutes } from './modules/projects/project.routes.js';
 import { templateRoutes } from './modules/templates/template.routes.js';
 import { specRoutes } from './modules/spec/spec.routes.js';
+import { wsRoutes } from './websocket/ws.routes.js';
+import { agentRoutes } from './modules/agents/agent.routes.js';
 import { initDummyHash } from './lib/hash.js';
 
 export async function buildApp() {
@@ -44,11 +47,16 @@ export async function buildApp() {
 
   await app.register(cookie);
 
+  // WebSocket support (before WS routes)
+  await app.register(websocket);
+
   // Routes
   await app.register(authRoutes, { prefix: '/api/auth' });
   await app.register(projectRoutes, { prefix: '/api' });
   await app.register(templateRoutes, { prefix: '/api' });
   await app.register(specRoutes, { prefix: '/api' });
+  await app.register(agentRoutes, { prefix: '/api' });
+  await app.register(wsRoutes);
 
   // Health check
   app.get('/health', async () => ({ status: 'ok' }));

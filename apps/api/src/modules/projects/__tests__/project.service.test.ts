@@ -17,6 +17,22 @@ vi.mock('../../../lib/prisma.js', () => {
   };
 });
 
+// Mock BullMQ queue for M4 startProject/retryProject
+vi.mock('../../../queue/agent-queue.js', () => ({
+  enqueueAgentRun: vi.fn().mockResolvedValue('mock-job-id'),
+}));
+
+// Mock Redis for M4 pauseProject/continueProject
+vi.mock('redis', () => {
+  const client = {
+    connect: vi.fn().mockResolvedValue(undefined),
+    set: vi.fn().mockResolvedValue('OK'),
+    del: vi.fn().mockResolvedValue(1),
+    disconnect: vi.fn().mockResolvedValue(undefined),
+  };
+  return { createClient: vi.fn(() => client) };
+});
+
 import prisma from '../../../lib/prisma.js';
 import {
   createProject,
@@ -166,12 +182,12 @@ describe('deleteProject', () => {
 describe('State transitions', () => {
   it('startProject: idle → running', async () => {
     mockPrisma.project.findFirst.mockResolvedValue(MOCK_PROJECT);
-    mockPrisma.project.update.mockResolvedValue({ ...MOCK_PROJECT, status: 'running' });
+    mockPrisma.project.update.mockResolvedValue({ ...MOCK_PROJECT, status: 'generating' });
 
     const result = await startProject('user-1', 'proj-1');
     expect(result).not.toHaveProperty('error');
     if (!('error' in result)) {
-      expect(result.data.status).toBe('running');
+      expect(result.data.status).toBe('generating');
     }
   });
 
@@ -181,14 +197,13 @@ describe('State transitions', () => {
     expect(result).toHaveProperty('error', 'INVALID_STATE_TRANSITION');
   });
 
-  it('pauseProject: running → paused', async () => {
-    mockPrisma.project.findFirst.mockResolvedValue({ ...MOCK_PROJECT, status: 'running' });
-    mockPrisma.project.update.mockResolvedValue({ ...MOCK_PROJECT, status: 'paused' });
+  it('pauseProject: running → pausing', async () => {
+    mockPrisma.project.findFirst.mockResolvedValue({ ...MOCK_PROJECT, status: 'generating' });
 
     const result = await pauseProject('user-1', 'proj-1');
     expect(result).not.toHaveProperty('error');
     if (!('error' in result)) {
-      expect(result.data.status).toBe('paused');
+      expect(result.data.status).toBe('pausing');
     }
   });
 
@@ -198,14 +213,13 @@ describe('State transitions', () => {
     expect(result).toHaveProperty('error', 'INVALID_STATE_TRANSITION');
   });
 
-  it('continueProject: paused → running', async () => {
+  it('continueProject: paused → generating', async () => {
     mockPrisma.project.findFirst.mockResolvedValue({ ...MOCK_PROJECT, status: 'paused' });
-    mockPrisma.project.update.mockResolvedValue({ ...MOCK_PROJECT, status: 'running' });
 
     const result = await continueProject('user-1', 'proj-1');
     expect(result).not.toHaveProperty('error');
     if (!('error' in result)) {
-      expect(result.data.status).toBe('running');
+      expect(result.data.status).toBe('generating');
     }
   });
 });

@@ -60,7 +60,7 @@ sophia-platform/
 | M1 Auth | `001-m1-auth` | 46/46 | v0.1.0 | fix(coderabbit): resolve PR review findings |
 | M2 Projects | `002-m2-projects` | 49/49 | v0.2.0 | feat(M2): implement projects module — all 49 tasks complete |
 | M3 Spec Engine | `003-m3-spec-engine` | 33/33 | v0.3.0 | feat(M3): implement spec engine — all 33 tasks complete |
-| M4–M7 | — | 0/106 | — | pendiente |
+| M4 Agent Runner | `004-m4-agent-runner` | 38/38 | v0.4.0 | feat(M4): agent runner complete — all 38 tasks done |
 
 ### Key Commands
 
@@ -91,6 +91,7 @@ JWT_ACCESS_SECRET=<random-32-chars>
 JWT_REFRESH_SECRET=<random-32-chars>
 ENCRYPTION_KEY=<64-hex-chars>          # AES-256-GCM para API keys
 ANTHROPIC_API_KEY=sk-ant-...           # Requerido desde M3 (generación de specs)
+PROJECTS_BASE_DIR=./projects           # Requerido desde M4 (archivos generados por agentes)
 RESEND_API_KEY=re_xxxxx                # Solo prod (dev usa console.log)
 FRONTEND_URL=http://localhost:3000
 PORT=3001
