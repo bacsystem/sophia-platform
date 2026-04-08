@@ -1,0 +1,210 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Sophia Platform — M2 Projects API",
+    "version": "1.0.0",
+    "description": "CRUD de proyectos con máquina de estados y stubs de ejecución"
+  },
+  "servers": [{ "url": "http://localhost:3001/api" }],
+  "components": {
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "access_token"
+      }
+    },
+    "schemas": {
+      "ProjectConfig": {
+        "type": "object",
+        "required": ["model", "agents"],
+        "properties": {
+          "model": { "type": "string", "example": "claude-3-5-sonnet-20241022" },
+          "agents": {
+            "type": "array",
+            "items": { "type": "string" },
+            "example": ["dba","seed","backend","frontend","qa","security","docs","deploy","integration"]
+          }
+        }
+      },
+      "Project": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "userId": { "type": "string", "format": "uuid" },
+          "name": { "type": "string", "maxLength": 100 },
+          "description": { "type": "string" },
+          "stack": { "type": "string", "maxLength": 50 },
+          "status": { "type": "string", "enum": ["idle","running","paused","done","error"] },
+          "progress": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "currentLayer": { "type": "number" },
+          "config": { "$ref": "#/components/schemas/ProjectConfig" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ProjectList": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/Project" } },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "total": { "type": "integer" },
+              "page": { "type": "integer" },
+              "limit": { "type": "integer" },
+              "pages": { "type": "integer" }
+            }
+          }
+        }
+      },
+      "CreateProjectInput": {
+        "type": "object",
+        "required": ["name", "description", "stack", "config"],
+        "properties": {
+          "name": { "type": "string", "minLength": 3, "maxLength": 100 },
+          "description": { "type": "string", "minLength": 10 },
+          "stack": { "type": "string", "minLength": 2, "maxLength": 50 },
+          "config": { "$ref": "#/components/schemas/ProjectConfig" }
+        }
+      },
+      "UpdateProjectInput": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "minLength": 3, "maxLength": 100 },
+          "description": { "type": "string", "minLength": 10 },
+          "config": { "$ref": "#/components/schemas/ProjectConfig" }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string" },
+          "message": { "type": "string" }
+        }
+      },
+      "ValidationErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string", "example": "VALIDATION_ERROR" },
+          "errors": { "type": "array", "items": { "type": "object" } }
+        }
+      }
+    }
+  },
+  "security": [{ "cookieAuth": [] }],
+  "paths": {
+    "/projects": {
+      "get": {
+        "summary": "HU-07 — Listar proyectos",
+        "operationId": "listProjects",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 12 } },
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["idle","running","paused","done","error"] } }
+        ],
+        "responses": {
+          "200": { "description": "Lista paginada", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectList" } } } },
+          "401": { "description": "No autenticado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      },
+      "post": {
+        "summary": "HU-06 — Crear proyecto",
+        "operationId": "createProject",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateProjectInput" } } }
+        },
+        "responses": {
+          "201": { "description": "Proyecto creado", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/Project" } } } } } },
+          "401": { "description": "No autenticado" },
+          "422": { "description": "Error de validación", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ValidationErrorResponse" } } } }
+        }
+      }
+    },
+    "/projects/{id}": {
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+      "get": {
+        "summary": "HU-08 — Ver detalle del proyecto",
+        "operationId": "getProject",
+        "responses": {
+          "200": { "description": "Detalle del proyecto", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/Project" } } } } } },
+          "401": { "description": "No autenticado" },
+          "404": { "description": "Proyecto no encontrado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      },
+      "patch": {
+        "summary": "HU-09 — Actualizar proyecto (solo idle)",
+        "operationId": "updateProject",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdateProjectInput" } } }
+        },
+        "responses": {
+          "200": { "description": "Proyecto actualizado" },
+          "401": { "description": "No autenticado" },
+          "404": { "description": "Proyecto no encontrado" },
+          "409": { "description": "PROJECT_NOT_IDLE — solo se puede editar en estado idle" },
+          "422": { "description": "Error de validación" }
+        }
+      },
+      "delete": {
+        "summary": "HU-10 — Eliminar proyecto (soft delete)",
+        "operationId": "deleteProject",
+        "responses": {
+          "200": { "description": "Proyecto eliminado", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "object", "properties": { "message": { "type": "string" } } } } } } } },
+          "401": { "description": "No autenticado" },
+          "404": { "description": "Proyecto no encontrado" },
+          "409": { "description": "PROJECT_RUNNING — no se puede eliminar en ejecución" }
+        }
+      }
+    },
+    "/projects/{id}/start": {
+      "post": {
+        "summary": "Iniciar generación (stub — M4 reemplaza)",
+        "operationId": "startProject",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": {
+          "200": { "description": "Estado cambiado a running", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "object", "properties": { "id": { "type": "string" }, "status": { "type": "string" } } } } } } } },
+          "404": { "description": "Proyecto no encontrado" },
+          "409": { "description": "INVALID_TRANSITION" }
+        }
+      }
+    },
+    "/projects/{id}/pause": {
+      "post": {
+        "summary": "Pausar generación (stub — M4 reemplaza)",
+        "operationId": "pauseProject",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": {
+          "200": { "description": "Estado cambiado a paused" },
+          "404": { "description": "Proyecto no encontrado" },
+          "409": { "description": "INVALID_TRANSITION" }
+        }
+      }
+    },
+    "/projects/{id}/continue": {
+      "post": {
+        "summary": "Continuar generación (stub — M4 reemplaza)",
+        "operationId": "continueProject",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": {
+          "200": { "description": "Estado cambiado a running" },
+          "404": { "description": "Proyecto no encontrado" },
+          "409": { "description": "INVALID_TRANSITION" }
+        }
+      }
+    },
+    "/projects/{id}/download": {
+      "get": {
+        "summary": "Descargar ZIP (stub — implementado en M6)",
+        "operationId": "downloadProject",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": {
+          "501": { "description": "Not Implemented — implementado en M6" }
+        }
+      }
+    }
+  }
+}

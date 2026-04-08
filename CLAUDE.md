@@ -56,8 +56,8 @@ sophia-platform/
 
 | Módulo | Branch | Tareas | Versión | Último commit |
 |--------|--------|--------|---------|---------------|
-| M1 Auth | `001-m1-auth` | 46/46 | v1.3 | feat(M1): implement M1-Auth complete + UI premium |
-| M2 Projects | — | 0/35 | v1.0 | pendiente |
+| M1 Auth | `001-m1-auth` | 46/46 | v1.3.1 | fix(coderabbit): resolve PR review findings |
+| M2 Projects | `002-m2-projects` | 0/35 | v1.0.0 | 🚧 En desarrollo |
 | M3–M7 | — | 0/131 | — | pendiente |
 
 ### Key Commands
