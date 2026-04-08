@@ -47,7 +47,7 @@ sophia-platform/
 | Sprint | Módulo | HUs | Estado |
 |--------|--------|-----|--------|
 | 1 | M1 Auth | HU-01→05 | ✅ v1.3 completado |
-| 1 | M2 Projects | HU-06→10 | 📋 Spec ready |
+| 1 | M2 Projects | HU-06→10 | ✅ v0.2.0 completado |
 | 2 | M3 Spec Engine | HU-11→13 | 📋 Spec ready |
 | 3 | M4 Agent Runner | HU-14→17 | 📋 Spec ready |
 | 4 | M5 Dashboard, M6 File Manager, M7 Settings | HU-18→28 | 📋 Spec ready |
@@ -56,8 +56,8 @@ sophia-platform/
 
 | Módulo | Branch | Tareas | Versión | Último commit |
 |--------|--------|--------|---------|---------------|
-| M1 Auth | `001-m1-auth` | 46/46 | v1.3 | feat(M1): implement M1-Auth complete + UI premium |
-| M2 Projects | — | 0/35 | v1.0 | pendiente |
+| M1 Auth | `001-m1-auth` | 46/46 | v0.1.0 | fix(coderabbit): resolve PR review findings |
+| M2 Projects | `002-m2-projects` | 49/49 | v0.2.0 | feat(M2): implement projects module — all 49 tasks complete |
 | M3–M7 | — | 0/131 | — | pendiente |
 
 ### Key Commands
@@ -85,7 +85,7 @@ pnpm --filter @sophia/api build # Build backend (tsc)
 # apps/api/.env
 DATABASE_URL=postgresql://user:pass@localhost:5432/sophia_dev
 REDIS_URL=redis://localhost:6379
-JWT_SECRET=<random-32-chars>
+JWT_ACCESS_SECRET=<random-32-chars>
 JWT_REFRESH_SECRET=<random-32-chars>
 ENCRYPTION_KEY=<64-hex-chars>          # AES-256-GCM para API keys
 RESEND_API_KEY=re_xxxxx                # Solo prod (dev usa console.log)
@@ -170,10 +170,27 @@ Dentro de cada módulo, el orden de implementación es:
 2. Backend: routes → controller → service → schema → **lint** → **build** (`tsc --noEmit`)
 3. Frontend: pages → components → hooks → stores → **lint** → **build** (`next build`)
 4. Tests (unit + integration)
-5. Documentación
+5. **Validación de rutas** (ver regla abajo)
+6. Documentación
 
 > **Lint obligatorio**: ejecutar `pnpm --filter @sophia/web lint` y `pnpm --filter @sophia/api lint` después de cada cambio en `apps/web/` o `apps/api/` respectivamente.
 > **Build obligatorio**: ejecutar `pnpm --filter @sophia/api build` y `pnpm --filter @sophia/web build` para verificar que compila sin errores antes de commit.
+> **Test obligatorio**: ejecutar `pnpm --filter @sophia/api test` antes de commit para verificar que todos los tests pasan.
+> **Clean build obligatorio**: si se cambia la estructura de páginas (`app/**/page.tsx`, `app/**/layout.tsx`) o se elimina/renombra una ruta, ejecutar `rm -rf apps/web/.next && pnpm --filter @sophia/web build` para evitar cache corrupto (`Cannot find module './XXX.js'`).
+
+### Validación de Rutas y Navegación (Post-Implementación)
+
+Al completar un módulo, feature, o fix que involucre frontend:
+
+1. **Verificar que las rutas nuevas son accesibles** desde la navegación principal (navbar, sidebar, links internos)
+2. **Verificar el flujo post-login**: el redirect después del login (`router.push(...)`) debe llevar a una página funcional con navbar visible
+3. **Verificar que `app/page.tsx`** (raíz) redirige a la página principal activa del sistema (actualmente `/projects`)
+4. **Verificar que el layout `(dashboard)/layout.tsx`** incluye links a todas las secciones implementadas
+5. **Checklist rápido:**
+   - [ ] Login → redirect → página con navbar ✅
+   - [ ] Todas las rutas nuevas aparecen en la navegación
+   - [ ] Rutas públicas vs protegidas correctamente configuradas en `middleware.ts`
+   - [ ] No hay páginas placeholder huérfanas (sin navbar ni links de acceso)
 
 ### Token Optimization
 
@@ -257,32 +274,30 @@ All skills check `.specify/extensions.yml` for `hooks.before_<command>` and `hoo
 
 ### Versionamiento Semántico
 
-Todos los artefactos de spec usan **Semantic Versioning** (`MAJOR.MINOR.PATCH`):
+El **proyecto** usa una única versión semántica (`MAJOR.MINOR.PATCH`) en `package.json` raíz:
 
-- **MAJOR**: Cambio de alcance (agregar/quitar HUs, rediseño de arquitectura)
-- **MINOR**: Nuevos endpoints, tablas, componentes, o correcciones de `/speckit.analyze`
-- **PATCH**: Correcciones de typos, clarificaciones de redacción, ajustes de formato
+- **MAJOR**: Rediseño de arquitectura o cambio de alcance global (>50% de HUs)
+- **MINOR**: Módulo completo implementado y en producción (M1, M2, M3...)
+- **PATCH**: Hotfixes, correcciones de bugs, mejoras de a11y, docs post-release
 
-Cada `spec.md` debe incluir `# Versión: X.Y` en su header. Al editar, incrementar la versión correspondiente.
+Los `spec.md` individuales usan `# Versión: X.Y` como referencia interna del artefacto (no del proyecto).
 
 ### Changelog
 
 Mantener `CHANGELOG.md` (raíz del proyecto) actualizado con cada cambio relevante. Formato:
 
 ```markdown
-## [M1-Auth v1.3] — 2026-04-08
-### Changed
-- Fix 422 response format to match constitution V
-- Add Helmet.js, CORS, shared types tasks
-- Clarify Zod schemas as frontend-only
+## [v0.3.0] — 2026-04-XX ✅ M3 Spec Engine
 ### Added
-- T042-T046: security headers, CORS, shared types, logout UI, perf test
+- ...
+### Fixed
+- ...
 ```
 
 Reglas:
-- Una entrada por módulo/sprint modificado
+- Una entrada por versión de proyecto (no por módulo)
+- La versión coincide con `package.json` y el tag git
 - Agrupar por `Added`, `Changed`, `Fixed`, `Removed`
-- Incluir IDs de tareas cuando aplique
 
 ### Archivos de Tracking
 
@@ -305,33 +320,42 @@ Reglas:
 3. Si hubo cambios en spec/plan, incrementar versión y agregar entrada en `CHANGELOG.md`
 4. Si se agregaron dependencias cross-module, actualizar `docs/context-map.md`
 
-### Release por Módulo
+### Regla de Módulo Completado
 
-Al completar **todas** las tareas de un módulo (100% ✅):
+**Al completar todas las tareas de un módulo (100% ✅):**
+1. Ejecutar lint + build + verificar que todo pasa
+2. **Validación de rutas**: ejecutar checklist de "Validación de Rutas y Navegación" (ver sección Module Execution Order)
+3. Bump versión en `package.json` raíz (MINOR)
+4. Actualizar `CHANGELOG.md` y `CLAUDE.md` (Sprint Status)
+5. Commit y push la feature branch
+6. **Preguntar al usuario:** "Módulo MX completado. ¿Deseas continuar con el módulo M(X+1)?"
+7. Solo iniciar el siguiente módulo si el usuario lo confirma
 
-```bash
-# 1. Commit de cierre del módulo
-git add -A
-git commit -m "release(MX): vX.Y.Z — <nombre módulo> complete"
+### Release
 
-# 2. Tag semántico
-git tag -a mX-<nombre>-vX.Y.Z -m "MX <Nombre> vX.Y.Z — <descripción breve>"
+El release se gestiona mediante **GitHub Actions** — no se crean tags manualmente.
 
-# 3. Push rama + tags (obligatorio)
-git push origin <branch> --tags
-```
+**Flujo completo:**
+1. Completar todas las tareas del módulo en la feature branch (`XXX-mN-nombre`)
+2. Bump versión en `package.json` raíz (MINOR por módulo nuevo, PATCH por hotfix)
+3. Actualizar `CHANGELOG.md` con la nueva versión
+4. Push la feature branch y crear/actualizar el PR hacia `main`
+5. CI (`ci.yml`) ejecuta: lint → build → test — debe pasar en verde
+6. Tú apruebas y mergeas el PR
+7. `release.yml` detecta el merge a `main`, lee `package.json`, crea tag `vX.Y.Z` y GitHub Release automáticamente
 
-**Convención de tags:**
-- Formato: `m<N>-<nombre-kebab>-v<MAJOR>.<MINOR>.<PATCH>`
-- Ejemplo: `m1-auth-v1.3.1`, `m2-projects-v1.0.0`
-- El tag apunta al commit de release, no al merge
-- **Push obligatorio:** `git push origin <branch> --tags` después de cada tag
+**NO hacer manualmente:**
+- `git tag` — lo hace GitHub Actions al merge
+- `git push --tags` — lo hace GitHub Actions
 
-**Versión del módulo:**
-- Formato: `MAJOR.MINOR.PATCH` (Semantic Versioning completo)
-- `PATCH` sube con fixes post-release (bugs, a11y, docs, CodeRabbit findings)
-- `MINOR` sube con cada iteración completa (implementación, tests, build ✅)
-- `MAJOR` sube solo si hay rediseño de spec (breaking change en HUs o modelo de datos)
+**Workflows:**
+- `.github/workflows/ci.yml` — PR quality gate (lint, build, test con Postgres+Redis)
+- `.github/workflows/release.yml` — Tag + GitHub Release automático al merge a `main`
+
+**Cuándo subir versión en `package.json`:**
+- `PATCH`: hotfixes post-release (bugs, a11y, docs, CodeRabbit findings)
+- `MINOR`: módulo completo implementado (implementación, tests, build ✅)
+- `MAJOR`: rediseño de arquitectura global o cambio de alcance mayor
 
 ### CodeRabbit Review Protocol
 

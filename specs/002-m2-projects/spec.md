@@ -2,7 +2,7 @@
 
 # Sophia Platform
 
-# Versión: 1.3 | Sprint: 1
+# Versión: 1.0.0 | Sprint: 1 | Estado: 🚧 En desarrollo
 
 ---
 
@@ -39,7 +39,12 @@ Módulo de gestión de proyectos. Permite crear, listar, ver detalle, actualizar
   - Selector de modelo: `claude-sonnet-4-6` (recomendado) | `claude-opus-4-6` | `claude-haiku-4-5`
   - ~~Selector de agentes en paralelo: 3 | 5 | 7~~ → **Sin efecto en MVP** (ejecución secuencial). Se oculta del formulario. Se implementará en post-MVP.
 - [ ] Preview del prompt que se enviará a Claude (colapsable)
-- [ ] Botón "Usar template" carga valores predefinidos en el formulario
+- [ ] Botón "Usar template" carga valores predefinidos en el formulario:
+  - Nombre: `"Mi proyecto Sophia"`
+  - Descripción: `"Sistema web con autenticación, CRUD de entidades y panel de administración"`
+  - Stack: `node-nextjs`
+  - Modelo: `claude-sonnet-4-6`
+  - Agentes: todos activos (dba, seed, backend, frontend, qa, security, docs, deploy, integration)
 - [ ] Al crear → redirige automáticamente al dashboard del proyecto `/projects/[id]`
 - [ ] Muestra errores inline bajo cada campo
 
@@ -87,6 +92,7 @@ z.object({
 
 - [ ] Grid de project cards con paginación server-side (12 por página)
 - [ ] Cada card muestra: nombre, stack badge, estado con color, progreso (%), capa actual con nombre, fecha relativa
+  - Estado `error` muestra badge rojo — sin mensaje de error en la card
 - [ ] Proyectos en estado `running` muestran indicador animado (pulso)
 - [ ] Buscador por nombre (server-side, ILIKE en Postgres)
 - [ ] Filtro por estado: Todos | En progreso | Completados | Con error | Pausados
@@ -129,10 +135,11 @@ error   → rojo    "Error"
 **Criterios de aceptación:**
 
 - [ ] Header con: nombre, stack badge, estado con color, progreso total (barra), capa actual
+  - Si status es `error`: mostrar campo `errorMessage` debajo del header (alert rojo, read-only)
 - [ ] Tabs: Dashboard | Archivos | Logs | Spec
   - Tab Dashboard → placeholder "Disponible cuando M5 esté implementado" (hasta Sprint 4)
   - Tab Archivos → placeholder "Disponible cuando M6 esté implementado" (hasta Sprint 5)
-  - Tab Logs → lista de logs basica (tabla con timestamp, agente, tipo, mensaje)
+  - Tab Logs → placeholder "Disponible cuando M4 esté implementado" (hasta Sprint 3)
   - Tab Spec → render del spec generado en markdown (read-only)
 - [ ] Botones de acción según estado:
   - `idle` → "▶ Iniciar"
@@ -171,6 +178,7 @@ error   → rojo    "Error"
 - [ ] Modal de confirmación con nombre del proyecto (el usuario debe escribir el nombre para confirmar)
 - [ ] No se puede eliminar un proyecto en estado `running`
 - [ ] Soft delete: marca `deleted_at` en BD, no se devuelve en queries
+  - Acceso directo a `/projects/[id]` de un proyecto eliminado retorna `404 NOT_FOUND` (igual que proyecto inexistente)
 - [ ] Toast de éxito después de eliminar
 - [ ] La lista se actualiza inmediatamente (optimistic update)
 - [ ] Limpieza real de archivos se ejecuta via job asíncrono (BullMQ, implementado en M4)
@@ -188,6 +196,7 @@ DELETE /api/projects/:id            → Soft delete proyecto
 POST   /api/projects/:id/start      → Stub: cambia status a running (M4 encola job)
 POST   /api/projects/:id/pause      → Stub: cambia status a paused (M4 señala agentes)
 POST   /api/projects/:id/continue   → Stub: cambia status a running (M4 retoma)
+POST   /api/projects/:id/retry      → Stub: cambia status a running desde error (M4)
 GET    /api/projects/:id/download   → Descargar ZIP (implementado en M6, M2 solo declara ruta)
 ```
 
@@ -250,7 +259,7 @@ GET    /api/projects/:id/download   → Descargar ZIP (implementado en M6, M2 so
 }
 
 // Response 422
-{ "errors": { "name": ["Mínimo 3 caracteres"] } }
+{ "error": "VALIDATION_ERROR", "errors": [{ "path": ["name"], "message": "Mínimo 3 caracteres" }] }
 ```
 
 ### PATCH /api/projects/:id
@@ -302,6 +311,16 @@ GET    /api/projects/:id/download   → Descargar ZIP (implementado en M6, M2 so
 { "error": "INVALID_STATE_TRANSITION", "message": "Solo se puede continuar un proyecto pausado" }
 ```
 
+### POST /api/projects/:id/retry
+
+```json
+// Response 200
+{ "data": { "id": "uuid", "status": "running" } }
+
+// Response 400
+{ "error": "INVALID_STATE_TRANSITION", "message": "Solo se puede reintentar desde estado 'error'" }
+```
+
 ### DELETE /api/projects/:id
 
 ```json
@@ -313,19 +332,15 @@ GET    /api/projects/:id/download   → Descargar ZIP (implementado en M6, M2 so
 
 // Response 404
 { "error": "NOT_FOUND", "message": "Proyecto no encontrado" }
+
+> **Nota**: Proyectos con `deleted_at IS NOT NULL` retornan `404 NOT_FOUND` — indistinguibles de proyectos inexistentes.
 ```
 
 ### GET /api/projects/:id/download
 
 ```json
-// Response 200 — Content-Type: application/zip, Transfer-Encoding: chunked
-// Streaming del ZIP
-
-// Response 400
-{ "error": "NOT_DOWNLOADABLE", "message": "El proyecto debe estar al menos en capa 3 (Backend)" }
-
-// Response 404
-{ "error": "NO_FILES", "message": "No hay archivos generados para descargar" }
+// Response 501 (implementado en M6)
+{ "error": "NOT_IMPLEMENTED", "message": "Descarga de archivos implementada en M6" }
 ```
 
 ---
@@ -390,6 +405,7 @@ GET    /api/projects/:id/download   → Descargar ZIP (implementado en M6, M2 so
 | progress      | integer      | No       | 0                 | Progreso 0-100                           |
 | current_layer | real         | No       | 1                 | Capa actual (1, 1.5, 2, 3, 4, 4.5, 5, 6, 7) |
 | tokens_used   | integer      | No       | 0                 | Caché denormalizado (actualizado por M4) |
+| error_message | text         | Sí       | null              | Mensaje de error de la última ejecución fallida (actualizado por M4) |
 | config        | jsonb        | No       | —                 | `{ model, agents[] }`                    |
 | deleted_at    | timestamptz  | Sí       | null              | Soft delete                              |
 | created_at    | timestamptz  | No       | now()             | —                                        |
@@ -437,7 +453,7 @@ GET    /api/projects/:id/download   → Descargar ZIP (implementado en M6, M2 so
 ## Páginas Frontend
 
 ```
-/                          → Lista de proyectos (dashboard principal)
+/projects                  → Lista de proyectos (dashboard principal)
 /projects/new              → Crear nuevo proyecto
 /projects/[id]             → Detalle + tabs (Dashboard, Archivos, Logs, Spec)
 ```
@@ -460,11 +476,12 @@ src/modules/projects/
 
 ```
 app/(dashboard)/
-├── page.tsx                          → Lista de proyectos
-├── projects/new/page.tsx             → Crear proyecto
-└── projects/[id]/
-    ├── page.tsx                      → Detalle del proyecto (tabs)
-    └── layout.tsx                    → Layout con header del proyecto
+└── projects/
+    ├── page.tsx                      → Lista de proyectos
+    ├── new/page.tsx                  → Crear proyecto
+    └── [id]/
+        ├── page.tsx                  → Detalle del proyecto (tabs)
+        └── layout.tsx                → Layout con header del proyecto
 
 components/projects/
 ├── project-card.tsx                  → Card de proyecto en grid
@@ -497,6 +514,19 @@ prisma/migrations/   → Migración M2
 - Canvas visual de agentes (M5)
 - Árbol de archivos interactivo (M6)
 - Templates CRUD completo (M3 o posterior)
+- Tab Logs funcional (M4 — no hay agent_logs en M2)
+
+---
+
+## Clarifications
+
+### Session 2026-04-08
+
+- Q: ¿Comportamiento del Tab Logs en M2 si M4 aún no existe? → A: Placeholder igual que Dashboard y Archivos — "Disponible cuando M4 esté implementado"
+- Q: ¿Qué valores carga el botón "Usar template" en HU-06? → A: Template completo con nombre y descripción genéricos, stack `node-nextjs`, modelo `claude-sonnet-4-6`, todos los agentes activos
+- Q: ¿Qué retorna el backend al acceder a un proyecto soft-deleted? → A: `404 NOT_FOUND` — igual que proyecto inexistente, sin revelar que fue eliminado
+- Q: ¿Latencia máxima aceptable para `GET /api/projects`? → A: ≤ 300ms p95 con hasta 100 proyectos del usuario
+- Q: ¿Cómo se comunica el error al usuario en estado `error`? → A: Badge rojo en card (sin detalle del error) + campo `errorMessage` en página de detalle debajo del header; campo `error_message` (nullable) en tabla `projects`
 
 ---
 
@@ -506,10 +536,11 @@ prisma/migrations/   → Migración M2
 - [ ] Paginación server-side con búsqueda y filtros funciona
 - [ ] Máquina de estados valida transiciones correctamente (400 en transición inválida)
 - [ ] Start/pause/continue cambian status correctamente (stubs para M4)
-- [ ] Download genera ZIP con streaming (guard: mínimo capa 3)
+- [ ] Ruta `GET /api/projects/:id/download` declara stub 501 `NOT_IMPLEMENTED` (implementación ZIP en M6)
 - [ ] Spec se almacena en tabla separada con versionamiento
 - [ ] Soft delete implementado (no hard delete)
 - [ ] Solo el owner puede ver/editar/eliminar sus proyectos (403)
 - [ ] Tests de endpoints cubriendo happy path, errores y transiciones inválidas
+- [ ] `GET /api/projects` responde en ≤ 300ms p95 con hasta 100 proyectos del usuario
 - [ ] UI responsive en mobile y desktop
 - [ ] No hay `any` en TypeScript

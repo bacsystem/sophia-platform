@@ -1,0 +1,246 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Sophia Platform — M2 Projects API",
+    "version": "1.1.0",
+    "description": "CRUD de proyectos con máquina de estados y stubs de ejecución"
+  },
+  "servers": [{ "url": "http://localhost:3001/api" }],
+  "components": {
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "access_token"
+      }
+    },
+    "schemas": {
+      "ProjectConfig": {
+        "type": "object",
+        "required": ["model", "agents"],
+        "properties": {
+          "model": {
+            "type": "string",
+            "enum": ["claude-sonnet-4-6", "claude-opus-4-6", "claude-haiku-4-5"],
+            "example": "claude-sonnet-4-6"
+          },
+          "agents": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["dba", "seed", "backend", "frontend", "qa", "security", "docs", "deploy", "integration"]
+            },
+            "minItems": 1,
+            "example": ["dba", "seed", "backend", "frontend", "qa", "security", "docs", "deploy", "integration"]
+          }
+        }
+      },
+      "Project": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "userId": { "type": "string", "format": "uuid" },
+          "name": { "type": "string", "maxLength": 100 },
+          "description": { "type": "string" },
+          "stack": { "type": "string", "enum": ["node-nextjs", "laravel-nextjs", "python-nextjs"] },
+          "status": { "type": "string", "enum": ["idle", "running", "paused", "done", "error"] },
+          "progress": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "currentLayer": { "type": "number" },
+          "currentLayerName": { "type": "string", "example": "Backend" },
+          "config": { "$ref": "#/components/schemas/ProjectConfig" },
+          "tokensUsed": { "type": "integer", "default": 0 },
+          "errorMessage": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ProjectList": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/Project" } },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "total": { "type": "integer" },
+              "page": { "type": "integer" },
+              "limit": { "type": "integer" },
+              "pages": { "type": "integer" }
+            }
+          }
+        }
+      },
+      "CreateProjectInput": {
+        "type": "object",
+        "required": ["name", "description", "stack", "config"],
+        "properties": {
+          "name": { "type": "string", "minLength": 3, "maxLength": 100 },
+          "description": { "type": "string", "minLength": 20, "maxLength": 5000 },
+          "stack": { "type": "string", "enum": ["node-nextjs", "laravel-nextjs", "python-nextjs"] },
+          "config": { "$ref": "#/components/schemas/ProjectConfig" }
+        }
+      },
+      "UpdateProjectInput": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "minLength": 3, "maxLength": 100 },
+          "description": { "type": "string", "minLength": 20, "maxLength": 5000 },
+          "stack": { "type": "string", "enum": ["node-nextjs", "laravel-nextjs", "python-nextjs"] },
+          "config": { "$ref": "#/components/schemas/ProjectConfig" }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string" },
+          "message": { "type": "string" }
+        }
+      },
+      "ValidationErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string", "example": "VALIDATION_ERROR" },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": { "type": "array", "items": { "type": "string" } },
+                "message": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "security": [{ "cookieAuth": [] }],
+  "paths": {
+    "/projects": {
+      "get": {
+        "summary": "HU-07 — Listar proyectos",
+        "operationId": "listProjects",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 12 } },
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["idle", "running", "paused", "done", "error"] } }
+        ],
+        "responses": {
+          "200": { "description": "Lista paginada", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectList" } } } },
+          "401": { "description": "No autenticado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      },
+      "post": {
+        "summary": "HU-06 — Crear proyecto",
+        "operationId": "createProject",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateProjectInput" } } }
+        },
+        "responses": {
+          "201": { "description": "Proyecto creado", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/Project" } } } } } },
+          "401": { "description": "No autenticado" },
+          "422": { "description": "Error de validación", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ValidationErrorResponse" } } } }
+        }
+      }
+    },
+    "/projects/{id}": {
+      "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+      "get": {
+        "summary": "HU-08 — Ver detalle del proyecto",
+        "operationId": "getProject",
+        "responses": {
+          "200": { "description": "Detalle del proyecto", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/Project" } } } } } },
+          "401": { "description": "No autenticado" },
+          "403": { "description": "No es el owner del proyecto" },
+          "404": { "description": "Proyecto no encontrado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      },
+      "patch": {
+        "summary": "HU-09 — Actualizar proyecto (solo idle)",
+        "operationId": "updateProject",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdateProjectInput" } } }
+        },
+        "responses": {
+          "200": { "description": "Proyecto actualizado", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/Project" } } } } } },
+          "400": { "description": "PROJECT_NOT_EDITABLE — solo se puede editar en estado idle", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "401": { "description": "No autenticado" },
+          "403": { "description": "No es el owner del proyecto" },
+          "404": { "description": "Proyecto no encontrado" },
+          "422": { "description": "Error de validación", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ValidationErrorResponse" } } } }
+        }
+      },
+      "delete": {
+        "summary": "HU-10 — Eliminar proyecto (soft delete)",
+        "operationId": "deleteProject",
+        "responses": {
+          "200": { "description": "Proyecto eliminado", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "object", "properties": { "message": { "type": "string" } } } } } } } },
+          "400": { "description": "CANNOT_DELETE_RUNNING — no se puede eliminar en ejecución", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "401": { "description": "No autenticado" },
+          "403": { "description": "No es el owner del proyecto" },
+          "404": { "description": "Proyecto no encontrado" }
+        }
+      }
+    },
+    "/projects/{id}/start": {
+      "post": {
+        "summary": "Iniciar generación (stub — M4 reemplaza)",
+        "operationId": "startProject",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": {
+          "200": { "description": "Estado cambiado a running", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "object", "properties": { "id": { "type": "string" }, "status": { "type": "string" } } } } } } } },
+          "400": { "description": "INVALID_STATE_TRANSITION", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "404": { "description": "Proyecto no encontrado" }
+        }
+      }
+    },
+    "/projects/{id}/pause": {
+      "post": {
+        "summary": "Pausar generación (stub — M4 reemplaza)",
+        "operationId": "pauseProject",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": {
+          "200": { "description": "Estado cambiado a paused", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "object", "properties": { "id": { "type": "string" }, "status": { "type": "string" } } } } } } } },
+          "400": { "description": "INVALID_STATE_TRANSITION", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "404": { "description": "Proyecto no encontrado" }
+        }
+      }
+    },
+    "/projects/{id}/continue": {
+      "post": {
+        "summary": "Continuar generación (stub — M4 reemplaza)",
+        "operationId": "continueProject",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": {
+          "200": { "description": "Estado cambiado a running", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "object", "properties": { "id": { "type": "string" }, "status": { "type": "string" } } } } } } } },
+          "400": { "description": "INVALID_STATE_TRANSITION", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "404": { "description": "Proyecto no encontrado" }
+        }
+      }
+    },
+    "/projects/{id}/retry": {
+      "post": {
+        "summary": "Reintentar generación desde error (stub — M4 reemplaza)",
+        "operationId": "retryProject",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": {
+          "200": { "description": "Estado cambiado a running", "content": { "application/json": { "schema": { "type": "object", "properties": { "data": { "type": "object", "properties": { "id": { "type": "string" }, "status": { "type": "string" } } } } } } } },
+          "400": { "description": "INVALID_STATE_TRANSITION", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "404": { "description": "Proyecto no encontrado" }
+        }
+      }
+    },
+    "/projects/{id}/download": {
+      "get": {
+        "summary": "Descargar ZIP (stub 501 — implementado en M6)",
+        "operationId": "downloadProject",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": {
+          "501": { "description": "Not Implemented — implementado en M6", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    }
+  }
+}

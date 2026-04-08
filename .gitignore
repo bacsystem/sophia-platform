@@ -14,7 +14,7 @@ out/
 .env.*.local
 
 # ─── Generated projects (runtime output) ────────────────
-projects/
+/projects/
 
 # ─── Database ────────────────────────────────────────────
 *.sql.bak

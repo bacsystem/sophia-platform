@@ -64,7 +64,7 @@ export function LoginForm() {
       });
 
       if (res.ok) {
-        router.push('/');
+        router.push('/projects');
         return;
       }
 

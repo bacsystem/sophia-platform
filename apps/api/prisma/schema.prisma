@@ -17,6 +17,7 @@ model User {
 
   refreshTokens      RefreshToken[]
   passwordResetTokens PasswordResetToken[]
+  projects            Project[]
 
   @@map("users")
 }
@@ -50,4 +51,45 @@ model PasswordResetToken {
   @@index([token])
   @@index([userId])
   @@map("password_reset_tokens")
+}
+
+model Project {
+  id           String    @id @default(uuid())
+  userId       String    @map("user_id")
+  name         String    @db.VarChar(100)
+  description  String
+  stack        String    @db.VarChar(50)
+  status       String    @default("idle") @db.VarChar(20)
+  progress     Int       @default(0)
+  currentLayer Float     @default(1) @map("current_layer")
+  config       Json
+  tokensUsed   Int       @default(0) @map("tokens_used")
+  errorMessage String?   @map("error_message")
+  deletedAt    DateTime? @map("deleted_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  user  User          @relation(fields: [userId], references: [id])
+  specs ProjectSpec[]
+
+  @@index([userId], name: "idx_projects_user_id")
+  @@index([status], name: "idx_projects_status")
+  @@index([deletedAt], name: "idx_projects_deleted_at")
+  @@index([userId, deletedAt], name: "idx_projects_user_deleted")
+  @@index([userId, status, deletedAt], name: "idx_projects_user_status_deleted")
+  @@map("projects")
+}
+
+model ProjectSpec {
+  id        String   @id @default(uuid())
+  projectId String   @map("project_id")
+  version   Int
+  content   Json
+  createdAt DateTime @default(now()) @map("created_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, version], name: "uq_project_specs_version")
+  @@index([projectId], name: "idx_project_specs_project_id")
+  @@map("project_specs")
 }
