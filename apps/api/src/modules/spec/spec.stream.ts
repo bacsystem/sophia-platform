@@ -1,4 +1,4 @@
-import type { FastifyReply } from 'fastify';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 
 /** SSE event payload types for spec generation progress */
 export type SseEvent =
@@ -9,15 +9,23 @@ export type SseEvent =
   | { type: 'error'; file: string; message: string; retryable: boolean };
 
 /**
- * @description Sets SSE headers on the Fastify reply.
+ * @description Sets SSE headers on the Fastify reply, including CORS headers.
  * Must be called before sending any events.
+ * Uses reply.raw.writeHead which bypasses Fastify's CORS plugin,
+ * so CORS headers are added manually based on the request origin.
  */
-export function initSseStream(reply: FastifyReply): void {
+export function initSseStream(reply: FastifyReply, request: FastifyRequest): void {
+  const allowedOrigins = process.env.CORS_ORIGIN?.split(',') ?? ['http://localhost:3000'];
+  const origin = request.headers.origin;
+  const corsOrigin = origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+
   reply.raw.writeHead(200, {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache',
     Connection: 'keep-alive',
     'X-Accel-Buffering': 'no',
+    'Access-Control-Allow-Origin': corsOrigin,
+    'Access-Control-Allow-Credentials': 'true',
   });
 }
 

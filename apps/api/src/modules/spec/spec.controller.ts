@@ -52,7 +52,7 @@ export async function specStreamHandler(
     return;
   }
 
-  initSseStream(reply);
+  initSseStream(reply, request);
 
   const unsubscribe = subscribeToSpecJob(
     query.data.jobId,
