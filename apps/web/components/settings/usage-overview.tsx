@@ -31,18 +31,22 @@ export function UsageOverview() {
   const [totals, setTotals] = useState<UsageTotals | null>(null);
   const [byProject, setByProject] = useState<ProjectUsage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchUsage = useCallback(async () => {
     try {
       const res = await fetch(`${API_URL}/api/settings/usage`, {
         credentials: 'include',
       });
-      if (!res.ok) return;
+      if (!res.ok) {
+        setError('No se pudo cargar el uso de tokens');
+        return;
+      }
       const body = await res.json();
       setTotals(body.data.totals);
       setByProject(body.data.byProject);
     } catch {
-      /* silently fail */
+      setError('Error de conexión al cargar uso');
     } finally {
       setLoading(false);
     }
@@ -58,6 +62,17 @@ export function UsageOverview() {
         <div className="flex items-center gap-2 text-white/50">
           <Loader2 className="w-4 h-4 animate-spin" />
           <span className="text-sm">Cargando uso...</span>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="glass rounded-2xl p-6">
+        <div className="flex items-center gap-2 text-red-400">
+          <BarChart3 className="w-4 h-4" />
+          <span className="text-sm">{error}</span>
         </div>
       </section>
     );

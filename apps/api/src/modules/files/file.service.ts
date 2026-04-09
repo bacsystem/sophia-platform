@@ -119,7 +119,12 @@ export async function getFileContent(projectId: string, fileId: string) {
   let truncated = false;
 
   if (isBinary) {
-    // Binary files: return metadata only, no content preview
+    // Binary files: verify existence, return metadata only
+    try {
+      await fs.stat(filePath);
+    } catch {
+      throw Object.assign(new Error('File not found on disk'), { code: 'FILE_NOT_FOUND' });
+    }
     content = null;
   } else {
     try {

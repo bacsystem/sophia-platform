@@ -34,7 +34,6 @@ export async function saveApiKeyHandler(
   if (!parsed.success) {
     reply.status(422).send({
       error: 'VALIDATION_ERROR',
-      message: 'Request validation failed',
       errors: parsed.error.errors,
     });
     return;
@@ -120,7 +119,6 @@ export async function getDailyUsageHandler(
   if (!parsed.success) {
     reply.status(422).send({
       error: 'VALIDATION_ERROR',
-      message: 'Request validation failed',
       errors: parsed.error.errors,
     });
     return;
@@ -139,7 +137,6 @@ export async function updateProfileHandler(
   if (!parsed.success) {
     reply.status(422).send({
       error: 'VALIDATION_ERROR',
-      message: 'Request validation failed',
       errors: parsed.error.errors,
     });
     return;
@@ -158,7 +155,6 @@ export async function changePasswordHandler(
   if (!parsed.success) {
     reply.status(422).send({
       error: 'VALIDATION_ERROR',
-      message: 'Request validation failed',
       errors: parsed.error.errors,
     });
     return;

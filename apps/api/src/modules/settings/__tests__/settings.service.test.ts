@@ -50,6 +50,11 @@ vi.mock('../../../lib/hash.js', () => ({
 const mockFetch = vi.fn();
 vi.stubGlobal('fetch', mockFetch);
 
+import { afterAll } from 'vitest';
+afterAll(() => {
+  vi.unstubAllGlobals();
+});
+
 import prisma from '../../../lib/prisma.js';
 import { checkRateLimit } from '../../../lib/redis.js';
 import { comparePasswordSafe } from '../../../lib/hash.js';

@@ -14,6 +14,7 @@ export const saveApiKeySchema = z.object({
 export const updateProfileSchema = z.object({
   name: z
     .string()
+    .trim()
     .min(2, 'Mínimo 2 caracteres')
     .max(100, 'Máximo 100 caracteres'),
 });

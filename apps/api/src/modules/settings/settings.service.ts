@@ -89,7 +89,8 @@ export async function saveApiKey(userId: string, input: SaveApiKeyInput) {
     },
   });
 
-  console.info(`[Audit] User ${userId} added API key`);
+  const redactedId = userId.slice(0, 8) + '…';
+  console.info(`[Audit] User ${redactedId} added API key`);
 
   return {
     data: {
@@ -126,7 +127,8 @@ export async function deleteApiKey(userId: string) {
     },
   });
 
-  console.info(`[Audit] User ${userId} deleted API key`);
+  const redactedId = userId.slice(0, 8) + '…';
+  console.info(`[Audit] User ${redactedId} deleted API key`);
 
   return { data: { message: 'API key eliminada' } };
 }

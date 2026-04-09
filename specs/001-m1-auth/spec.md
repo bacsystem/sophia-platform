@@ -2,7 +2,7 @@
 
 # Sophia Platform
 
-# Versión: 1.3.0 | Sprint: 1 | Estado: ✅ COMPLETADO
+# Versión: 1.4.0 | Sprint: 1 | Estado: ✅ COMPLETADO
 
 ---
 

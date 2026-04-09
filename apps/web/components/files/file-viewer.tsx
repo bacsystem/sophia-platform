@@ -153,7 +153,7 @@ export function FileViewer({ projectId, fileId }: FileViewerProps) {
   });
 
   const handleCopy = useCallback(async () => {
-    if (!file || !file.content) return;
+    if (!file || file.content == null) return;
     await navigator.clipboard.writeText(file.content);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);

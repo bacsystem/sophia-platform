@@ -15,7 +15,7 @@ export type SseEvent =
  * so CORS headers are added manually based on the request origin.
  */
 export function initSseStream(reply: FastifyReply, request: FastifyRequest): void {
-  const allowedOrigins = process.env.CORS_ORIGIN?.split(',') ?? ['http://localhost:3000'];
+  const allowedOrigins = (process.env.CORS_ORIGIN?.split(',') ?? ['http://localhost:3000']).map(s => s.trim()).filter(Boolean);
   const origin = request.headers.origin;
   const corsOrigin = origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
 
