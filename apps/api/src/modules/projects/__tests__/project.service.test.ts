@@ -9,9 +9,13 @@ vi.mock('../../../lib/prisma.js', () => {
     findFirst: vi.fn(),
     update: vi.fn(),
   };
+  const mockProjectSpec = {
+    findFirst: vi.fn(),
+  };
   return {
     default: {
       project: mockProject,
+      projectSpec: mockProjectSpec,
       $transaction: vi.fn((arr: Promise<unknown>[]) => Promise.all(arr)),
     },
   };
@@ -52,6 +56,9 @@ const mockPrisma = prisma as unknown as {
     count: ReturnType<typeof vi.fn>;
     findFirst: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
+  };
+  projectSpec: {
+    findFirst: ReturnType<typeof vi.fn>;
   };
   $transaction: ReturnType<typeof vi.fn>;
 };
@@ -182,13 +189,23 @@ describe('deleteProject', () => {
 describe('State transitions', () => {
   it('startProject: idle → running', async () => {
     mockPrisma.project.findFirst.mockResolvedValue(MOCK_PROJECT);
-    mockPrisma.project.update.mockResolvedValue({ ...MOCK_PROJECT, status: 'generating' });
+    mockPrisma.projectSpec.findFirst.mockResolvedValue({ id: 'spec-1', version: 1 });
+    mockPrisma.project.update.mockResolvedValue({ ...MOCK_PROJECT, status: 'running' });
 
     const result = await startProject('user-1', 'proj-1');
     expect(result).not.toHaveProperty('error');
     if (!('error' in result)) {
-      expect(result.data.status).toBe('generating');
+      expect(result.data.status).toBe('running');
     }
+  });
+
+  it('startProject: no spec → NO_SPEC error', async () => {
+    mockPrisma.project.findFirst.mockResolvedValue(MOCK_PROJECT);
+    mockPrisma.projectSpec.findFirst.mockResolvedValue(null);
+
+    const result = await startProject('user-1', 'proj-1');
+    expect(result).toHaveProperty('error', 'NO_SPEC');
+    expect(result).toHaveProperty('status', 400);
   });
 
   it('startProject: running → INVALID_STATE_TRANSITION', async () => {
@@ -198,7 +215,7 @@ describe('State transitions', () => {
   });
 
   it('pauseProject: running → pausing', async () => {
-    mockPrisma.project.findFirst.mockResolvedValue({ ...MOCK_PROJECT, status: 'generating' });
+    mockPrisma.project.findFirst.mockResolvedValue({ ...MOCK_PROJECT, status: 'running' });
 
     const result = await pauseProject('user-1', 'proj-1');
     expect(result).not.toHaveProperty('error');
@@ -213,13 +230,13 @@ describe('State transitions', () => {
     expect(result).toHaveProperty('error', 'INVALID_STATE_TRANSITION');
   });
 
-  it('continueProject: paused → generating', async () => {
+  it('continueProject: paused → running', async () => {
     mockPrisma.project.findFirst.mockResolvedValue({ ...MOCK_PROJECT, status: 'paused' });
 
     const result = await continueProject('user-1', 'proj-1');
     expect(result).not.toHaveProperty('error');
     if (!('error' in result)) {
-      expect(result.data.status).toBe('generating');
+      expect(result.data.status).toBe('running');
     }
   });
 });

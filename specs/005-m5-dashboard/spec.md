@@ -43,10 +43,10 @@ Dashboard visual interactivo que muestra los agentes trabajando en tiempo real. 
 
 **Criterios de aceptación:**
 
-- [ ] Área principal del dashboard muestra nodos de agentes en un `<canvas>` HTML5
-- [ ] 9 nodos de agentes reales (dba, seed, backend, frontend, qa, security, docs, deploy, integration) + 1 nodo visual "Orchestrator"
-- [ ] El nodo Orchestrator refleja `projects.status` y `projects.current_layer` (no es un agente real)
-- [ ] Conexiones reflejan el flujo secuencial real de capas:
+- [x] Área principal del dashboard muestra nodos de agentes en un `<canvas>` HTML5
+- [x] 9 nodos de agentes reales (dba, seed, backend, frontend, qa, security, docs, deploy, integration) + 1 nodo visual "Orchestrator"
+- [x] El nodo Orchestrator refleja `projects.status` y `projects.current_layer` (no es un agente real)
+- [x] Conexiones reflejan el flujo secuencial real de capas:
 
 ```
 Orchestrator
@@ -55,18 +55,18 @@ Orchestrator
     DBA ─► Seed ─► Backend ─► Frontend ─► QA ─► Security ─► Docs ─► Deploy ─► Integration
 ```
 
-- [ ] Estados visuales de cada nodo:
+- [x] Estados visuales de cada nodo:
   - `queued` → gris claro, sin animación, label "En cola"
   - `idle` → gris, sin animación
   - `working` → color del agente, anillo CSS pulsando, label con tarea actual
   - `done` → verde, checkmark ✓, sin animación
   - `error` → rojo, animación CSS shake
   - `paused` → ámbar, anillo estático
-- [ ] Conexión entre nodos se ilumina cuando la capa del destino está activa
-- [ ] Partículas animadas viajan por la conexión activa (requestAnimationFrame)
-- [ ] Tooltip al hover (overlay HTML posicionado sobre canvas): nombre, tarea actual, tokens usados, tiempo
-- [ ] Clic en nodo (hit-testing circular) → expande panel lateral con detalle del agente (logs, archivos, progreso)
-- [ ] Canvas responsive: escala con `devicePixelRatio` y redimensiona con `ResizeObserver`
+- [x] Conexión entre nodos se ilumina cuando la capa del destino está activa
+- [x] Partículas animadas viajan por la conexión activa (requestAnimationFrame)
+- [x] Tooltip al hover (overlay HTML posicionado sobre canvas): nombre, tarea actual, tokens usados, tiempo
+- [x] Clic en nodo (hit-testing circular) → expande panel lateral con detalle del agente (logs, archivos, progreso)
+- [x] Canvas responsive: escala con `devicePixelRatio` y redimensiona con `ResizeObserver`
 
 **Nodos — posiciones y colores:**
 
@@ -108,19 +108,19 @@ Integration:  { cx: 350, cy: 470 }
 
 **Criterios de aceptación:**
 
-- [ ] Panel de log en sidebar derecho del dashboard
-- [ ] Cada entrada: `mm:ss` | `[agente]` con color | mensaje
-- [ ] Colores por tipo:
+- [x] Panel de log en sidebar derecho del dashboard
+- [x] Cada entrada: `mm:ss` | `[agente]` con color | mensaje
+- [x] Colores por tipo:
   - `info` → texto gris `●`
   - `ok` → texto verde `✓`
   - `warn` → texto ámbar `⚠`
   - `error` → texto rojo `✕`
-- [ ] Auto-scroll al último mensaje
-- [ ] Botón para pausar/reanudar auto-scroll
-- [ ] Badge con contador de mensajes nuevos cuando scroll está pausado
-- [ ] Ring buffer de 200 logs en Zustand — los más recientes
-- [ ] Botón "Ver historial completo" → abre vista paginada (consume `GET /api/projects/:id/logs`)
-- [ ] Filtro por agente (tabs o dropdown)
+- [x] Auto-scroll al último mensaje
+- [x] Botón para pausar/reanudar auto-scroll
+- [x] Badge con contador de mensajes nuevos cuando scroll está pausado
+- [x] Ring buffer de 200 logs en Zustand — los más recientes
+- [x] Botón "Ver historial completo" → abre vista paginada (consume `GET /api/projects/:id/logs`)
+- [x] Filtro por agente (tabs o dropdown)
 
 ---
 
@@ -132,9 +132,9 @@ Integration:  { cx: 350, cy: 470 }
 
 **Criterios de aceptación:**
 
-- [ ] Tab "Archivos" en el sidebar (junto a tab "Logs")
-- [ ] Cada archivo aparece con animación Framer Motion (fade + slide down)
-- [ ] Ícono dinámico por extensión (mapa unificado en `packages/shared/constants/file-icons.ts`, compartido con M6). Usa componentes Lucide React:
+- [x] Tab "Archivos" en el sidebar (junto a tab "Logs")
+- [x] Cada archivo aparece con animación Framer Motion (fade + slide down)
+- [x] Ícono dinámico por extensión (mapa unificado en `packages/shared/constants/file-icons.ts`, compartido con M6). Usa componentes Lucide React:
   - `.ts` `.tsx` → `<FileCode />` (azul)
   - `.sql` → `<Database />`
   - `.prisma` → `<Gem />`
@@ -145,11 +145,11 @@ Integration:  { cx: 350, cy: 470 }
   - `.env` → `<Lock />`
   - otros → `<File />`
   > En el Canvas (HU-18), los íconos se renderizan como SVG paths de Lucide dibujados con `ctx.fill()` / `ctx.stroke()`. El mapa exporta tanto el componente React como el path SVG raw.
-- [ ] Muestra: ícono, nombre, ruta relativa, badge del agente que lo creó
-- [ ] Badge "NEW" verde durante 3 segundos después de aparecer
-- [ ] Clic en archivo → modal con contenido + syntax highlighting (shiki)
-- [ ] Contador total: "23 archivos generados"
-- [ ] Agrupados por carpeta (colapsables, expandidos por defecto en la capa activa)
+- [x] Muestra: ícono, nombre, ruta relativa, badge del agente que lo creó
+- [x] Badge "NEW" verde durante 3 segundos después de aparecer
+- [x] Clic en archivo → modal con contenido + syntax highlighting (shiki)
+- [x] Contador total: "23 archivos generados"
+- [x] Agrupados por carpeta (colapsables, expandidos por defecto en la capa activa)
 
 ---
 
@@ -161,17 +161,17 @@ Integration:  { cx: 350, cy: 470 }
 
 **Criterios de aceptación:**
 
-- [ ] Barra de métricas en la parte superior del dashboard
-- [ ] 5 métricas en cards:
+- [x] Barra de métricas en la parte superior del dashboard
+- [x] 5 métricas en cards:
   - `<Bot />` Agentes activos: `2 / 9`
   - `<BarChart3 />` Archivos creados: `12 / ~28` (creados vs estimados por heurística M4)
   - `<FolderOpen />` Archivos generados: `23`
   - `<Timer />` Tiempo transcurrido: `04:32` (timer local, sincronizado con `project.createdAt`)
   - `<Coins />` Tokens usados: `24,831` (formateado con separador de miles)
-- [ ] Barra de progreso general debajo de métricas: `68%` con color gradient
-- [ ] Indicador de capa actual: "Layer 2: Backend" con icono del agente
-- [ ] Todas las métricas se actualizan via WebSocket events
-- [ ] Timer local con `setInterval(1000)` que se limpia al desmontar
+- [x] Barra de progreso general debajo de métricas: `68%` con color gradient
+- [x] Indicador de capa actual: "Layer 2: Backend" con icono del agente
+- [x] Todas las métricas se actualizan via WebSocket events
+- [x] Timer local con `setInterval(1000)` que se limpia al desmontar
 
 ---
 
@@ -183,14 +183,14 @@ Integration:  { cx: 350, cy: 470 }
 
 **Criterios de aceptación:**
 
-- [ ] Botones en la barra superior junto a las métricas
-- [ ] Estado `running` → botón "⏸ Pausar" (azul outline)
-- [ ] Estado `paused` → botón "▶ Continuar" (azul solid) + nodos en estado visual paused
-- [ ] Estado `error` → botón "↺ Reintentar" (rojo outline) + nodo con error resaltado
-- [ ] Estado `done` → botón "⬇ Descargar ZIP" (verde solid) + todos los nodos verdes
-- [ ] Al pausar → nodos activos cambian a estado visual `paused`, conexiones se atenúan (opacity 0.3)
-- [ ] Al continuar → nodos retoman estado `working`, conexiones se reiluminan
-- [ ] Confirmación antes de pausar: "El agente actual terminará su tarea antes de pausar"
+- [x] Botones en la barra superior junto a las métricas
+- [x] Estado `running` → botón "⏸ Pausar" (azul outline)
+- [x] Estado `paused` → botón "▶ Continuar" (azul solid) + nodos en estado visual paused
+- [x] Estado `error` → botón "↺ Reintentar" (rojo outline) + nodo con error resaltado
+- [x] Estado `done` → botón "⬇ Descargar ZIP" (verde solid) + todos los nodos verdes
+- [x] Al pausar → nodos activos cambian a estado visual `paused`, conexiones se atenúan (opacity 0.3)
+- [x] Al continuar → nodos retoman estado `working`, conexiones se reiluminan
+- [x] Confirmación antes de pausar: "El agente actual terminará su tarea antes de pausar"
 
 ---
 
@@ -223,11 +223,11 @@ En pantallas pequeñas, el canvas se reemplaza por una vista simplificada:
 
 **Criterios:**
 
-- [ ] Lista vertical de agentes con progress bar inline
-- [ ] Progress bar general en top
-- [ ] Botón de acción (pausar/continuar/etc.) siempre visible
-- [ ] Tabs logs/archivos en parte inferior (full width)
-- [ ] Sin canvas, sin partículas, sin conexiones
+- [x] Lista vertical de agentes con progress bar inline
+- [x] Progress bar general en top
+- [x] Botón de acción (pausar/continuar/etc.) siempre visible
+- [x] Tabs logs/archivos en parte inferior (full width)
+- [x] Sin canvas, sin partículas, sin conexiones
 
 ---
 
@@ -432,19 +432,19 @@ function drawParticle(ctx: CanvasRenderingContext2D, particle: Particle) {
 
 ## Definición de Done
 
-- [ ] Desktop: Canvas muestra 9 agentes + orchestrator con posiciones y colores correctos
-- [ ] Animaciones Canvas para working (pulso), done (check), error (shake), paused (ámbar)
-- [ ] Conexiones se iluminan al activar la capa correspondiente
-- [ ] Partículas animadas viajan por la conexión al cambiar de capa
-- [ ] Clic en nodo (hit-testing) expande panel de detalle del agente
-- [ ] Log panel recibe y muestra eventos WS en tiempo real con auto-scroll
-- [ ] Archivos panel muestra archivos agrupados por carpeta con animación de entrada
-- [ ] Preview de archivo con syntax highlighting (shiki) funciona
-- [ ] Métricas se actualizan en tiempo real, timer local funciona
-- [ ] Botones pausar/continuar/reintentar/descargar funcionan correctamente
-- [ ] Mobile: vista simplificada con lista de agentes + progress bars
-- [ ] WebSocket hook con reconexión automática + replay funciona
-- [ ] No hay memory leaks (cleanup de WS, timers, buffers al desmontar)
-- [ ] Canvas responsive (ResizeObserver + devicePixelRatio)
-- [ ] Tests de componentes clave (agent-canvas, log-panel, websocket hook)
-- [ ] No hay `any` en TypeScript
+- [x] Desktop: Canvas muestra 9 agentes + orchestrator con posiciones y colores correctos
+- [x] Animaciones Canvas para working (pulso), done (check), error (shake), paused (ámbar)
+- [x] Conexiones se iluminan al activar la capa correspondiente
+- [x] Partículas animadas viajan por la conexión al cambiar de capa
+- [x] Clic en nodo (hit-testing) expande panel de detalle del agente
+- [x] Log panel recibe y muestra eventos WS en tiempo real con auto-scroll
+- [x] Archivos panel muestra archivos agrupados por carpeta con animación de entrada
+- [x] Preview de archivo con syntax highlighting (shiki) funciona
+- [x] Métricas se actualizan en tiempo real, timer local funciona
+- [x] Botones pausar/continuar/reintentar/descargar funcionan correctamente
+- [x] Mobile: vista simplificada con lista de agentes + progress bars
+- [x] WebSocket hook con reconexión automática + replay funciona
+- [x] No hay memory leaks (cleanup de WS, timers, buffers al desmontar)
+- [x] Canvas responsive (ResizeObserver + devicePixelRatio)
+- [x] Tests de componentes clave (agent-canvas, log-panel, websocket hook)
+- [x] No hay `any` en TypeScript

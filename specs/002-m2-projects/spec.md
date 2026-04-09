@@ -30,7 +30,7 @@ Módulo de gestión de proyectos. Permite crear, listar, ver detalle, actualizar
 
 **Criterios de aceptación:**
 
-- [ ] Formulario estructurado con los siguientes campos:
+- [x] Formulario estructurado con los siguientes campos:
   - Nombre del proyecto (requerido, 3-100 chars)
   - Descripción en lenguaje natural (requerido, 20-5000 chars)
   - Selector de stack: `node-nextjs` | `laravel-nextjs` | `python-nextjs`
@@ -38,15 +38,15 @@ Módulo de gestión de proyectos. Permite crear, listar, ver detalle, actualizar
   - > **Nota**: `seed`, `security` e `integration` están siempre activos y no son deseleccionables. Los checkboxes solo aplican a los 6 agentes opcionales: dba, backend, frontend, qa, docs, deploy.
   - Selector de modelo: `claude-sonnet-4-6` (recomendado) | `claude-opus-4-6` | `claude-haiku-4-5`
   - ~~Selector de agentes en paralelo: 3 | 5 | 7~~ → **Sin efecto en MVP** (ejecución secuencial). Se oculta del formulario. Se implementará en post-MVP.
-- [ ] Preview del prompt que se enviará a Claude (colapsable)
-- [ ] Botón "Usar template" carga valores predefinidos en el formulario:
+- [x] Preview del prompt que se enviará a Claude (colapsable)
+- [x] Botón "Usar template" carga valores predefinidos en el formulario:
   - Nombre: `"Mi proyecto Sophia"`
   - Descripción: `"Sistema web con autenticación, CRUD de entidades y panel de administración"`
   - Stack: `node-nextjs`
   - Modelo: `claude-sonnet-4-6`
   - Agentes: todos activos (dba, seed, backend, frontend, qa, security, docs, deploy, integration)
-- [ ] Al crear → redirige automáticamente al dashboard del proyecto `/projects/[id]`
-- [ ] Muestra errores inline bajo cada campo
+- [x] Al crear → redirige automáticamente al dashboard del proyecto `/projects/[id]`
+- [x] Muestra errores inline bajo cada campo
 
 > **Fuera de MVP**: Modo chat libre y subir documento (.md, .txt, .pdf). Se implementan en M2.1.
 
@@ -90,15 +90,15 @@ z.object({
 
 **Criterios de aceptación:**
 
-- [ ] Grid de project cards con paginación server-side (12 por página)
-- [ ] Cada card muestra: nombre, stack badge, estado con color, progreso (%), capa actual con nombre, fecha relativa
+- [x] Grid de project cards con paginación server-side (12 por página)
+- [x] Cada card muestra: nombre, stack badge, estado con color, progreso (%), capa actual con nombre, fecha relativa
   - Estado `error` muestra badge rojo — sin mensaje de error en la card
-- [ ] Proyectos en estado `running` muestran indicador animado (pulso)
-- [ ] Buscador por nombre (server-side, ILIKE en Postgres)
-- [ ] Filtro por estado: Todos | En progreso | Completados | Con error | Pausados
-- [ ] Ordenamiento por fecha de creación (más reciente primero)
-- [ ] Si no hay proyectos → empty state con ilustración y botón "Crear primer proyecto"
-- [ ] Al hacer clic en una card → navega a `/projects/[id]`
+- [x] Proyectos en estado `running` muestran indicador animado (pulso)
+- [x] Buscador por nombre (server-side, ILIKE en Postgres)
+- [x] Filtro por estado: Todos | En progreso | Completados | Con error | Pausados
+- [x] Ordenamiento por fecha de creación (más reciente primero)
+- [x] Si no hay proyectos → empty state con ilustración y botón "Crear primer proyecto"
+- [x] Al hacer clic en una card → navega a `/projects/[id]`
 
 **Estados y colores:**
 
@@ -134,20 +134,20 @@ error   → rojo    "Error"
 
 **Criterios de aceptación:**
 
-- [ ] Header con: nombre, stack badge, estado con color, progreso total (barra), capa actual
+- [x] Header con: nombre, stack badge, estado con color, progreso total (barra), capa actual
   - Si status es `error`: mostrar campo `errorMessage` debajo del header (alert rojo, read-only)
-- [ ] Tabs: Dashboard | Archivos | Logs | Spec
+- [x] Tabs: Dashboard | Archivos | Logs | Spec
   - Tab Dashboard → placeholder "Disponible cuando M5 esté implementado" (hasta Sprint 4)
   - Tab Archivos → placeholder "Disponible cuando M6 esté implementado" (hasta Sprint 5)
   - Tab Logs → placeholder "Disponible cuando M4 esté implementado" (hasta Sprint 3)
   - Tab Spec → render del spec generado en markdown (read-only)
-- [ ] Botones de acción según estado:
+- [x] Botones de acción según estado:
   - `idle` → "▶ Iniciar"
   - `running` → "⏸ Pausar"
   - `paused` → "▶ Continuar"
   - `done` → "⬇ Descargar ZIP"
   - `error` → "↺ Reintentar"
-- [ ] Solo el owner del proyecto puede acceder (403 si no es suyo)
+- [x] Solo el owner del proyecto puede acceder (403 si no es suyo)
 
 ---
 
@@ -159,10 +159,10 @@ error   → rojo    "Error"
 
 **Criterios de aceptación:**
 
-- [ ] Solo editable en estado `idle` (no se puede editar en ejecución, completado o error)
-- [ ] Campos editables: nombre, descripción, stack, config
-- [ ] Mismas validaciones Zod que en creación
-- [ ] Toast de éxito al guardar
+- [x] Solo editable en estado `idle` (no se puede editar en ejecución, completado o error)
+- [x] Campos editables: nombre, descripción, stack, config
+- [x] Mismas validaciones Zod que en creación
+- [x] Toast de éxito al guardar
 
 ---
 
@@ -174,14 +174,14 @@ error   → rojo    "Error"
 
 **Criterios de aceptación:**
 
-- [ ] Opción de eliminar en menú ⋯ de cada project card y en el detalle
-- [ ] Modal de confirmación con nombre del proyecto (el usuario debe escribir el nombre para confirmar)
-- [ ] No se puede eliminar un proyecto en estado `running`
-- [ ] Soft delete: marca `deleted_at` en BD, no se devuelve en queries
+- [x] Opción de eliminar en menú ⋯ de cada project card y en el detalle
+- [x] Modal de confirmación con nombre del proyecto (el usuario debe escribir el nombre para confirmar)
+- [x] No se puede eliminar un proyecto en estado `running`
+- [x] Soft delete: marca `deleted_at` en BD, no se devuelve en queries
   - Acceso directo a `/projects/[id]` de un proyecto eliminado retorna `404 NOT_FOUND` (igual que proyecto inexistente)
-- [ ] Toast de éxito después de eliminar
-- [ ] La lista se actualiza inmediatamente (optimistic update)
-- [ ] Limpieza real de archivos se ejecuta via job asíncrono (BullMQ, implementado en M4)
+- [x] Toast de éxito después de eliminar
+- [x] La lista se actualiza inmediatamente (optimistic update)
+- [x] Limpieza real de archivos se ejecuta via job asíncrono (BullMQ, implementado en M4)
 
 ---
 
@@ -532,15 +532,15 @@ prisma/migrations/   → Migración M2
 
 ## Definición de Done
 
-- [ ] CRUD de proyectos funciona end-to-end (crear, listar, ver, editar, soft delete)
-- [ ] Paginación server-side con búsqueda y filtros funciona
-- [ ] Máquina de estados valida transiciones correctamente (400 en transición inválida)
-- [ ] Start/pause/continue cambian status correctamente (stubs para M4)
-- [ ] Ruta `GET /api/projects/:id/download` declara stub 501 `NOT_IMPLEMENTED` (implementación ZIP en M6)
-- [ ] Spec se almacena en tabla separada con versionamiento
-- [ ] Soft delete implementado (no hard delete)
-- [ ] Solo el owner puede ver/editar/eliminar sus proyectos (403)
-- [ ] Tests de endpoints cubriendo happy path, errores y transiciones inválidas
-- [ ] `GET /api/projects` responde en ≤ 300ms p95 con hasta 100 proyectos del usuario
-- [ ] UI responsive en mobile y desktop
-- [ ] No hay `any` en TypeScript
+- [x] CRUD de proyectos funciona end-to-end (crear, listar, ver, editar, soft delete)
+- [x] Paginación server-side con búsqueda y filtros funciona
+- [x] Máquina de estados valida transiciones correctamente (400 en transición inválida)
+- [x] Start/pause/continue cambian status correctamente (stubs para M4)
+- [x] Ruta `GET /api/projects/:id/download` declara stub 501 `NOT_IMPLEMENTED` (implementación ZIP en M6)
+- [x] Spec se almacena en tabla separada con versionamiento
+- [x] Soft delete implementado (no hard delete)
+- [x] Solo el owner puede ver/editar/eliminar sus proyectos (403)
+- [x] Tests de endpoints cubriendo happy path, errores y transiciones inválidas
+- [x] `GET /api/projects` responde en ≤ 300ms p95 con hasta 100 proyectos del usuario
+- [x] UI responsive en mobile y desktop
+- [x] No hay `any` en TypeScript

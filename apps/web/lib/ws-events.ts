@@ -5,9 +5,9 @@ export type AgentEventType =
   | 'agent:progress'
   | 'agent:completed'
   | 'agent:failed'
-  | 'agent:paused'
-  | 'pipeline:completed'
-  | 'pipeline:failed';
+  | 'project:paused'
+  | 'project:done'
+  | 'project:error';
 
 export interface AgentEvent {
   type: AgentEventType;
@@ -20,7 +20,7 @@ export interface AgentEvent {
 }
 
 export type AgentStatusEvent = AgentEvent & {
-  type: 'agent:started' | 'agent:completed' | 'agent:failed' | 'agent:paused';
+  type: 'agent:started' | 'agent:completed' | 'agent:failed';
   agentType: string;
   layer: number;
 };
@@ -40,15 +40,15 @@ export type FileCreatedEvent = AgentEvent & {
 };
 
 export type ProjectDoneEvent = AgentEvent & {
-  type: 'pipeline:completed';
+  type: 'project:done';
 };
 
 export type ProjectErrorEvent = AgentEvent & {
-  type: 'pipeline:failed';
+  type: 'project:error';
   message: string;
 };
 
 export type ProjectPausedEvent = AgentEvent & {
-  type: 'agent:paused';
+  type: 'project:paused';
   agentType: string;
 };

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { buildApp } from '../../../app.js';
 import type { FastifyInstance } from 'fastify';
+import prisma from '../../../lib/prisma.js';
 
 // Mock BullMQ and Redis to avoid real connections in integration tests
 vi.mock('../../../queue/agent-queue.js', () => ({
@@ -164,6 +165,17 @@ describe('Projects API Integration', () => {
 
   describe('POST /api/projects/:id/start', () => {
     it('should transition project to running', async () => {
+      // Create a spec so startProject validation passes
+      await prisma.projectSpec.create({
+        data: {
+          projectId: createdProjectId,
+          version: 1,
+          content: { spec: '# Spec', dataModel: '# Data Model', apiDesign: '# API' },
+          source: 'generated',
+          valid: true,
+        },
+      });
+
       const res = await app.inject({
         method: 'POST',
         url: `/api/projects/${createdProjectId}/start`,
@@ -172,7 +184,7 @@ describe('Projects API Integration', () => {
 
       expect(res.statusCode).toBe(200);
       const body = JSON.parse(res.body);
-      expect(body.data.status).toBe('generating');
+      expect(body.data.status).toBe('running');
     });
 
     it('should return 400 for invalid transition (running→start)', async () => {
@@ -212,7 +224,7 @@ describe('Projects API Integration', () => {
 
       expect(res.statusCode).toBe(200);
       const body = JSON.parse(res.body);
-      expect(body.data.status).toBe('generating');
+      expect(body.data.status).toBe('running');
     });
   });
 

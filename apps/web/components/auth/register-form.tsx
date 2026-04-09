@@ -56,7 +56,7 @@ export function RegisterForm() {
       });
 
       if (res.ok) {
-        router.push('/');
+        router.push('/projects');
         return;
       }
 

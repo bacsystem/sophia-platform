@@ -147,7 +147,7 @@ export function useWebSocket({ projectId, enabled = true }: UseWebSocketOptions)
         break;
       }
 
-      case 'agent:paused': {
+      case 'project:paused': {
         if (agentType) {
           state.updateAgent(agentType, { status: 'paused' });
         }
@@ -168,7 +168,7 @@ export function useWebSocket({ projectId, enabled = true }: UseWebSocketOptions)
         break;
       }
 
-      case 'pipeline:completed': {
+      case 'project:done': {
         state.setStatus('done');
         state.setProgress(100);
         state.updateAgent('orchestrator', { status: 'done', progress: 100 });
@@ -182,7 +182,7 @@ export function useWebSocket({ projectId, enabled = true }: UseWebSocketOptions)
         break;
       }
 
-      case 'pipeline:failed': {
+      case 'project:error': {
         state.setStatus('error');
         state.updateAgent('orchestrator', { status: 'error' });
         state.addLog({

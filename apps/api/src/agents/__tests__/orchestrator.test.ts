@@ -14,6 +14,7 @@ vi.mock('../../lib/prisma.js', () => ({
     },
     generatedFile: {
       upsert: vi.fn().mockResolvedValue({}),
+      findFirst: vi.fn().mockResolvedValue(null),
     },
     agentLog: {
       create: vi.fn().mockResolvedValue({}),
@@ -82,13 +83,13 @@ describe('orchestrator — runPipeline', () => {
     vi.restoreAllMocks();
   });
 
-  it('updates project status to generating then completed', async () => {
+  it('updates project status to running then done', async () => {
     const { runPipeline } = await import('../../agents/orchestrator.js');
     await runPipeline('project-1', 'user-1');
 
     const updateCalls = (prisma.project.update as ReturnType<typeof vi.fn>).mock.calls;
-    expect(updateCalls.some((c: unknown[]) => (c[0] as { data: { status: string } }).data.status === 'generating')).toBe(true);
-    expect(updateCalls.some((c: unknown[]) => (c[0] as { data: { status: string } }).data.status === 'completed')).toBe(true);
+    expect(updateCalls.some((c: unknown[]) => (c[0] as { data: { status: string } }).data.status === 'running')).toBe(true);
+    expect(updateCalls.some((c: unknown[]) => (c[0] as { data: { status: string } }).data.status === 'done')).toBe(true);
   });
 
   it('runs all 9 layers when no layers are completed', async () => {
@@ -116,7 +117,7 @@ describe('orchestrator — runPipeline', () => {
           upsert: vi.fn().mockResolvedValue({ id: 'agent-1' }),
           findMany: vi.fn().mockResolvedValue([{ layer: 1 }, { layer: 1.5 }]),
         },
-        generatedFile: { upsert: vi.fn().mockResolvedValue({}) },
+        generatedFile: { upsert: vi.fn().mockResolvedValue({}), findFirst: vi.fn().mockResolvedValue(null) },
         agentLog: { create: vi.fn().mockResolvedValue({}) },
       },
     }));

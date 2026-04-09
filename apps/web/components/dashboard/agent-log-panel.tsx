@@ -4,27 +4,57 @@
 
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { Pause, Play, History } from 'lucide-react';
-import { useDashboardStore } from '@/hooks/use-dashboard-store';
+import { useDashboardStore, type AgentLog } from '@/hooks/use-dashboard-store';
 import { LAYER_AGENTS } from '@/lib/agent-config';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+
+interface AgentLogPanelProps {
+  projectId?: string;
+  onViewHistory?: () => void;
+}
+
 /** @description Panel de logs con auto-scroll, filtro por agente, y badge de mensajes nuevos */
-export function AgentLogPanel() {
+export function AgentLogPanel({ projectId, onViewHistory }: AgentLogPanelProps) {
   const logs = useDashboardStore((s) => s.logs);
   const scrollPaused = useDashboardStore((s) => s.scrollPaused);
+  const unreadCount = useDashboardStore((s) => s.unreadCount);
   const setScrollPaused = useDashboardStore((s) => s.setScrollPaused);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [filter, setFilter] = useState<string | null>(null);
+  const [historyLogs, setHistoryLogs] = useState<AgentLog[] | null>(null);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   const filteredLogs = filter
     ? logs.filter((l) => l.agentType === filter)
     : logs;
+
+  const displayLogs = historyLogs ?? filteredLogs;
+
+  const fetchHistory = useCallback(async () => {
+    if (historyLogs) { setHistoryLogs(null); return; }
+    if (!projectId || loadingHistory) return;
+    if (onViewHistory) { onViewHistory(); return; }
+    setLoadingHistory(true);
+    try {
+      const res = await fetch(`${API_URL}/api/projects/${projectId}/logs?limit=200`, {
+        credentials: 'include',
+      });
+      if (res.ok) {
+        const body = await res.json();
+        setHistoryLogs(body.data ?? []);
+      }
+    } finally {
+      setLoadingHistory(false);
+    }
+  }, [projectId, loadingHistory, onViewHistory, historyLogs]);
 
   // Auto-scroll when not paused
   useEffect(() => {
     if (!scrollPaused && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [filteredLogs.length, scrollPaused]);
+  }, [displayLogs.length, scrollPaused]);
 
   const togglePause = useCallback(() => {
     setScrollPaused(!scrollPaused);
@@ -51,9 +81,9 @@ export function AgentLogPanel() {
 
         <div className="flex-1" />
 
-        {scrollPaused && (
-          <span className="bg-blue-500/20 text-blue-400 text-[10px] px-1.5 py-0.5 rounded-full">
-            Pausado
+        {scrollPaused && unreadCount > 0 && (
+          <span className="bg-blue-500/20 text-blue-400 text-[10px] px-1.5 py-0.5 rounded-full font-mono">
+            +{unreadCount}
           </span>
         )}
 
@@ -74,12 +104,12 @@ export function AgentLogPanel() {
         aria-live="polite"
         aria-atomic="false"
       >
-        {filteredLogs.length === 0 && (
+        {displayLogs.length === 0 && (
           <p className="text-white/30 text-xs text-center py-4">
             Sin logs disponibles
           </p>
         )}
-        {filteredLogs.map((log) => (
+        {displayLogs.map((log) => (
           <div key={log.id} className="flex items-start gap-2 text-xs py-0.5">
             <span className="text-white/25 shrink-0 tabular-nums w-10">
               {formatTime(log.timestamp)}
@@ -96,11 +126,13 @@ export function AgentLogPanel() {
       {/* History button */}
       <div className="px-3 py-2 border-t border-white/10">
         <button
-          className="flex items-center gap-1.5 text-xs text-white/40 hover:text-white/60 transition-colors"
+          onClick={fetchHistory}
+          disabled={loadingHistory}
+          className="flex items-center gap-1.5 text-xs text-white/40 hover:text-white/60 transition-colors disabled:opacity-50"
           aria-label="Ver historial completo de logs"
         >
           <History className="w-3 h-3" />
-          Ver historial completo
+          {loadingHistory ? 'Cargando...' : historyLogs ? 'Volver a tiempo real' : 'Ver historial completo'}
         </button>
       </div>
     </div>

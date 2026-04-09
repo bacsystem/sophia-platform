@@ -2,7 +2,7 @@
 
 # Sophia Platform
 
-# Versión: 1.3.0 | Sprint: 1 | Estado: ✅ COMPLETADO
+# Versión: 1.4.0 | Sprint: 1 | Estado: ✅ COMPLETADO
 
 ---
 
@@ -73,13 +73,13 @@ Set-Cookie: refresh_token=<opaque>; HttpOnly; Secure; SameSite=Strict; Path=/api
 
 **Criterios de aceptación:**
 
-- [ ] Formulario con: nombre, email, contraseña, confirmar contraseña
-- [ ] Email debe ser único — error claro si ya existe
-- [ ] Contraseña mínimo 8 caracteres con al menos 1 número
-- [ ] Confirmar contraseña debe coincidir
-- [ ] Al registrarse exitosamente → set cookies + redirige al dashboard
-- [ ] Muestra errores inline bajo cada campo
-- [ ] Rate limit: máximo 3 registros por IP por hora
+- [x] Formulario con: nombre, email, contraseña, confirmar contraseña
+- [x] Email debe ser único — error claro si ya existe
+- [x] Contraseña mínimo 8 caracteres con al menos 1 número
+- [x] Confirmar contraseña debe coincidir
+- [x] Al registrarse exitosamente → set cookies + redirige al dashboard
+- [x] Muestra errores inline bajo cada campo
+- [x] Rate limit: máximo 3 registros por IP por hora
 
 **Validaciones Zod (frontend-only — el backend NO valida confirmPassword, solo recibe name/email/password):**
 
@@ -108,13 +108,13 @@ z.object({
 
 **Criterios de aceptación:**
 
-- [ ] Formulario con: email, contraseña
-- [ ] Si credenciales incorrectas → mensaje genérico "Credenciales incorrectas" (no revelar cuál falló)
-- [ ] Checkbox "Recordarme" → refresh token de 30 días
-- [ ] Sin "Recordarme" → refresh token de 24 horas
-- [ ] Después de 5 intentos fallidos → bloqueo 15 minutos con mensaje claro y countdown
-- [ ] Link "Olvidé mi contraseña" visible
-- [ ] Al login exitoso → set cookies + redirige al dashboard
+- [x] Formulario con: email, contraseña
+- [x] Si credenciales incorrectas → mensaje genérico "Credenciales incorrectas" (no revelar cuál falló)
+- [x] Checkbox "Recordarme" → refresh token de 30 días
+- [x] Sin "Recordarme" → refresh token de 24 horas
+- [x] Después de 5 intentos fallidos → bloqueo 15 minutos con mensaje claro y countdown
+- [x] Link "Olvidé mi contraseña" visible
+- [x] Al login exitoso → set cookies + redirige al dashboard
 
 **Rate limiting (Redis):**
 
@@ -145,11 +145,11 @@ z.object({
 
 **Criterios de aceptación:**
 
-- [ ] Botón de logout visible en el sidebar o header
-- [ ] Al hacer logout → refresh token revocado en BD
-- [ ] Cookies de access y refresh eliminadas
-- [ ] Redirige a /login
-- [ ] No puede acceder a rutas protegidas después del logout
+- [x] Botón de logout visible en el sidebar o header
+- [x] Al hacer logout → refresh token revocado en BD
+- [x] Cookies de access y refresh eliminadas
+- [x] Redirige a /login
+- [x] No puede acceder a rutas protegidas después del logout
 
 ---
 
@@ -161,12 +161,12 @@ z.object({
 
 **Criterios de aceptación:**
 
-- [ ] Cuando el access token expira, el frontend hace refresh automático
-- [ ] Si el refresh es exitoso → nuevo access token + nuevo refresh token (rotación)
-- [ ] El refresh token anterior se invalida en BD
-- [ ] Si el refresh token expiró o fue revocado → redirige a /login
-- [ ] El refresh es transparente para el usuario (no ve interrupción)
-- [ ] Concurrent refresh (ej. múltiples tabs): first-wins — la primera request rota el token, las siguientes reciben 401 y redirigen a /login
+- [x] Cuando el access token expira, el frontend hace refresh automático
+- [x] Si el refresh es exitoso → nuevo access token + nuevo refresh token (rotación)
+- [x] El refresh token anterior se invalida en BD
+- [x] Si el refresh token expiró o fue revocado → redirige a /login
+- [x] El refresh es transparente para el usuario (no ve interrupción)
+- [x] Concurrent refresh (ej. múltiples tabs): first-wins — la primera request rota el token, las siguientes reciben 401 y redirigen a /login
 
 ---
 
@@ -178,17 +178,17 @@ z.object({
 
 **Criterios de aceptación:**
 
-- [ ] Formulario con campo email en /forgot-password
-- [ ] Siempre muestra mensaje genérico "Si el email existe, recibirás instrucciones" (no confirma si existe)
-- [ ] Si el email existe → envía email con link de reset
-- [ ] Link de reset válido por 1 hora, uso único
-- [ ] Token de reset hasheado en BD (no plaintext)
-- [ ] Link redirige a /reset-password?token=xxx
-- [ ] Formulario de reset con: nueva contraseña, confirmar contraseña
-- [ ] Al resetear exitosamente → redirige a /login con mensaje de éxito
-- [ ] Token expirado o ya usado → mensaje de error con opción de solicitar nuevo
-- [ ] Acceso a /reset-password sin token o con token inválido → mostrar "Token inválido o expirado" con link a /forgot-password
-- [ ] Rate limit: máximo 3 solicitudes por email por hora
+- [x] Formulario con campo email en /forgot-password
+- [x] Siempre muestra mensaje genérico "Si el email existe, recibirás instrucciones" (no confirma si existe)
+- [x] Si el email existe → envía email con link de reset
+- [x] Link de reset válido por 1 hora, uso único
+- [x] Token de reset hasheado en BD (no plaintext)
+- [x] Link redirige a /reset-password?token=xxx
+- [x] Formulario de reset con: nueva contraseña, confirmar contraseña
+- [x] Al resetear exitosamente → redirige a /login con mensaje de éxito
+- [x] Token expirado o ya usado → mensaje de error con opción de solicitar nuevo
+- [x] Acceso a /reset-password sin token o con token inválido → mostrar "Token inválido o expirado" con link a /forgot-password
+- [x] Rate limit: máximo 3 solicitudes por email por hora
 
 ---
 
@@ -448,14 +448,14 @@ prisma/
 
 ## Definición de Done
 
-- [ ] Registro funciona end-to-end (formulario → API → BD → cookies → dashboard)
-- [ ] Login devuelve access + refresh en cookies httpOnly
-- [ ] Refresh automático funciona sin intervención del usuario
-- [ ] Logout revoca refresh token en BD y limpia cookies
-- [ ] Forgot/reset password funciona con token hasheado y expiración
-- [ ] Rate limiting activo en register, login y forgot-password
-- [ ] Rutas protegidas redirigen a /login si no hay sesión válida
-- [ ] Tests de endpoints cubriendo happy path y errores
-- [ ] UI responsive en mobile y desktop
-- [ ] No hay `any` en TypeScript
-- [ ] CORS configurado correctamente
+- [x] Registro funciona end-to-end (formulario → API → BD → cookies → dashboard)
+- [x] Login devuelve access + refresh en cookies httpOnly
+- [x] Refresh automático funciona sin intervención del usuario
+- [x] Logout revoca refresh token en BD y limpia cookies
+- [x] Forgot/reset password funciona con token hasheado y expiración
+- [x] Rate limiting activo en register, login y forgot-password
+- [x] Rutas protegidas redirigen a /login si no hay sesión válida
+- [x] Tests de endpoints cubriendo happy path y errores
+- [x] UI responsive en mobile y desktop
+- [x] No hay `any` en TypeScript
+- [x] CORS configurado correctamente

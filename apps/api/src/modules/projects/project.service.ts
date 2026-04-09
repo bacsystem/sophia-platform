@@ -179,7 +179,7 @@ export async function deleteProject(userId: string, id: string) {
   if (project.userId !== userId) {
     return { error: 'FORBIDDEN', message: 'No tienes acceso a este proyecto', status: 403 };
   }
-  if (['running', 'generating', 'pausing', 'paused'].includes(project.status)) {
+  if (['running', 'pausing', 'paused'].includes(project.status)) {
     return {
       error: 'CANNOT_DELETE_RUNNING',
       message: 'No se puede eliminar un proyecto en ejecución',
@@ -191,7 +191,7 @@ export async function deleteProject(userId: string, id: string) {
   return { data: { message: 'Proyecto eliminado' } };
 }
 
-/** Enqueues the agent pipeline and transitions project to 'generating'. */
+/** Enqueues the agent pipeline and transitions project to 'running'. */
 export async function startProject(userId: string, id: string) {
   const project = await prisma.project.findFirst({ where: { id, deletedAt: null } });
   if (!project) return { error: 'NOT_FOUND', message: 'Proyecto no encontrado', status: 404 };
@@ -200,10 +200,15 @@ export async function startProject(userId: string, id: string) {
     return { error: 'INVALID_STATE_TRANSITION', message: "Solo se puede iniciar desde estado 'idle' o 'error'", status: 400 };
   }
 
-  await prisma.project.update({ where: { id }, data: { status: 'generating' } });
+  const spec = await prisma.projectSpec.findFirst({ where: { projectId: id }, orderBy: { version: 'desc' } });
+  if (!spec) {
+    return { error: 'NO_SPEC', message: 'El proyecto debe tener spec generado antes de iniciar', status: 400 };
+  }
+
+  await prisma.project.update({ where: { id }, data: { status: 'running' } });
   const jobId = await enqueueAgentRun(id, userId);
 
-  return { data: { id, status: 'generating', jobId } };
+  return { data: { id, status: 'running', jobId } };
 }
 
 /** Sets Redis pause flag so the orchestrator pauses before the next layer. */
@@ -211,7 +216,7 @@ export async function pauseProject(userId: string, id: string) {
   const project = await prisma.project.findFirst({ where: { id, deletedAt: null } });
   if (!project) return { error: 'NOT_FOUND', message: 'Proyecto no encontrado', status: 404 };
   if (project.userId !== userId) return { error: 'FORBIDDEN', message: 'No tienes acceso a este proyecto', status: 403 };
-  if (project.status !== 'generating') {
+  if (project.status !== 'running') {
     return { error: 'INVALID_STATE_TRANSITION', message: 'Solo se puede pausar un proyecto en ejecución', status: 400 };
   }
 
@@ -229,7 +234,7 @@ export async function continueProject(userId: string, id: string) {
   const project = await prisma.project.findFirst({ where: { id, deletedAt: null } });
   if (!project) return { error: 'NOT_FOUND', message: 'Proyecto no encontrado', status: 404 };
   if (project.userId !== userId) return { error: 'FORBIDDEN', message: 'No tienes acceso a este proyecto', status: 403 };
-  if (!['paused', 'pausing', 'generating'].includes(project.status)) {
+  if (!['paused', 'pausing', 'running'].includes(project.status)) {
     return { error: 'INVALID_STATE_TRANSITION', message: 'Solo se puede continuar un proyecto pausado o en proceso de pausar', status: 400 };
   }
 
@@ -239,7 +244,7 @@ export async function continueProject(userId: string, id: string) {
   await redis.del(`project:pause:${id}`);
   await redis.disconnect();
 
-  return { data: { id, status: 'generating' } };
+  return { data: { id, status: 'running' } };
 }
 
 /** Re-enqueues the pipeline from error state. */
@@ -251,8 +256,8 @@ export async function retryProject(userId: string, id: string) {
     return { error: 'INVALID_STATE_TRANSITION', message: "Solo se puede reintentar desde estado 'error'", status: 400 };
   }
 
-  await prisma.project.update({ where: { id }, data: { status: 'generating' } });
+  await prisma.project.update({ where: { id }, data: { status: 'running' } });
   const jobId = await enqueueAgentRun(id, userId);
 
-  return { data: { id, status: 'generating', jobId } };
+  return { data: { id, status: 'running', jobId } };
 }

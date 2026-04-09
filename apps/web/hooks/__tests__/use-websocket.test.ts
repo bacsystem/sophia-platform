@@ -123,7 +123,7 @@ describe('use-websocket', () => {
     expect(state.logs.length).toBeGreaterThan(0);
   });
 
-  it('dispatches pipeline:completed events', async () => {
+  it('dispatches project:done events', async () => {
     const { useWebSocket } = await import('@/hooks/use-websocket');
     const { renderHook } = await import('@testing-library/react');
 
@@ -133,7 +133,7 @@ describe('use-websocket', () => {
     ws.simulateOpen();
 
     ws.simulateMessage({
-      type: 'pipeline:completed',
+      type: 'project:done',
       message: 'Done',
       timestamp: new Date().toISOString(),
     });

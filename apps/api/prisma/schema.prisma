@@ -119,9 +119,10 @@ model UserSettings {
   anthropicApiKeyEncrypted String?  @map("anthropic_api_key_encrypted")
   anthropicApiKeyIv        String?  @map("anthropic_api_key_iv")
   anthropicApiKeyTag       String?  @map("anthropic_api_key_tag")
-  anthropicApiKeyLast4     String?  @map("anthropic_api_key_last4") @db.VarChar(4)
-  createdAt                DateTime @default(now()) @map("created_at")
-  updatedAt                DateTime @updatedAt @map("updated_at")
+  anthropicApiKeyLast4     String?   @map("anthropic_api_key_last4") @db.VarChar(4)
+  apiKeyVerifiedAt         DateTime? @map("api_key_verified_at")
+  createdAt                DateTime  @default(now()) @map("created_at")
+  updatedAt                DateTime  @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

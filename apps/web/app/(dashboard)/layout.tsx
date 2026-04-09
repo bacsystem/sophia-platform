@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { FolderOpen } from 'lucide-react';
+import { FolderOpen, Settings } from 'lucide-react';
+import { LogoutButton } from '@/components/auth/logout-button';
 
 /** @description Dashboard layout — shared nav wrapper for authenticated routes */
 export default function DashboardLayout({ children }: { readonly children: ReactNode }) {
@@ -25,6 +26,17 @@ export default function DashboardLayout({ children }: { readonly children: React
               <FolderOpen className="w-4 h-4" />
               <span>Proyectos</span>
             </Link>
+            <Link
+              href="/settings"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-white/60 hover:text-white hover:bg-white/8 transition-colors"
+            >
+              <Settings className="w-4 h-4" />
+              <span>Configuración</span>
+            </Link>
+          </div>
+
+          <div className="ml-auto">
+            <LogoutButton />
           </div>
         </div>
       </nav>

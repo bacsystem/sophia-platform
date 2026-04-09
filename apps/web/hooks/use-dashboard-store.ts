@@ -105,12 +105,14 @@ interface DashboardStore {
   // UI state
   connected: boolean;
   scrollPaused: boolean;
+  unreadCount: number;
   selectedAgentId: string | null;
   activeTab: 'logs' | 'files';
 
   // Actions
   setConnected: (connected: boolean) => void;
   setScrollPaused: (paused: boolean) => void;
+  resetUnread: () => void;
   selectAgent: (agentId: string | null) => void;
   setActiveTab: (tab: 'logs' | 'files') => void;
   setProgress: (progress: number) => void;
@@ -136,7 +138,10 @@ export const useDashboardStore = create<DashboardStore>((set) => ({
   addLog: (log) =>
     set((state) => {
       const next = [...state.logs, log];
-      return { logs: next.length > MAX_LOGS ? next.slice(-MAX_LOGS) : next };
+      return {
+        logs: next.length > MAX_LOGS ? next.slice(-MAX_LOGS) : next,
+        unreadCount: state.scrollPaused ? state.unreadCount + 1 : 0,
+      };
     }),
 
   // Files
@@ -159,12 +164,14 @@ export const useDashboardStore = create<DashboardStore>((set) => ({
   // UI
   connected: false,
   scrollPaused: false,
+  unreadCount: 0,
   selectedAgentId: null,
   activeTab: 'logs',
 
   // Actions
   setConnected: (connected) => set({ connected }),
-  setScrollPaused: (scrollPaused) => set({ scrollPaused }),
+  setScrollPaused: (scrollPaused) => set(scrollPaused ? { scrollPaused } : { scrollPaused, unreadCount: 0 }),
+  resetUnread: () => set({ unreadCount: 0 }),
   selectAgent: (selectedAgentId) => set({ selectedAgentId }),
   setActiveTab: (activeTab) => set({ activeTab }),
   setProgress: (progress) => set({ progress }),
@@ -202,6 +209,7 @@ export const useDashboardStore = create<DashboardStore>((set) => ({
       activeAgents: 0,
       connected: false,
       scrollPaused: false,
+      unreadCount: 0,
       selectedAgentId: null,
       activeTab: 'logs',
     }),

@@ -31,10 +31,11 @@ CREATE TABLE user_settings (
   user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
 
   -- API Key (encriptada AES-256-GCM)
-  anthropic_api_key_encrypted BYTEA,       -- ciphertext
-  anthropic_api_key_iv        BYTEA,       -- IV único (12 bytes)
-  anthropic_api_key_tag       BYTEA,       -- auth tag (16 bytes)
-  anthropic_api_key_last4     VARCHAR(4),  -- últimos 4 chars para display
+  anthropic_api_key_encrypted TEXT,         -- ciphertext (hex string)
+  anthropic_api_key_iv        TEXT,         -- IV único (12 bytes, hex)
+  anthropic_api_key_tag       TEXT,         -- auth tag (16 bytes, hex)
+  anthropic_api_key_last4     VARCHAR(4),   -- últimos 4 chars para display
+  api_key_verified_at         TIMESTAMPTZ,  -- última verificación exitosa con Anthropic
 
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -65,14 +66,14 @@ CREATE INDEX idx_user_settings_user_id ON user_settings(user_id);
 
 **Criterios de aceptación:**
 
-- [ ] Campo para ingresar API key con validación de formato: `sk-ant-api03-...` (regex: `/^sk-ant-api03-[A-Za-z0-9_-]{90,110}$/`)
-- [ ] Al guardar → el sistema verifica la key haciendo una llamada ligera a Anthropic (`messages.create` con max_tokens: 1, prompt trivial)
-- [ ] Si la key es válida → se encripta con AES-256-GCM y se almacena en BD
-- [ ] Se muestra solo: `sk-ant-...XXXX` (últimos 4 caracteres)
-- [ ] Botón "Eliminar API key" con modal de confirmación ("¿Seguro? No podrás ejecutar proyectos sin ella")
-- [ ] Si no hay API key → mensaje claro: "Configura tu API key de Anthropic para ejecutar proyectos" con enlace a docs de Anthropic
-- [ ] Sin API key → los botones de ejecutar proyecto (M2/M4) están deshabilitados con tooltip
-- [ ] Rate limit en verificación: máximo 5 intentos por hora por usuario
+- [x] Campo para ingresar API key con validación de formato: `sk-ant-api03-...` (regex: `/^sk-ant-api03-[A-Za-z0-9_-]{90,110}$/`)
+- [x] Al guardar → el sistema verifica la key haciendo una llamada ligera a Anthropic (`messages.create` con max_tokens: 1, prompt trivial)
+- [x] Si la key es válida → se encripta con AES-256-GCM y se almacena en BD
+- [x] Se muestra solo: `sk-ant-...XXXX` (últimos 4 caracteres)
+- [x] Botón "Eliminar API key" con modal de confirmación ("¿Seguro? No podrás ejecutar proyectos sin ella")
+- [x] Si no hay API key → mensaje claro: "Configura tu API key de Anthropic para ejecutar proyectos" con enlace a docs de Anthropic
+- [x] Sin API key → los botones de ejecutar proyecto (M2/M4) están deshabilitados con tooltip
+- [x] Rate limit en verificación: máximo 5 intentos por hora por usuario
 
 > **Decisión MVP**: No hay API key del sistema. Cada usuario debe proporcionar su propia key. Esto elimina problemas de costos compartidos y abuso.
 
@@ -86,11 +87,11 @@ CREATE INDEX idx_user_settings_user_id ON user_settings(user_id);
 
 **Criterios de aceptación:**
 
-- [ ] Card resumen: tokens totales input + output (todos los proyectos)
-- [ ] Costo estimado total en USD (marcado como "~estimado")
-- [ ] Tabla de uso por proyecto:
+- [x] Card resumen: tokens totales input + output (todos los proyectos)
+- [x] Costo estimado total en USD (marcado como "~estimado")
+- [x] Tabla de uso por proyecto:
   - Nombre proyecto | Tokens input | Tokens output | Costo estimado | Fecha
-- [ ] Precios configurables desde `packages/shared/constants/pricing.ts`:
+- [x] Precios configurables desde `packages/shared/constants/pricing.ts`:
 
 ```typescript
 export const ANTHROPIC_PRICING = {
@@ -101,10 +102,10 @@ export const ANTHROPIC_PRICING = {
 } as const;
 ```
 
-- [ ] Disclaimer visible: "Los precios son estimados basados en tarifas públicas de Anthropic y pueden variar"
-- [ ] Gráfico de barras de uso por día (últimos 30 días) con `recharts`
-- [ ] Filtro por período: última semana / último mes / últimos 3 meses / todo
-- [ ] Datos provienen de sumar `tokens_input` y `tokens_output` de la tabla `agents` agrupados por `project_id`
+- [x] Disclaimer visible: "Los precios son estimados basados en tarifas públicas de Anthropic y pueden variar"
+- [x] Gráfico de barras de uso por día (últimos 30 días) con `recharts`
+- [x] Filtro por período: última semana / último mes / últimos 3 meses / todo
+- [x] Datos provienen de sumar `tokens_input` y `tokens_output` de la tabla `agents` agrupados por `project_id`
 
 ---
 
@@ -116,15 +117,15 @@ export const ANTHROPIC_PRICING = {
 
 **Criterios de aceptación:**
 
-- [ ] Campo editable: nombre (min 2, max 100 caracteres)
-- [ ] Sección cambio de contraseña (colapsable, separada del nombre):
+- [x] Campo editable: nombre (min 2, max 100 caracteres)
+- [x] Sección cambio de contraseña (colapsable, separada del nombre):
   - Contraseña actual (obligatoria para validar identidad)
   - Nueva contraseña (min 8 caracteres, mismas reglas que registro M1)
   - Confirmar nueva contraseña
-- [ ] Validación: la contraseña actual debe ser correcta (bcrypt compare) antes de aplicar cambio
-- [ ] Toast de éxito al guardar nombre
-- [ ] Toast de éxito al cambiar contraseña + cierra la sección colapsable
-- [ ] Errores inline por campo (no solo toast genérico)
+- [x] Validación: la contraseña actual debe ser correcta (bcrypt compare) antes de aplicar cambio
+- [x] Toast de éxito al guardar nombre
+- [x] Toast de éxito al cambiar contraseña + cierra la sección colapsable
+- [x] Errores inline por campo (no solo toast genérico)
 
 ---
 
@@ -366,21 +367,22 @@ apps/web/components/settings/
 - Exportar datos de uso (CSV/PDF)
 - Notificaciones de límite de tokens
 - Tema oscuro/claro toggle (hereda del sistema)
+- Deshabilitar botones de ejecutar proyecto sin API key (cross-module M2/M4 — se implementará cuando M4 frontend esté activo)
 - Eliminación de cuenta
 
 ---
 
 ## Definición de Done
 
-- [ ] API key se guarda encriptada con AES-256-GCM en BD
-- [ ] API key se muestra ofuscada (`sk-ant-...XXXX`)
-- [ ] Verificación con Anthropic funciona y tiene rate limit
-- [ ] Sin API key → ejecución de proyectos bloqueada con mensaje claro
-- [ ] Uso de tokens muestra totales + por proyecto con costos estimados
-- [ ] Gráfico recharts de uso diario renderiza correctamente
-- [ ] Disclaimer de precios estimados visible
-- [ ] Editar nombre funciona con validación
-- [ ] Cambiar contraseña valida la actual antes de aplicar
-- [ ] UI responsive
-- [ ] `encryption.service.ts` tiene tests unitarios (encrypt → decrypt roundtrip)
-- [ ] No hay `any` en TypeScript
+- [x] API key se guarda encriptada con AES-256-GCM en BD
+- [x] API key se muestra ofuscada (`sk-ant-...XXXX`)
+- [x] Verificación con Anthropic funciona y tiene rate limit
+- [x] Sin API key → ejecución de proyectos bloqueada con mensaje claro
+- [x] Uso de tokens muestra totales + por proyecto con costos estimados
+- [x] Gráfico recharts de uso diario renderiza correctamente
+- [x] Disclaimer de precios estimados visible
+- [x] Editar nombre funciona con validación
+- [x] Cambiar contraseña valida la actual antes de aplicar
+- [x] UI responsive
+- [x] `encryption.service.ts` tiene tests unitarios (encrypt → decrypt roundtrip)
+- [x] No hay `any` en TypeScript

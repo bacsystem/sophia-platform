@@ -15,6 +15,7 @@ import {
   Folder,
   FolderOpen,
 } from 'lucide-react';
+import { getFileIcon as getSharedFileIcon } from '@sophia/shared/constants/file-icons';
 import type { FileTreeNodeData } from '@/lib/file-tree-builder';
 
 const AGENT_COLORS: Record<string, string> = {
@@ -29,24 +30,15 @@ const AGENT_COLORS: Record<string, string> = {
   'integration-agent': 'bg-pink-500',
 };
 
-const EXTENSION_ICONS: Record<string, { icon: typeof File; className: string }> = {
-  '.ts': { icon: FileCode, className: 'text-blue-400' },
-  '.tsx': { icon: FileCode, className: 'text-blue-400' },
-  '.js': { icon: FileCode, className: 'text-yellow-400' },
-  '.jsx': { icon: FileCode, className: 'text-yellow-400' },
-  '.sql': { icon: Database, className: 'text-emerald-400' },
-  '.prisma': { icon: Gem, className: 'text-indigo-400' },
-  '.json': { icon: FileJson, className: 'text-amber-400' },
-  '.md': { icon: FileText, className: 'text-gray-400' },
-  '.yml': { icon: Settings, className: 'text-pink-400' },
-  '.yaml': { icon: Settings, className: 'text-pink-400' },
-  '.css': { icon: Palette, className: 'text-sky-400' },
-  '.env': { icon: Lock, className: 'text-red-400' },
+const ICON_COMPONENTS: Record<string, typeof File> = {
+  FileCode, Database, Gem, FileJson, FileText, Settings, Palette, Lock, File,
 };
 
 function getFileIcon(extension?: string) {
-  if (!extension) return { icon: File, className: 'text-white/40' };
-  return EXTENSION_ICONS[extension] ?? { icon: File, className: 'text-white/40' };
+  if (!extension) return { icon: File, className: 'text-gray-500' };
+  const entry = getSharedFileIcon(extension);
+  const IconComp = ICON_COMPONENTS[entry.component] ?? File;
+  return { icon: IconComp, className: entry.colorClass };
 }
 
 function formatSize(bytes: number): string {

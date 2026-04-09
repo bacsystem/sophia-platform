@@ -60,7 +60,8 @@ interface FileData {
   id: string;
   name: string;
   path: string;
-  content: string;
+  content: string | null;
+  binary?: boolean;
   extension?: string;
   sizeBytes: number;
   agentType: string;
@@ -116,13 +117,13 @@ export function FileViewer({ projectId, fileId }: FileViewerProps) {
 
   // Highlight with shiki (async import to code-split)
   useEffect(() => {
-    if (!file) return;
+    if (!file || file.binary || !file.content) return;
     let cancelled = false;
     const lang = file.extension ? EXT_TO_LANG[file.extension] ?? 'text' : 'text';
 
     import('shiki')
       .then(({ codeToHtml }) =>
-        codeToHtml(file.content, {
+        codeToHtml(file.content!, {
           lang,
           theme: 'github-dark',
         }),
@@ -140,7 +141,7 @@ export function FileViewer({ projectId, fileId }: FileViewerProps) {
     };
   }, [file]);
 
-  const lines = useMemo(() => file?.content.split('\n') ?? [], [file]);
+  const lines = useMemo(() => (file?.content ?? '').split('\n'), [file]);
   const useVirtual = lines.length > VIRTUAL_THRESHOLD;
 
   const virtualizer = useVirtualizer({
@@ -152,7 +153,7 @@ export function FileViewer({ projectId, fileId }: FileViewerProps) {
   });
 
   const handleCopy = useCallback(async () => {
-    if (!file) return;
+    if (!file || file.content == null) return;
     await navigator.clipboard.writeText(file.content);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -227,8 +228,25 @@ export function FileViewer({ projectId, fileId }: FileViewerProps) {
         </div>
       )}
 
+      {/* Binary file info */}
+      {file.binary && (
+        <div className="flex flex-col items-center justify-center flex-1 text-center p-6 gap-3">
+          <AlertTriangle className="w-8 h-8 text-white/20" />
+          <p className="text-white/50 text-sm">Archivo binario — no se puede previsualizar</p>
+          <p className="text-white/30 text-xs">{file.name} · {formatSize(file.sizeBytes)}</p>
+          <button
+            type="button"
+            onClick={handleDownload}
+            className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 text-xs text-white/60 hover:bg-white/5 transition-colors"
+          >
+            <Download className="w-3.5 h-3.5" />
+            Descargar archivo
+          </button>
+        </div>
+      )}
+
       {/* Code content */}
-      <div ref={scrollRef} className="flex-1 overflow-auto">
+      {!file.binary && <div ref={scrollRef} className="flex-1 overflow-auto">
         {useVirtual ? (
           <div
             className="font-mono text-[13px] leading-5"
@@ -280,7 +298,7 @@ export function FileViewer({ projectId, fileId }: FileViewerProps) {
             </pre>
           </div>
         )}
-      </div>
+      </div>}
     </div>
   );
 }

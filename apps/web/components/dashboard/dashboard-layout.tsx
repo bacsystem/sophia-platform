@@ -101,7 +101,7 @@ export function DashboardLayout({ projectId, projectName, startedAt }: Dashboard
               </div>
               <div className="flex-1 overflow-auto min-h-0">
                 {activeTab === 'logs' ? (
-                  <AgentLogPanel />
+                  <AgentLogPanel projectId={projectId} />
                 ) : (
                   <AgentFilesPanel onFileClick={setPreviewFile} />
                 )}
@@ -138,7 +138,7 @@ export function DashboardLayout({ projectId, projectName, startedAt }: Dashboard
               </div>
               <div className="min-h-0">
                 {activeTab === 'logs' ? (
-                  <AgentLogPanel />
+                  <AgentLogPanel projectId={projectId} />
                 ) : (
                   <AgentFilesPanel onFileClick={setPreviewFile} />
                 )}

@@ -38,8 +38,8 @@ Gestor de archivos generados por los agentes. Permite navegar la estructura del 
 
 **Criterios de aceptación:**
 
-- [ ] Árbol de carpetas colapsable en el sidebar izquierdo del file manager
-- [ ] Ícono dinámico por extensión (mapa unificado con M5, usa componentes Lucide React):
+- [x] Árbol de carpetas colapsable en el sidebar izquierdo del file manager
+- [x] Ícono dinámico por extensión (mapa unificado con M5, usa componentes Lucide React):
   - `.ts` `.tsx` → `<FileCode />` (azul)
   - `.sql` → `<Database />`
   - `.prisma` → `<Gem />`
@@ -49,12 +49,12 @@ Gestor de archivos generados por los agentes. Permite navegar la estructura del 
   - `.css` → `<Palette />`
   - `.env` → `<Lock />`
   - otros → `<File />`
-- [ ] Al hacer clic en archivo → muestra contenido con syntax highlighting en panel derecho
-- [ ] Breadcrumb de navegación (`carpeta / subcarpeta / archivo.ext`)
-- [ ] Muestra tamaño de cada archivo (formateado: bytes, KB, MB)
-- [ ] Badge de color del agente que creó el archivo
-- [ ] Buscador de archivos por nombre (filtro client-side sobre la lista cargada)
-- [ ] Archivos binarios (si existieran): muestran info (nombre, tamaño, agente) sin preview de contenido
+- [x] Al hacer clic en archivo → muestra contenido con syntax highlighting en panel derecho
+- [x] Breadcrumb de navegación (`carpeta / subcarpeta / archivo.ext`)
+- [x] Muestra tamaño de cada archivo (formateado: bytes, KB, MB)
+- [x] Badge de color del agente que creó el archivo
+- [x] Buscador de archivos por nombre (filtro client-side sobre la lista cargada)
+- [x] Archivos binarios (si existieran): muestran info (nombre, tamaño, agente) sin preview de contenido
 
 ---
 
@@ -66,12 +66,12 @@ Gestor de archivos generados por los agentes. Permite navegar la estructura del 
 
 **Criterios de aceptación:**
 
-- [ ] Syntax highlighting con `shiki` según extensión del archivo (TypeScript, SQL, Prisma, Markdown, JSON, YAML, CSS, etc.)
-- [ ] Número de líneas visible (gutter)
-- [ ] Botón "Copiar contenido" al portapapeles (`navigator.clipboard.writeText`)
-- [ ] Botón "Descargar archivo" (descarga individual)
-- [ ] Header del viewer muestra: nombre, extensión, agente que lo creó (badge), timestamp de creación, tamaño
-- [ ] Archivos grandes (> 500 líneas): virtualización con `@tanstack/react-virtual` o paginación
+- [x] Syntax highlighting con `shiki` según extensión del archivo (TypeScript, SQL, Prisma, Markdown, JSON, YAML, CSS, etc.)
+- [x] Número de líneas visible (gutter)
+- [x] Botón "Copiar contenido" al portapapeles (`navigator.clipboard.writeText`)
+- [x] Botón "Descargar archivo" (descarga individual)
+- [x] Header del viewer muestra: nombre, extensión, agente que lo creó (badge), timestamp de creación, tamaño
+- [x] Archivos grandes (> 500 líneas): virtualización con `@tanstack/react-virtual` o paginación
 
 ---
 
@@ -83,14 +83,14 @@ Gestor de archivos generados por los agentes. Permite navegar la estructura del 
 
 **Criterios de aceptación:**
 
-- [ ] Botón "⬇ Descargar ZIP" en el header del file manager
-- [ ] Solo disponible cuando `status = done` o `status = paused`
-- [ ] Deshabilitado con tooltip explicativo en otros estados
-- [ ] Muestra tamaño estimado del ZIP antes de descargar (suma de `size_bytes` de `generated_files` × 0.6 como estimado de compresión)
-- [ ] El ZIP mantiene la estructura de carpetas exacta del proyecto
-- [ ] Descarga directa vía `Content-Disposition: attachment` (sin abrir nueva pestaña)
-- [ ] Nombre del ZIP: `{nombre-proyecto}-sophia.zip` (slug del nombre)
-- [ ] Generación del ZIP en streaming (no cargar todo en memoria)
+- [x] Botón "⬇ Descargar ZIP" en el header del file manager
+- [x] Solo disponible cuando `status = done` o `status = paused`
+- [x] Deshabilitado con tooltip explicativo en otros estados
+- [x] Muestra tamaño estimado del ZIP antes de descargar (suma de `size_bytes` de `generated_files` × 0.6 como estimado de compresión)
+- [x] El ZIP mantiene la estructura de carpetas exacta del proyecto
+- [x] Descarga directa vía `Content-Disposition: attachment` (sin abrir nueva pestaña)
+- [x] Nombre del ZIP: `{nombre-proyecto}-sophia.zip` (slug del nombre)
+- [x] Generación del ZIP en streaming (no cargar todo en memoria)
 
 ---
 
@@ -236,15 +236,15 @@ apps/web/lib/
 
 ## Definición de Done
 
-- [ ] Árbol de archivos navega correctamente con carpetas colapsables
-- [ ] Íconos correctos por extensión (mapa unificado con M5)
-- [ ] Syntax highlighting con shiki funciona para TS, SQL, JSON, MD, YAML, CSS, Prisma
-- [ ] Breadcrumb refleja la ruta actual
-- [ ] Búsqueda de archivos filtra correctamente
-- [ ] Copiar contenido al portapapeles funciona
-- [ ] Descarga individual de archivo funciona
-- [ ] Descarga ZIP con estructura correcta de carpetas
-- [ ] ZIP solo disponible en `status = done | paused`
-- [ ] Path traversal prevention validado
-- [ ] UI responsive (árbol en sidebar ≥ 768px, stacked en mobile)
-- [ ] No hay `any` en TypeScript
+- [x] Árbol de archivos navega correctamente con carpetas colapsables
+- [x] Íconos correctos por extensión (mapa unificado con M5)
+- [x] Syntax highlighting con shiki funciona para TS, SQL, JSON, MD, YAML, CSS, Prisma
+- [x] Breadcrumb refleja la ruta actual
+- [x] Búsqueda de archivos filtra correctamente
+- [x] Copiar contenido al portapapeles funciona
+- [x] Descarga individual de archivo funciona
+- [x] Descarga ZIP con estructura correcta de carpetas
+- [x] ZIP solo disponible en `status = done | paused`
+- [x] Path traversal prevention validado
+- [x] UI responsive (árbol en sidebar ≥ 768px, stacked en mobile)
+- [x] No hay `any` en TypeScript

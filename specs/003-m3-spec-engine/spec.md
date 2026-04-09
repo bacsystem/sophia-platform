@@ -2,7 +2,7 @@
 
 # Sophia Platform
 
-# Versión: 1.2 | Sprint: 2
+# Versión: 1.3 | Sprint: 2
 
 ---
 
@@ -38,19 +38,19 @@ Motor de generación de specs usando IA. Convierte la descripción en lenguaje n
 
 **Criterios de aceptación:**
 
-- [ ] Al hacer clic en "Generar Spec" en el proyecto → inicia generación
-- [ ] Solo se puede generar si el proyecto está en estado `idle`
-- [ ] Sophia genera 3 documentos en secuencia (3 llamadas independientes a Claude):
+- [x] Al hacer clic en "Generar Spec" en el proyecto → inicia generación
+- [x] Solo se puede generar si el proyecto está en estado `idle`
+- [x] Sophia genera 3 documentos en secuencia (3 llamadas independientes a Claude):
   1. `spec.md` — requerimientos funcionales, NFR, historias de usuario
   2. `data-model.md` — entidades, campos, tipos, índices, relaciones
   3. `api-design.md` — endpoints REST con request/response schemas
-- [ ] El usuario ve el progreso en tiempo real (SSE streaming por documento)
-- [ ] Si la descripción del proyecto es menor de 20 chars → error 422
-- [ ] Timeout de 90 segundos por documento — si se excede, guarda lo parcial y reporta error
-- [ ] Si Claude falla → retry automático hasta 3 veces, luego error al usuario (ver C3 para detalle por tipo de error Anthropic)
-- [ ] El output de cada documento se valida contra un schema de secciones obligatorias
-- [ ] El spec se guarda en `project_specs` con version incremental
-- [ ] Rate limit aplicado (ver NFRs Específicos de M3)
+- [x] El usuario ve el progreso en tiempo real (SSE streaming por documento)
+- [x] Si la descripción del proyecto es menor de 20 chars → error 422
+- [x] Timeout de 90 segundos por documento — si se excede, guarda lo parcial y reporta error
+- [x] Si Claude falla → retry automático hasta 3 veces, luego error al usuario (ver C3 para detalle por tipo de error Anthropic)
+- [x] El output de cada documento se valida contra un schema de secciones obligatorias
+- [x] El spec se guarda en `project_specs` con version incremental
+- [x] Rate limit aplicado (ver NFRs Específicos de M3)
 
 **Flujo de generación:**
 
@@ -79,14 +79,14 @@ GET /api/projects/:id/spec/stream?jobId=xxx
 
 **Criterios de aceptación:**
 
-- [ ] El spec se muestra en formato Markdown renderizado (tab "Spec" del proyecto)
-- [ ] 3 sub-tabs: spec.md | data-model.md | api-design.md
-- [ ] Botón "Editar" → abre editor markdown con preview al lado
-- [ ] El usuario puede modificar cualquiera de los 3 documentos
-- [ ] Botón "Guardar cambios" → crea nueva versión en `project_specs` (no sobreescribe)
-- [ ] Botón "Regenerar" → regenera desde la descripción original
-- [ ] Modal de confirmación antes de regenerar ("Se creará una nueva versión, la actual se conserva")
-- [ ] Dropdown para ver versiones anteriores del spec
+- [x] El spec se muestra en formato Markdown renderizado (tab "Spec" del proyecto)
+- [x] 3 sub-tabs: spec.md | data-model.md | api-design.md
+- [x] Botón "Editar" → abre editor markdown con preview al lado
+- [x] El usuario puede modificar cualquiera de los 3 documentos
+- [x] Botón "Guardar cambios" → crea nueva versión en `project_specs` (no sobreescribe)
+- [x] Botón "Regenerar" → regenera desde la descripción original
+- [x] Modal de confirmación antes de regenerar ("Se creará una nueva versión, la actual se conserva")
+- [x] Dropdown para ver versiones anteriores del spec
 
 ---
 
@@ -98,16 +98,16 @@ GET /api/projects/:id/spec/stream?jobId=xxx
 
 **Criterios de aceptación:**
 
-- [ ] Galería de templates en la página de crear proyecto
-- [ ] 5 templates del sistema (seed data, no editables). Cada template usa un ícono Lucide React:
+- [x] Galería de templates en la página de crear proyecto
+- [x] 5 templates del sistema (seed data, no editables). Cada template usa un ícono Lucide React:
   - `<Building2 />` ERP Módulo — módulo empresarial con CRUD, reportes, roles
   - `<Rocket />` SaaS Starter — multi-tenant con billing, auth, dashboard
   - `<Plug />` REST API — API backend pura con auth, CRUD, docs
   - `<Monitor />` Landing + Admin — landing page con panel administrativo
   - `<BookOpen />` EdTech — plataforma educativa con cursos, estudiantes, progreso
-- [ ] Al seleccionar template → pre-llena nombre, descripción, stack y agentes en el formulario de crear proyecto
-- [ ] El usuario puede modificar los valores antes de crear
-- [ ] Los templates no generan spec automáticamente — solo pre-llenan el formulario
+- [x] Al seleccionar template → pre-llena nombre, descripción, stack y agentes en el formulario de crear proyecto
+- [x] El usuario puede modificar los valores antes de crear
+- [x] Los templates no generan spec automáticamente — solo pre-llenan el formulario
 
 > **Fuera de MVP**: CRUD de templates personalizados y guardar proyecto existente como template.
 
@@ -493,15 +493,15 @@ prisma/seed.ts       → Seed de 5 templates predefinidos
 
 ## Definición de Done
 
-- [ ] Generación de spec produce 3 documentos (spec.md, data-model.md, api-design.md)
-- [ ] Streaming SSE funciona — el usuario ve el texto aparecer en tiempo real
-- [ ] Cada documento se valida contra schema de secciones obligatorias
-- [ ] Retry automático funciona (hasta 3 intentos) con backoff
-- [ ] Timeout de 90s por documento funciona y guarda parcial
-- [ ] El spec se guarda en `project_specs` con versionamiento
-- [ ] Edición manual crea nueva versión sin perder la anterior
-- [ ] Rate limiting activo (10/proyecto/hora, 50/usuario/día)
-- [ ] 5 templates del sistema se muestran en la galería
-- [ ] Tests del spec service cubriendo generación, validación, versiones y errores
-- [ ] UI responsive en mobile y desktop
-- [ ] No hay `any` en TypeScript
+- [x] Generación de spec produce 3 documentos (spec.md, data-model.md, api-design.md)
+- [x] Streaming SSE funciona — el usuario ve el texto aparecer en tiempo real
+- [x] Cada documento se valida contra schema de secciones obligatorias
+- [x] Retry automático funciona (hasta 3 intentos) con backoff
+- [x] Timeout de 90s por documento funciona y guarda parcial
+- [x] El spec se guarda en `project_specs` con versionamiento
+- [x] Edición manual crea nueva versión sin perder la anterior
+- [x] Rate limiting activo (10/proyecto/hora, 50/usuario/día)
+- [x] 5 templates del sistema se muestran en la galería
+- [x] Tests del spec service cubriendo generación, validación, versiones y errores
+- [x] UI responsive en mobile y desktop
+- [x] No hay `any` en TypeScript
