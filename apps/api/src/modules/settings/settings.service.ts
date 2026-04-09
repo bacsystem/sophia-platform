@@ -59,6 +59,13 @@ export async function saveApiKey(userId: string, input: SaveApiKeyInput) {
   // Verify key with Anthropic
   const verifyResult = await verifyKeyWithAnthropic(input.apiKey);
   if (!verifyResult.valid) {
+    if (verifyResult.reason === 'UPSTREAM_UNAVAILABLE') {
+      return {
+        error: 'UPSTREAM_UNAVAILABLE' as const,
+        message: 'No se pudo conectar con Anthropic. Intenta más tarde.',
+        status: 503,
+      };
+    }
     return {
       error: 'API_KEY_VERIFICATION_FAILED' as const,
       message: 'No se pudo verificar la API key con Anthropic',
@@ -167,15 +174,31 @@ export async function verifyApiKey(userId: string) {
     };
   }
 
-  const apiKey = decrypt(
-    settings.anthropicApiKeyEncrypted,
-    settings.anthropicApiKeyIv,
-    settings.anthropicApiKeyTag,
-  );
+  let apiKey: string;
+  try {
+    apiKey = decrypt(
+      settings.anthropicApiKeyEncrypted,
+      settings.anthropicApiKeyIv,
+      settings.anthropicApiKeyTag,
+    );
+  } catch {
+    return {
+      error: 'DECRYPTION_FAILED' as const,
+      message: 'No se pudo descifrar la API key. Configúrala nuevamente.',
+      status: 400,
+    };
+  }
 
   const result = await verifyKeyWithAnthropic(apiKey);
 
   if (!result.valid) {
+    if (result.reason === 'UPSTREAM_UNAVAILABLE') {
+      return {
+        error: 'UPSTREAM_UNAVAILABLE' as const,
+        message: 'No se pudo conectar con Anthropic. Intenta más tarde.',
+        status: 503,
+      };
+    }
     return {
       error: 'API_KEY_INVALID' as const,
       message: 'La API key ya no es válida con Anthropic',
@@ -278,6 +301,7 @@ export async function getDailyUsage(userId: string, query: DailyUsageQuery) {
     FROM agents a
     JOIN projects p ON a.project_id = p.id
     WHERE p.user_id = ${userId}
+      AND p.deleted_at IS NULL
       AND a.completed_at >= ${since}
       AND a.completed_at IS NOT NULL
     GROUP BY DATE(a.completed_at)
@@ -350,8 +374,11 @@ function calculateCost(tokensInput: number, tokensOutput: number): number {
   return Math.round((inputCost + outputCost) * 100) / 100;
 }
 
-async function verifyKeyWithAnthropic(apiKey: string): Promise<{ valid: boolean }> {
+async function verifyKeyWithAnthropic(apiKey: string): Promise<{ valid: boolean; reason?: 'INVALID_KEY' | 'UPSTREAM_UNAVAILABLE' }> {
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -364,10 +391,17 @@ async function verifyKeyWithAnthropic(apiKey: string): Promise<{ valid: boolean 
         max_tokens: 1,
         messages: [{ role: 'user', content: 'Hi' }],
       }),
+      signal: controller.signal,
     });
 
-    return { valid: response.ok };
+    clearTimeout(timeout);
+
+    if (response.ok) return { valid: true };
+    if (response.status === 401 || response.status === 403) {
+      return { valid: false, reason: 'INVALID_KEY' };
+    }
+    return { valid: false, reason: 'UPSTREAM_UNAVAILABLE' };
   } catch {
-    return { valid: false };
+    return { valid: false, reason: 'UPSTREAM_UNAVAILABLE' };
   }
 }

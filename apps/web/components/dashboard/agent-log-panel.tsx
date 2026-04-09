@@ -37,7 +37,7 @@ export function AgentLogPanel({ projectId, onViewHistory }: AgentLogPanelProps) 
     if (onViewHistory) { onViewHistory(); return; }
     setLoadingHistory(true);
     try {
-      const res = await fetch(`${API_URL}/api/projects/${projectId}/logs?limit=500`, {
+      const res = await fetch(`${API_URL}/api/projects/${projectId}/logs?limit=200`, {
         credentials: 'include',
       });
       if (res.ok) {

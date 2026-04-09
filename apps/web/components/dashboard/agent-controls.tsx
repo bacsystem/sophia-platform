@@ -105,8 +105,8 @@ export function AgentControls({ projectId, status, onStatusChange }: AgentContro
         <button
           disabled
           className="flex items-center gap-1.5 rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-1.5 text-xs text-green-400 cursor-not-allowed opacity-50"
-          aria-label="Descargar ZIP — disponible en M6"
-          title="Disponible cuando M6 esté implementado"
+          aria-label="Descargar ZIP del proyecto"
+          title="Descarga de archivos generados"
         >
           <Download className="w-3.5 h-3.5" />
           Descargar ZIP
