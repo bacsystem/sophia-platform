@@ -6,6 +6,7 @@ CREATE TABLE "user_settings" (
     "anthropic_api_key_iv" TEXT,
     "anthropic_api_key_tag" TEXT,
     "anthropic_api_key_last4" VARCHAR(4),
+    "api_key_verified_at" TIMESTAMPTZ,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
