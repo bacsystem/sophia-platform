@@ -199,6 +199,10 @@ export async function verifyApiKey(userId: string) {
         status: 503,
       };
     }
+    await prisma.userSettings.update({
+      where: { userId },
+      data: { apiKeyVerifiedAt: null },
+    });
     return {
       error: 'API_KEY_INVALID' as const,
       message: 'La API key ya no es válida con Anthropic',
