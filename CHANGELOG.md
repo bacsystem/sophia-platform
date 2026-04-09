@@ -6,6 +6,37 @@ Versionado semántico a nivel de proyecto: `MAJOR.MINOR.PATCH`.
 
 ---
 
+## [v0.7.0] — 2026-06-07 ✅ M7 Settings
+
+### Added
+- M7 Settings (HU-26→28): configuración de usuario — API key, uso de tokens, perfil
+- Backend: módulo `settings/` con 8 endpoints REST (GET /, PUT/DELETE /api-key, POST /api-key/verify, GET /usage, GET /usage/daily, PUT /profile, PUT /password)
+- `settings.service.ts` — saveApiKey (AES-256-GCM encrypt + Anthropic verification), deleteApiKey, verifyApiKey (rate limit 5/hr), getSettings, getUsage (token aggregation per project), getDailyUsage (SQL GROUP BY date), updateProfile, changePassword (bcrypt)
+- `settings.controller.ts` — 8 handlers con Zod validation + error handling
+- `settings.schema.ts` — 4 schemas Zod (apiKey regex, profile name, password strength, daily usage query)
+- `settings.routes.ts` — 8 endpoints con authenticate hook
+- Frontend: página de configuración con 5 secciones
+- `api-key-section.tsx` — guardado/verificación/eliminación de API key con indicadores de estado
+- `usage-overview.tsx` — cards de totales + tabla per-project con costos estimados
+- `usage-chart.tsx` — gráfico de barras Recharts con selector de período (7d/30d/90d)
+- `profile-form.tsx` — edición de nombre con react-hook-form + feedback visual
+- `password-form.tsx` — cambio de contraseña colapsable con validación en tiempo real
+- Prisma migration: `api_key_verified_at` column en `user_settings`
+- Settings nav link (⚙️) en dashboard layout
+- 15 unit tests para settings.service.ts
+
+### Fixed
+- Certificación M1-M7: 283/283 criterios verificados y marcados en specs
+- M6: mapa de íconos unificado desde `@sophia/shared`, breadcrumb ruta completa, detección binarios
+- M7: display API key como `sk-ant-...XXXX`, modal confirmación delete, mensaje sin key + link Anthropic, disclaimer precios, filtro período "Todo" (365d)
+- M5: badge unreadCount logs, handler fetchHistory, labels métricas, colores botones, texto pausa
+- M4: validación spec en startProject, persistencia progress/currentLayer, status `done`, eventos WS renombrados
+- M2: status `running` (antes `generating`), banners éxito inline
+- M1: LogoutButton visible, tests rate limit, redirect post-registro
+
+### Dependencies
+- `recharts` añadido a `@sophia/web`
+
 ## [v0.6.0] — 2026-05-09 ✅ M6 File Manager
 
 ### Added

@@ -99,10 +99,10 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
   // Determine start layer (supports retry from failed layer)
   const startLayer = await getStartLayer(projectId);
 
-  // Update project status to 'generating'
+  // Update project status to 'running'
   await prisma.project.update({
     where: { id: projectId },
-    data: { status: 'generating' },
+    data: { status: 'running' },
   });
 
   const totalLayers = LAYERS.length;
@@ -116,7 +116,18 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
 
       // Check pause before starting each layer
       if (await isPaused(projectId)) {
-        emitEvent(buildEvent('agent:paused', projectId, { agentType: layerDef.type, layer: layerDef.layer }));
+        // Find last generated file for this project
+        const lastGenFile = await prisma.generatedFile.findFirst({
+          where: { projectId },
+          orderBy: { createdAt: 'desc' },
+          select: { path: true },
+        });
+        emitEvent(buildEvent('project:paused', projectId, {
+          agentType: layerDef.type,
+          layer: layerDef.layer,
+          layerName: layerDef.type.replace('-agent', ''),
+          lastFile: lastGenFile?.path ?? null,
+        }));
         await prisma.project.update({ where: { id: projectId }, data: { status: 'paused' } });
 
         const resumed = await waitForResume(projectId);
@@ -124,7 +135,7 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
           throw new Error('Pipeline cancelled: pause timeout exceeded');
         }
 
-        await prisma.project.update({ where: { id: projectId }, data: { status: 'generating' } });
+        await prisma.project.update({ where: { id: projectId }, data: { status: 'running' } });
         emitEvent(buildEvent('agent:started', projectId, { agentType: layerDef.type, layer: layerDef.layer, message: 'Resumed' }));
       }
 
@@ -202,6 +213,13 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
 
       completedLayers++;
       const pipelineProgress = Math.round((completedLayers / totalLayers) * 100);
+
+      // Persist progress and currentLayer in DB
+      await prisma.project.update({
+        where: { id: projectId },
+        data: { progress: pipelineProgress, currentLayer: layerDef.layer },
+      });
+
       emitEvent(buildEvent('agent:completed', projectId, {
         agentType: layerDef.type,
         layer: layerDef.layer,
@@ -212,19 +230,19 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
     // All layers done
     await prisma.project.update({
       where: { id: projectId },
-      data: { status: 'completed' },
+      data: { status: 'done', progress: 100 },
     });
 
-    emitEvent(buildEvent('pipeline:completed', projectId, { progress: 100 }));
+    emitEvent(buildEvent('project:done', projectId, { progress: 100 }));
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
 
     await prisma.project.update({
       where: { id: projectId },
-      data: { status: 'error' },
+      data: { status: 'error', errorMessage: message },
     });
 
-    emitEvent(buildEvent('pipeline:failed', projectId, { message }));
+    emitEvent(buildEvent('project:error', projectId, { message }));
     throw err;
   }
 }

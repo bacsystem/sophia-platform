@@ -2,7 +2,7 @@
 
 Resumen de progreso por módulo. Actualizar al completar cada fase o sprint.
 
-> Última actualización: 2026-05-09
+> Última actualización: 2026-04-09
 
 ---
 
@@ -16,8 +16,8 @@ Resumen de progreso por módulo. Actualizar al completar cada fase o sprint.
 | 3 | M4 Agent Runner | HU-14→17 | 38 | 38 | 100% | ✅ Complete |
 | 4 | M5 Dashboard | HU-18→22 | 22 | 22 | 100% | ✅ Complete |
 | 4 | M6 File Manager | HU-23→25 | 23 | 23 | 100% | ✅ Complete |
-| 4 | M7 Settings | HU-26→28 | 24 | 0 | 0% | 📋 Spec ready |
-| **—** | **TOTAL** | **28** | **233** | **209** | **90%** | |
+| 4 | M7 Settings | HU-26→28 | 26 | 26 | 100% | ✅ Complete |
+| **—** | **TOTAL** | **28** | **235** | **235** | **100%** | |
 
 ### Leyenda de estados
 
@@ -100,15 +100,15 @@ Resumen de progreso por módulo. Actualizar al completar cada fase o sprint.
 | Phase 4 | HU-25 Descargar ZIP | 4 | 4 | ✅ |
 | Phase 5 | Polish & Tests | 2 | 2 | ✅ |
 
-### M7 Settings (24 tareas)
+### M7 Settings (26 tareas)
 
 | Fase | Descripción | Tareas | Completadas | Estado |
 |------|-------------|--------|-------------|--------|
-| Phase 1 | Setup (Module Structure + Shared Constants) | 4 | 0 | ⬜ |
-| Phase 2 | HU-26 Configurar API Key | 7 | 0 | ⬜ |
-| Phase 3 | HU-27 Ver Uso de Tokens | 5 | 0 | ⬜ |
-| Phase 4 | HU-28 Editar Perfil | 5 | 0 | ⬜ |
-| Phase 5 | Polish & Tests | 3 | 0 | ⬜ |
+| Phase 1 | Setup (Module Structure + Shared Constants) | 4 | 4 | ✅ |
+| Phase 2 | HU-26 Configurar API Key | 7 | 7 | ✅ |
+| Phase 3 | HU-27 Ver Uso de Tokens | 5 | 5 | ✅ |
+| Phase 4 | HU-28 Editar Perfil | 7 | 7 | ✅ |
+| Phase 5 | Polish & Tests | 3 | 3 | ✅ |
 
 ---
 

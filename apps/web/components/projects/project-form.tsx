@@ -70,6 +70,7 @@ export function ProjectForm({ project, templateValues }: ProjectFormProps) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [saved, setSaved] = useState(false);
   const isEdit = !!project;
 
   const {
@@ -135,7 +136,12 @@ export function ProjectForm({ project, templateValues }: ProjectFormProps) {
       }
 
       const id = isEdit ? project.id : body.data.id;
-      router.push(`/projects/${id}`);
+      if (isEdit) {
+        setSaved(true);
+        setTimeout(() => router.push(`/projects/${id}`), 800);
+      } else {
+        router.push(`/projects/${id}`);
+      }
     } catch {
       setServerError('Error de conexión');
     }
@@ -285,6 +291,13 @@ ${watchedDescription || '(sin descripción)'}`}
       {serverError && (
         <div className="px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/30 text-sm text-red-400">
           {serverError}
+        </div>
+      )}
+
+      {/* Success */}
+      {saved && (
+        <div className="px-4 py-3 rounded-xl bg-green-500/10 border border-green-500/30 text-sm text-green-400">
+          Proyecto guardado exitosamente
         </div>
       )}
 

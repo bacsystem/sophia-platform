@@ -164,16 +164,16 @@ Layer 7   (integration): spec + todos los archivos generados (validación cross-
 
 **Criterios de aceptación:**
 
-- [ ] El proyecto DEBE tener spec generado (M3) — si no, error 400
-- [ ] Al iniciar → crea registros de agentes en BD (uno por tipo activado en config, seed/security/integration siempre activos)
-- [ ] Orquestador ejecuta capas 1→7 secuencialmente (9 layers)
-- [ ] Cada agente usa Claude con Tool Use para generar archivos iterativamente
-- [ ] Al completar cada archivo → guarda metadata en BD + archivo en filesystem + emite WS event
-- [ ] Al completar cada capa → actualiza `projects.current_layer` y `projects.progress`
-- [ ] Al completar Layer 7 → `projects.status = done` + emite `project:done`
-- [ ] Si un agente falla → `projects.status = error` + emite `project:error`
-- [ ] Cada agente tiene timeout de 5 minutos — si excede, falla con error claro
-- [ ] Checkpoint: después de cada archivo creado, el estado se persiste en BD (resumible)
+- [x] El proyecto DEBE tener spec generado (M3) — si no, error 400
+- [x] Al iniciar → crea registros de agentes en BD (uno por tipo activado en config, seed/security/integration siempre activos)
+- [x] Orquestador ejecuta capas 1→7 secuencialmente (9 layers)
+- [x] Cada agente usa Claude con Tool Use para generar archivos iterativamente
+- [x] Al completar cada archivo → guarda metadata en BD + archivo en filesystem + emite WS event
+- [x] Al completar cada capa → actualiza `projects.current_layer` y `projects.progress`
+- [x] Al completar Layer 7 → `projects.status = done` + emite `project:done`
+- [x] Si un agente falla → `projects.status = error` + emite `project:error`
+- [x] Cada agente tiene timeout de 5 minutos — si excede, falla con error claro
+- [x] Checkpoint: después de cada archivo creado, el estado se persiste en BD (resumible)
 
 **Flujo detallado:**
 
@@ -212,13 +212,13 @@ BullMQ Worker procesa job:
 
 **Criterios de aceptación:**
 
-- [ ] Botón "Pausar" disponible cuando `status = running`
-- [ ] Al pausar → se marca flag `paused = true` en Redis
-- [ ] El agente activo termina su tool_call actual antes de detenerse (graceful)
-- [ ] `projects.status = paused`
-- [ ] El agente activo queda con `status = paused` (no `done` ni `error`)
-- [ ] Emite evento WS: `project:paused` con `{ layer, lastFile }`
-- [ ] El job de BullMQ no se reencola hasta que el usuario continúe
+- [x] Botón "Pausar" disponible cuando `status = running`
+- [x] Al pausar → se marca flag `paused = true` en Redis
+- [x] El agente activo termina su tool_call actual antes de detenerse (graceful)
+- [x] `projects.status = paused`
+- [x] El agente activo queda con `status = paused` (no `done` ni `error`)
+- [x] Emite evento WS: `project:paused` con `{ layer, lastFile }`
+- [x] El job de BullMQ no se reencola hasta que el usuario continúe
 
 ---
 
@@ -230,13 +230,13 @@ BullMQ Worker procesa job:
 
 **Criterios de aceptación:**
 
-- [ ] Botón "Continuar" disponible cuando `status = paused`
-- [ ] Al continuar → lee `projects.current_layer` y archivos ya generados
-- [ ] Recrea el contexto del agente con los archivos existentes
-- [ ] NO repite archivos ya creados (lee de `generated_files`)
-- [ ] El agente retoma generando los archivos faltantes de la capa actual
-- [ ] `projects.status = running`
-- [ ] Emite WS: `agent:status { status: working }` + `project:progress`
+- [x] Botón "Continuar" disponible cuando `status = paused`
+- [x] Al continuar → lee `projects.current_layer` y archivos ya generados
+- [x] Recrea el contexto del agente con los archivos existentes
+- [x] NO repite archivos ya creados (lee de `generated_files`)
+- [x] El agente retoma generando los archivos faltantes de la capa actual
+- [x] `projects.status = running`
+- [x] Emite WS: `agent:status { status: working }` + `project:progress`
 
 ---
 
@@ -248,13 +248,13 @@ BullMQ Worker procesa job:
 
 **Criterios de aceptación:**
 
-- [ ] Botón "Reintentar" disponible cuando `status = error`
-- [ ] Al reintentar → retoma desde la capa que falló (no desde Layer 1)
-- [ ] Los archivos de capas completadas se preservan
-- [ ] El agente que falló se reinicia con status `idle`
-- [ ] Si falló por rate limit de Claude → retry automático con backoff (1s, 2s, 4s), max 3 intentos
-- [ ] Si falló por timeout → reintenta con timeout extendido (10 min)
-- [ ] Si falla 3 veces consecutivas → error permanente, requiere intervención manual
+- [x] Botón "Reintentar" disponible cuando `status = error`
+- [x] Al reintentar → retoma desde la capa que falló (no desde Layer 1)
+- [x] Los archivos de capas completadas se preservan
+- [x] El agente que falló se reinicia con status `idle`
+- [x] Si falló por rate limit de Claude → retry automático con backoff (1s, 2s, 4s), max 3 intentos
+- [x] Si falló por timeout → reintenta con timeout extendido (10 min)
+- [x] Si falla 3 veces consecutivas → error permanente, requiere intervención manual
 
 ---
 
@@ -714,17 +714,17 @@ src/worker.ts                → Entry point separado para BullMQ worker
 
 ## Definición de Done
 
-- [ ] 9 agentes ejecutan su capa correctamente usando Tool Use
-- [ ] Orquestador ejecuta 9 capas secuencialmente con contexto entre ellas
-- [ ] Archivos se guardan en filesystem + metadata en BD
-- [ ] Pause funciona con graceful stop (termina tool_call actual)
-- [ ] Continue retoma sin repetir archivos ya creados
-- [ ] Retry retoma desde la capa fallida
-- [ ] Errores se capturan y reportan con reintentos automáticos (backoff)
-- [ ] WebSocket emite todos los eventos con auth en handshake
-- [ ] Reconexión WS con replay funciona
-- [ ] BullMQ worker corre como proceso separado
-- [ ] Checkpoints por archivo permiten resume después de crash
-- [ ] Path traversal prevention verificado
-- [ ] Tests del orchestrator, tool-executor, y cada agente
-- [ ] No hay `any` en TypeScript
+- [x] 9 agentes ejecutan su capa correctamente usando Tool Use
+- [x] Orquestador ejecuta 9 capas secuencialmente con contexto entre ellas
+- [x] Archivos se guardan en filesystem + metadata en BD
+- [x] Pause funciona con graceful stop (termina tool_call actual)
+- [x] Continue retoma sin repetir archivos ya creados
+- [x] Retry retoma desde la capa fallida
+- [x] Errores se capturan y reportan con reintentos automáticos (backoff)
+- [x] WebSocket emite todos los eventos con auth en handshake
+- [x] Reconexión WS con replay funciona
+- [x] BullMQ worker corre como proceso separado
+- [x] Checkpoints por archivo permiten resume después de crash
+- [x] Path traversal prevention verificado
+- [x] Tests del orchestrator, tool-executor, y cada agente
+- [x] No hay `any` en TypeScript

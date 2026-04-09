@@ -48,7 +48,7 @@ export function AgentControls({ projectId, status, onStatusChange }: AgentContro
         <button
           onClick={() => setConfirmPause(true)}
           disabled={loading}
-          className="flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-400 hover:bg-amber-500/20 transition-colors disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-1.5 text-xs text-blue-400 hover:bg-blue-500/20 transition-colors disabled:opacity-50"
           aria-label="Pausar generación"
         >
           <Pause className="w-3.5 h-3.5" />
@@ -58,11 +58,11 @@ export function AgentControls({ projectId, status, onStatusChange }: AgentContro
 
       {isRunning && confirmPause && (
         <div className="flex items-center gap-1.5">
-          <span className="text-xs text-amber-400">¿Pausar?</span>
+          <span className="text-xs text-blue-400">El agente actual terminará su tarea antes de pausar. ¿Continuar?</span>
           <button
             onClick={() => sendAction('pause')}
             disabled={loading}
-            className="rounded-md bg-amber-500/20 px-2 py-1 text-xs text-amber-400 hover:bg-amber-500/30 transition-colors disabled:opacity-50"
+            className="rounded-md bg-blue-500/20 px-2 py-1 text-xs text-blue-400 hover:bg-blue-500/30 transition-colors disabled:opacity-50"
           >
             {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Sí'}
           </button>
@@ -79,7 +79,7 @@ export function AgentControls({ projectId, status, onStatusChange }: AgentContro
         <button
           onClick={() => sendAction('resume')}
           disabled={loading}
-          className="flex items-center gap-1.5 rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-1.5 text-xs text-green-400 hover:bg-green-500/20 transition-colors disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-lg border border-blue-500/30 bg-blue-500 px-3 py-1.5 text-xs text-white hover:bg-blue-600 transition-colors disabled:opacity-50"
           aria-label="Continuar generación"
         >
           {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
@@ -104,9 +104,9 @@ export function AgentControls({ projectId, status, onStatusChange }: AgentContro
       {isDone && (
         <button
           disabled
-          className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/30 cursor-not-allowed"
+          className="flex items-center gap-1.5 rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-1.5 text-xs text-green-400 cursor-not-allowed opacity-50"
           aria-label="Descargar ZIP — disponible en M6"
-          title="Disponible en M6 File Manager"
+          title="Disponible cuando M6 esté implementado"
         >
           <Download className="w-3.5 h-3.5" />
           Descargar ZIP

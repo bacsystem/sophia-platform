@@ -1,6 +1,7 @@
 export interface FileTreeNodeData {
   id: string;
   name: string;
+  path: string;
   type: 'file' | 'directory';
   extension?: string;
   sizeBytes?: number;
@@ -29,6 +30,7 @@ export function buildFileTree(
         dirNode = {
           id: `dir-${dirPath}`,
           name: parts[i],
+          path: dirPath,
           type: 'directory',
           children: [],
         };
@@ -42,6 +44,7 @@ export function buildFileTree(
     currentChildren.push({
       id: file.id,
       name: file.name,
+      path: file.path,
       type: 'file',
       extension: ext,
       sizeBytes: file.sizeBytes,

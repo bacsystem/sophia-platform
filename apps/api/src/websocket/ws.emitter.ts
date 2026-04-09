@@ -5,17 +5,19 @@ export type AgentEventType =
   | 'agent:progress'
   | 'agent:completed'
   | 'agent:failed'
-  | 'agent:paused'
-  | 'pipeline:completed'
-  | 'pipeline:failed';
+  | 'project:paused'
+  | 'project:done'
+  | 'project:error';
 
 export interface AgentEvent {
   type: AgentEventType;
   projectId: string;
   agentType?: string;
   layer?: number;
+  layerName?: string;
   progress?: number; // 0–100
   message?: string;
+  lastFile?: string | null;
   timestamp: string;
 }
 

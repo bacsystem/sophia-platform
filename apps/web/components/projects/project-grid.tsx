@@ -78,10 +78,14 @@ export function ProjectGrid({ initialProjects, initialMeta }: ProjectGridProps) 
     void fetchProjects({ search, status: activeFilter, page });
   };
 
+  const [deleteSuccess, setDeleteSuccess] = useState(false);
+
   const handleDeleteSuccess = (id: string) => {
     setProjects((prev) => prev.filter((p) => p.id !== id));
     setMeta((prev) => ({ ...prev, total: Math.max(0, prev.total - 1) }));
     setDeleteTarget(null);
+    setDeleteSuccess(true);
+    setTimeout(() => setDeleteSuccess(false), 3000);
     router.refresh();
   };
 
@@ -89,6 +93,13 @@ export function ProjectGrid({ initialProjects, initialMeta }: ProjectGridProps) 
 
   return (
     <>
+      {/* Delete success toast */}
+      {deleteSuccess && (
+        <div className="mb-4 px-4 py-3 rounded-xl bg-green-500/10 border border-green-500/30 text-sm text-green-400">
+          Proyecto eliminado exitosamente
+        </div>
+      )}
+
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <div className="relative flex-1">

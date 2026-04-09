@@ -9,6 +9,16 @@ const PROJECTS_BASE_DIR = process.env.PROJECTS_BASE_DIR ?? './projects';
 /** @description Max file size displayed in viewer (1 MB) */
 const MAX_PREVIEW_BYTES = 1_048_576;
 
+/** @description Binary extensions that should not be previewed as text */
+const BINARY_EXTENSIONS = new Set([
+  '.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico', '.bmp', '.svg',
+  '.woff', '.woff2', '.ttf', '.otf', '.eot',
+  '.zip', '.gz', '.tar', '.rar', '.7z',
+  '.pdf', '.doc', '.docx', '.xls', '.xlsx',
+  '.mp3', '.mp4', '.wav', '.avi', '.mov',
+  '.exe', '.dll', '.so', '.dylib',
+]);
+
 export interface FileTreeNode {
   id: string;
   name: string;
@@ -102,35 +112,44 @@ export async function getFileContent(projectId: string, fileId: string) {
     throw Object.assign(new Error('Invalid file path'), { code: 'FORBIDDEN' });
   }
 
-  let content: string;
+  const ext = path.extname(file.name).toLowerCase();
+  const isBinary = BINARY_EXTENSIONS.has(ext);
+
+  let content: string | null = null;
   let truncated = false;
-  try {
-    const stat = await fs.stat(filePath);
-    if (stat.size > MAX_PREVIEW_BYTES) {
-      const buffer = Buffer.alloc(MAX_PREVIEW_BYTES);
-      const fh = await fs.open(filePath, 'r');
-      try {
-        await fh.read(buffer, 0, MAX_PREVIEW_BYTES, 0);
-      } finally {
-        await fh.close();
+
+  if (isBinary) {
+    // Binary files: return metadata only, no content preview
+    content = null;
+  } else {
+    try {
+      const stat = await fs.stat(filePath);
+      if (stat.size > MAX_PREVIEW_BYTES) {
+        const buffer = Buffer.alloc(MAX_PREVIEW_BYTES);
+        const fh = await fs.open(filePath, 'r');
+        try {
+          await fh.read(buffer, 0, MAX_PREVIEW_BYTES, 0);
+        } finally {
+          await fh.close();
+        }
+        content = buffer.toString('utf-8');
+        truncated = true;
+      } else {
+        content = await fs.readFile(filePath, 'utf-8');
       }
-      content = buffer.toString('utf-8');
-      truncated = true;
-    } else {
-      content = await fs.readFile(filePath, 'utf-8');
+    } catch {
+      throw Object.assign(new Error('File not found on disk'), { code: 'FILE_NOT_FOUND' });
     }
-  } catch {
-    throw Object.assign(new Error('File not found on disk'), { code: 'FILE_NOT_FOUND' });
   }
 
-  const lineCount = content.split('\n').length;
-  const ext = path.extname(file.name);
+  const lineCount = content ? content.split('\n').length : 0;
 
   return {
     id: file.id,
     name: file.name,
     path: file.path,
     content,
+    binary: isBinary,
     extension: ext || undefined,
     sizeBytes: file.sizeBytes,
     agentType: file.agent.type,

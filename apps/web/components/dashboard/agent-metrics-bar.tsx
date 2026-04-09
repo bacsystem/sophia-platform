@@ -18,6 +18,9 @@ export function AgentMetricsBar({ startedAt }: AgentMetricsBarProps) {
 
   const isRunning = status === 'running';
 
+  /* Heuristic: ~3 files per completed layer + ~5 for active layer */
+  const estimatedFiles = Math.max(currentLayer * 3 + 5, totalFiles);
+
   return (
     <div className="space-y-3">
       {/* Progress bar */}
@@ -41,18 +44,18 @@ export function AgentMetricsBar({ startedAt }: AgentMetricsBarProps) {
         <MetricCard
           icon={<Bot className="w-4 h-4" />}
           label="Agentes"
-          value={activeAgents}
+          value={`${activeAgents} / 9`}
           active={isRunning}
         />
         <MetricCard
           icon={<BarChart3 className="w-4 h-4" />}
-          label="Capa"
-          value={currentLayer > 0 ? `${currentLayer}/9` : '-'}
+          label="Creados"
+          value={`${totalFiles} / ~${estimatedFiles}`}
           active={isRunning}
         />
         <MetricCard
           icon={<FolderOpen className="w-4 h-4" />}
-          label="Archivos"
+          label="Generados"
           value={totalFiles}
           active={isRunning}
         />

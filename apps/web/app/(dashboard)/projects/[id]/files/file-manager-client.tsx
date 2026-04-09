@@ -57,7 +57,7 @@ export function FileManagerClient({ project, tree, totalFiles, totalSizeBytes }:
       {selectedFile && (
         <div className="px-4 py-2 border-b border-white/5 bg-white/[0.02]">
           <FileBreadcrumb
-            path={selectedFile.name}
+            path={selectedFile.path}
             onNavigate={handleBreadcrumbNavigate}
           />
         </div>

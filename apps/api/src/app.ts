@@ -10,6 +10,7 @@ import { specRoutes } from './modules/spec/spec.routes.js';
 import { wsRoutes } from './websocket/ws.routes.js';
 import { agentRoutes } from './modules/agents/agent.routes.js';
 import { fileRoutes } from './modules/files/file.routes.js';
+import { settingsRoutes } from './modules/settings/settings.routes.js';
 import { initDummyHash } from './lib/hash.js';
 
 export async function buildApp() {
@@ -58,6 +59,7 @@ export async function buildApp() {
   await app.register(specRoutes, { prefix: '/api' });
   await app.register(agentRoutes, { prefix: '/api' });
   await app.register(fileRoutes, { prefix: '/api' });
+  await app.register(settingsRoutes, { prefix: '/api/settings' });
   await app.register(wsRoutes);
 
   // Health check
