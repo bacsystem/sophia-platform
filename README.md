@@ -13,7 +13,7 @@ Sistema autónomo de generación de software impulsado por IA (Claude Code). Sop
 | IA | Anthropic SDK — Claude con Tool Use |
 | WebSockets | @fastify/websocket |
 | Deploy | Railway (backend) + Vercel (frontend) |
-
+ 
 ## Estructura
 
 ```
