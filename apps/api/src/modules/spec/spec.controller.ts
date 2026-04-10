@@ -9,6 +9,7 @@ import {
 import {
   startSpecGeneration,
   subscribeToSpecJob,
+  recoverSpecJob,
   getSpec,
   getSpecVersions,
   getSpecVersion,
@@ -61,8 +62,17 @@ export async function specStreamHandler(
   );
 
   if (unsubscribe === null) {
-    // Job not found — send error event and close
-    sendSseEvent(reply, { type: 'error', file: '', message: 'Job no encontrado', retryable: false });
+    // Job not found in memory — check if spec was saved to DB (server restart recovery)
+    const recovery = await recoverSpecJob(params.data.id);
+    if (recovery) {
+      sendSseEvent(reply, {
+        type: 'done',
+        version: recovery.version,
+        files: ['spec.md', 'data-model.md', 'api-design.md'],
+      });
+    } else {
+      sendSseEvent(reply, { type: 'error', file: '', message: 'Job no encontrado', retryable: false });
+    }
     endSseStream(reply);
     return;
   }

@@ -163,7 +163,7 @@ export function ProjectForm({ project, templateValues }: ProjectFormProps) {
           <button
             type="button"
             onClick={applyTemplate}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-violet-500/20 text-violet-300 border border-violet-500/30 hover:bg-violet-500/30 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-[rgba(var(--accent-rgb)/0.20)] text-[var(--accent-300)] border border-[rgba(var(--accent-rgb)/0.30)] hover:bg-[rgba(var(--accent-rgb)/0.30)] transition-colors"
           >
             <Sparkles className="w-4 h-4" />
             Usar template
@@ -200,7 +200,7 @@ export function ProjectForm({ project, templateValues }: ProjectFormProps) {
         />
         <div className="flex justify-between items-start">
           <div>{errors.description && <p className="error-text">{errors.description.message}</p>}</div>
-          <p className="text-xs text-white/30">{watchedDescription?.length ?? 0}/5000</p>
+          <p className="text-xs text-[var(--text-disabled)]">{watchedDescription?.length ?? 0}/5000</p>
         </div>
       </div>
 
@@ -234,12 +234,12 @@ export function ProjectForm({ project, templateValues }: ProjectFormProps) {
                 aria-pressed={isSelected}
                 className={`p-3.5 rounded-xl border text-left transition-all duration-150 ${
                   isSelected
-                    ? 'border-violet-500/60 bg-violet-500/10 shadow-[0_0_0_2px_rgba(139,92,246,0.3)]'
-                    : 'border-white/10 bg-white/3 hover:border-white/20'
+                    ? 'border-[rgba(var(--accent-rgb)/0.55)] bg-[rgba(var(--accent-rgb)/0.08)] shadow-[0_0_0_2px_rgba(var(--accent-rgb)/0.20)]'
+                    : 'border-[var(--muted-border)] bg-[var(--surface-header)] hover:border-[rgba(var(--accent-rgb)/0.30)]'
                 }`}
               >
-                <p className="text-sm font-semibold text-white">{opt.label}</p>
-                <p className="text-xs text-white/40 mt-0.5">{opt.description}</p>
+                <p className="text-sm font-semibold text-[var(--text-primary)]">{opt.label}</p>
+                <p className="text-xs text-[var(--text-tertiary)] mt-0.5">{opt.description}</p>
               </button>
             );
           })}
@@ -268,14 +268,14 @@ export function ProjectForm({ project, templateValues }: ProjectFormProps) {
         <button
           type="button"
           onClick={() => setShowPreview(!showPreview)}
-          className="w-full flex items-center justify-between px-4 py-3 text-sm text-white/60 hover:text-white/80 transition-colors"
+          className="w-full flex items-center justify-between px-4 py-3 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
         >
           <span className="font-medium">Vista previa del prompt</span>
           {showPreview ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </button>
         {showPreview && (
-          <div className="border-t border-white/10 px-4 py-4">
-            <pre className="text-xs text-white/50 whitespace-pre-wrap font-mono leading-relaxed">
+          <div className="border-t border-[var(--muted-border)] px-4 py-4">
+            <pre className="text-xs text-[var(--text-tertiary)] whitespace-pre-wrap font-mono leading-relaxed">
               {`Proyecto: ${watchedName || '(sin nombre)'}
 Stack: ${watchedStack || '(sin stack)'}
 Agentes: ${watchedAgents?.join(', ') || '(ninguno)'}
@@ -306,7 +306,7 @@ ${watchedDescription || '(sin descripción)'}`}
         <button
           type="button"
           onClick={() => router.back()}
-          className="px-5 py-2.5 rounded-xl text-sm font-medium text-white/60 border border-white/10 hover:border-white/20 hover:text-white/80 transition-colors"
+          className="px-5 py-2.5 rounded-xl text-sm font-medium text-[var(--text-secondary)] border border-[var(--muted-border)] hover:border-[rgba(var(--accent-rgb)/0.30)] hover:text-[var(--text-primary)] transition-colors"
         >
           Cancelar
         </button>

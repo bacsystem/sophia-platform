@@ -78,7 +78,7 @@ export function FileTreeNode({
   };
 
   const { icon: IconComponent, className: iconClass } = isDir
-    ? { icon: isExpanded ? FolderOpen : Folder, className: 'text-violet-400' }
+    ? { icon: isExpanded ? FolderOpen : Folder, className: 'text-[var(--accent-400)]' }
     : getFileIcon(node.extension);
 
   const agentColor = node.agentType ? AGENT_COLORS[node.agentType] : null;
@@ -90,17 +90,17 @@ export function FileTreeNode({
         onClick={handleClick}
         className={`w-full flex items-center gap-1.5 px-2 py-1 text-left text-sm rounded transition-colors ${
           isSelected
-            ? 'bg-violet-500/20 text-white'
-            : 'text-white/70 hover:bg-white/5 hover:text-white'
+            ? 'bg-[rgba(var(--accent-rgb)/0.20)] text-[var(--text-primary)]'
+            : 'text-[var(--text-secondary)] hover:bg-[var(--row-hover)] hover:text-[var(--text-primary)]'
         }`}
         style={{ paddingLeft: `${depth * 16 + 8}px` }}
       >
         {isDir && (
           <span className="w-4 h-4 flex items-center justify-center shrink-0">
             {isExpanded ? (
-              <ChevronDown className="w-3 h-3 text-white/40" />
+              <ChevronDown className="w-3 h-3 text-[var(--text-tertiary)]" />
             ) : (
-              <ChevronRight className="w-3 h-3 text-white/40" />
+              <ChevronRight className="w-3 h-3 text-[var(--text-tertiary)]" />
             )}
           </span>
         )}
@@ -118,7 +118,7 @@ export function FileTreeNode({
         )}
 
         {node.sizeBytes != null && !isDir && (
-          <span className="text-xs text-white/30 shrink-0">{formatSize(node.sizeBytes)}</span>
+          <span className="text-xs text-[var(--text-tertiary)] shrink-0">{formatSize(node.sizeBytes)}</span>
         )}
       </button>
 

@@ -130,7 +130,7 @@ export function LoginForm() {
               onClick={() => setShowPassword((v) => !v)}
               aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
               aria-pressed={showPassword}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors"
             >
               {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
             </button>
@@ -143,9 +143,9 @@ export function LoginForm() {
             <input
               type="checkbox"
               {...register('rememberMe')}
-              className="w-4 h-4 rounded border-white/20 bg-white/10 text-violet-500 focus:ring-violet-500 focus:ring-offset-0"
+              className="w-4 h-4 rounded border-[var(--text-tertiary)] bg-[var(--surface-header)] text-[var(--accent-500)] focus:ring-[rgba(var(--accent-rgb)/0.40)] focus:ring-offset-0"
             />
-            <span className="text-sm text-white/50">Recordarme</span>
+            <span className="text-sm text-[var(--text-secondary)]">Recordarme</span>
           </label>
           <a href="/forgot-password" className="link-premium text-sm">
             ¿Olvidaste tu contraseña?

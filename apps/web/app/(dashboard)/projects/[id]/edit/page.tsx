@@ -47,13 +47,13 @@ export default async function EditProjectPage({ params }: { params: Promise<{ id
       <div className="space-y-1">
         <Link
           href={`/projects/${id}`}
-          className="inline-flex items-center gap-1.5 text-sm text-white/40 hover:text-white/70 transition-colors mb-4"
+          className="inline-flex items-center gap-1.5 text-sm text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors mb-4"
         >
           <ArrowLeft className="w-4 h-4" />
           {project.name}
         </Link>
-        <h1 className="text-2xl font-bold text-white">Editar proyecto</h1>
-        <p className="text-sm text-white/40">
+        <h1 className="text-2xl font-bold text-[var(--text-primary)]">Editar proyecto</h1>
+        <p className="text-sm text-[var(--text-tertiary)]">
           Solo se puede editar un proyecto en estado pendiente.
         </p>
       </div>

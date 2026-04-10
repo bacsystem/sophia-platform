@@ -33,7 +33,9 @@ function validateSpec(content: string): ValidationResult {
   }
 
   // At least 2 HU with Como/Quiero/Para pattern
-  const huMatches = content.match(/Como\s.+\s+Quiero\s.+\s+Para\s.+/gi) ?? [];
+  // Strip markdown bold/italic markers so **Como** / **Quiero** / **Para** still match
+  const strippedContent = content.replace(/\*/g, '');
+  const huMatches = strippedContent.match(/Como\s.+\s+Quiero\s.+\s+Para\s.+/gi) ?? [];
   if (huMatches.length < 2) {
     missing.push('Historias de Usuario (mínimo 2 con Como/Quiero/Para)');
   }

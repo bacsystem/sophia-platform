@@ -79,9 +79,9 @@ export function ResetPasswordForm({ searchParams }: ResetPasswordFormProps) {
   if (state === 'success') {
     return (
       <div className="space-y-5 text-center">
-        <div className="rounded-2xl bg-green-500/10 border border-green-500/20 p-6 space-y-3">
-          <CheckCircle2 className="mx-auto text-green-400" size={32} />
-          <p className="text-sm text-green-300">Contraseña actualizada exitosamente.</p>
+        <div className="rounded-2xl bg-[var(--color-success-subtle)] border border-[rgba(5,150,105,0.20)] p-6 space-y-3">
+          <CheckCircle2 className="mx-auto text-[var(--color-success)]" size={32} />
+          <p className="text-sm text-[var(--color-success)]">Contraseña actualizada exitosamente.</p>
         </div>
         <a href="/login" className="link-premium text-sm">
           Ir al login →
@@ -130,7 +130,7 @@ export function ResetPasswordForm({ searchParams }: ResetPasswordFormProps) {
             onClick={() => setShowPassword((v) => !v)}
             aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
             aria-pressed={showPassword}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors"
           >
             {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
           </button>
@@ -156,7 +156,7 @@ export function ResetPasswordForm({ searchParams }: ResetPasswordFormProps) {
             onClick={() => setShowConfirm((v) => !v)}
             aria-label={showConfirm ? 'Ocultar confirmación de contraseña' : 'Mostrar confirmación de contraseña'}
             aria-pressed={showConfirm}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors"
           >
             {showConfirm ? <EyeOff size={17} /> : <Eye size={17} />}
           </button>

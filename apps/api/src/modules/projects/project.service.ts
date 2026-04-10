@@ -1,4 +1,5 @@
 import prisma from '../../lib/prisma.js';
+import { getRedisClient } from '../../lib/redis.js';
 import { enqueueAgentRun } from '../../queue/agent-queue.js';
 import type { CreateProjectInput, UpdateProjectInput, ListProjectsQuery } from './project.schema.js';
 
@@ -220,11 +221,8 @@ export async function pauseProject(userId: string, id: string) {
     return { error: 'INVALID_STATE_TRANSITION', message: 'Solo se puede pausar un proyecto en ejecución', status: 400 };
   }
 
-  const { createClient } = await import('redis');
-  const redis = createClient({ url: process.env.REDIS_URL ?? 'redis://localhost:6379' });
-  await redis.connect();
-  await redis.set(`project:pause:${id}`, '1', { EX: 3600 }); // auto-expire 1h
-  await redis.disconnect();
+  const redis = getRedisClient();
+  await redis.set(`project:pause:${id}`, '1', 'EX', 3600); // auto-expire 1h
 
   return { data: { id, status: 'pausing' } };
 }
@@ -238,11 +236,8 @@ export async function continueProject(userId: string, id: string) {
     return { error: 'INVALID_STATE_TRANSITION', message: 'Solo se puede continuar un proyecto pausado o en proceso de pausar', status: 400 };
   }
 
-  const { createClient } = await import('redis');
-  const redis = createClient({ url: process.env.REDIS_URL ?? 'redis://localhost:6379' });
-  await redis.connect();
+  const redis = getRedisClient();
   await redis.del(`project:pause:${id}`);
-  await redis.disconnect();
 
   return { data: { id, status: 'running' } };
 }

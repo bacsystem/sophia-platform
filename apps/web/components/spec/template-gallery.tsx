@@ -58,7 +58,7 @@ export function TemplateGallery({ onSelect }: TemplateGalleryProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center gap-2 text-white/40 text-sm py-2">
+      <div className="flex items-center gap-2 text-[var(--text-tertiary)] text-sm py-2">
         <Loader2 className="w-4 h-4 animate-spin" />
         Cargando templates…
       </div>
@@ -80,7 +80,7 @@ export function TemplateGallery({ onSelect }: TemplateGalleryProps) {
 
   return (
     <div className="space-y-3">
-      <p className="text-xs text-white/40 uppercase tracking-wider font-medium">Templates</p>
+      <p className="text-xs text-[var(--text-tertiary)] uppercase tracking-wider font-medium">Templates</p>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {templates.map((tpl) => {
           const Icon = ICON_MAP[tpl.icon] ?? Plug;
@@ -94,20 +94,20 @@ export function TemplateGallery({ onSelect }: TemplateGalleryProps) {
               className={[
                 'flex flex-col items-start gap-2 rounded-xl p-3 text-left transition-all border',
                 isSelected
-                  ? 'border-violet-500/60 bg-violet-500/10'
-                  : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/8',
+                  ? 'border-[rgba(var(--accent-rgb)/0.60)] bg-[rgba(var(--accent-rgb)/0.10)]'
+                  : 'border-[var(--muted-border)] bg-[var(--surface-header)] hover:border-[var(--text-disabled)] hover:bg-[var(--row-hover)]',
               ].join(' ')}
             >
-              <Icon className={`w-5 h-5 ${isSelected ? 'text-violet-400' : 'text-white/60'}`} />
+              <Icon className={`w-5 h-5 ${isSelected ? 'text-[var(--accent-400)]' : 'text-[var(--text-secondary)]'}`} />
               <div>
-                <p className={`text-sm font-medium leading-tight ${isSelected ? 'text-white' : 'text-white/80'}`}>
+                <p className={`text-sm font-medium leading-tight ${isSelected ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}`}>
                   {tpl.name}
                 </p>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {tpl.tags.slice(0, 2).map((tag) => (
                     <span
                       key={tag}
-                      className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 text-white/50"
+                      className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--surface-header)] text-[var(--text-tertiary)]"
                     >
                       {tag}
                     </span>

@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import { Pause, Play, RotateCcw, Download, Loader2 } from 'lucide-react';
 import type { ProjectStatus } from '@sophia/shared';
+import { useDashboardStore } from '@/hooks/use-dashboard-store';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
@@ -14,21 +15,43 @@ interface AgentControlsProps {
   onStatusChange?: (status: ProjectStatus) => void;
 }
 
+/**
+ * @description Fetch with automatic token refresh on 401.
+ * Tries the request, if 401, refreshes token and retries once.
+ */
+async function fetchWithRefresh(url: string, init: RequestInit): Promise<Response> {
+  const res = await fetch(url, init);
+  if (res.status === 401) {
+    const refreshRes = await fetch(`${API_URL}/api/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+    if (refreshRes.ok) {
+      return fetch(url, init);
+    }
+  }
+  return res;
+}
+
 /** @description Context-aware action buttons for controlling the agent pipeline */
 export function AgentControls({ projectId, status, onStatusChange }: AgentControlsProps) {
   const [loading, setLoading] = useState(false);
   const [confirmPause, setConfirmPause] = useState(false);
+  const connected = useDashboardStore((s) => s.connected);
 
-  const sendAction = async (action: 'pause' | 'resume' | 'retry') => {
+  const sendAction = async (action: 'pause' | 'continue' | 'retry') => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/api/projects/${projectId}/generation/${action}`, {
+      const res = await fetchWithRefresh(`${API_URL}/api/projects/${projectId}/${action}`, {
         method: 'POST',
         credentials: 'include',
       });
       if (res.ok) {
         const body = await res.json();
         onStatusChange?.(body.data?.status ?? status);
+      } else if (res.status === 401) {
+        // Token refresh also failed — session truly expired
+        window.location.href = '/login';
       }
     } finally {
       setLoading(false);
@@ -48,7 +71,7 @@ export function AgentControls({ projectId, status, onStatusChange }: AgentContro
         <button
           onClick={() => setConfirmPause(true)}
           disabled={loading}
-          className="flex items-center gap-1.5 rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-1.5 text-xs text-blue-400 hover:bg-blue-500/20 transition-colors disabled:opacity-50"
+          className="btn-info flex items-center gap-1.5 rounded-lg px-3 py-1.5 disabled:opacity-50"
           aria-label="Pausar generación"
         >
           <Pause className="w-3.5 h-3.5" />
@@ -58,17 +81,17 @@ export function AgentControls({ projectId, status, onStatusChange }: AgentContro
 
       {isRunning && confirmPause && (
         <div className="flex items-center gap-1.5">
-          <span className="text-xs text-blue-400">El agente actual terminará su tarea antes de pausar. ¿Continuar?</span>
+          <span className="text-xs text-[var(--color-info)]" style={{ fontFamily: "var(--font-mono, 'Space Mono', monospace)" }}>El agente actual terminará su tarea antes de pausar. ¿Continuar?</span>
           <button
             onClick={() => sendAction('pause')}
             disabled={loading}
-            className="rounded-md bg-blue-500/20 px-2 py-1 text-xs text-blue-400 hover:bg-blue-500/30 transition-colors disabled:opacity-50"
+            className="btn-info rounded-md px-2 py-1 disabled:opacity-50"
           >
             {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Sí'}
           </button>
           <button
             onClick={() => setConfirmPause(false)}
-            className="rounded-md bg-white/5 px-2 py-1 text-xs text-white/60 hover:bg-white/10 transition-colors"
+            className="btn-ghost rounded-md px-2 py-1"
           >
             No
           </button>
@@ -77,9 +100,10 @@ export function AgentControls({ projectId, status, onStatusChange }: AgentContro
 
       {isPaused && (
         <button
-          onClick={() => sendAction('resume')}
+          onClick={() => sendAction('continue')}
           disabled={loading}
-          className="flex items-center gap-1.5 rounded-lg border border-blue-500/30 bg-blue-500 px-3 py-1.5 text-xs text-white hover:bg-blue-600 transition-colors disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-lg bg-[var(--color-info)] px-3 py-1.5 text-xs text-white hover:opacity-90 transition-opacity disabled:opacity-50"
+          style={{ fontFamily: "var(--font-mono, 'Space Mono', monospace)" }}
           aria-label="Continuar generación"
         >
           {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
@@ -92,7 +116,7 @@ export function AgentControls({ projectId, status, onStatusChange }: AgentContro
         <button
           onClick={() => sendAction('retry')}
           disabled={loading}
-          className="flex items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs text-red-400 hover:bg-red-500/20 transition-colors disabled:opacity-50"
+          className="btn-error flex items-center gap-1.5 rounded-lg px-3 py-1.5 disabled:opacity-50"
           aria-label="Reintentar generación"
         >
           {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
@@ -100,11 +124,11 @@ export function AgentControls({ projectId, status, onStatusChange }: AgentContro
         </button>
       )}
 
-      {/* Download ZIP (M6 placeholder — disabled for now) */}
+      {/* Download ZIP */}
       {isDone && (
         <button
           disabled
-          className="flex items-center gap-1.5 rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-1.5 text-xs text-green-400 cursor-not-allowed opacity-50"
+          className="btn-success flex items-center gap-1.5 rounded-lg px-3 py-1.5 cursor-not-allowed opacity-50"
           aria-label="Descargar ZIP del proyecto"
           title="Descarga de archivos generados"
         >
@@ -114,13 +138,13 @@ export function AgentControls({ projectId, status, onStatusChange }: AgentContro
       )}
 
       {/* Connection indicator */}
-      <div className="ml-auto flex items-center gap-1.5 text-xs text-white/40">
+      <div className="ml-auto flex items-center gap-1.5 text-xs text-[var(--text-secondary)]" style={{ fontFamily: "var(--font-mono, 'Space Mono', monospace)" }}>
         <div
           className={`w-2 h-2 rounded-full ${
-            status === 'idle' ? 'bg-white/20' : 'bg-green-400'
+            connected ? 'bg-[var(--color-success)]' : status === 'idle' ? 'bg-[var(--text-disabled)]' : 'bg-[var(--color-error)] animate-pulse'
           }`}
         />
-        {status === 'idle' ? 'Desconectado' : 'En vivo'}
+        {connected ? 'En vivo' : status === 'idle' ? 'Desconectado' : 'Sin conexión'}
       </div>
     </div>
   );

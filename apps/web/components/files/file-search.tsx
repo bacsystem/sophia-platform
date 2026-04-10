@@ -39,21 +39,21 @@ export function FileSearch({ onSearch }: FileSearchProps) {
 
   return (
     <div className="relative">
-      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
+      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-tertiary)]" />
       <input
         ref={inputRef}
         type="text"
         value={query}
         onChange={(e) => handleChange(e.target.value)}
         placeholder="Buscar archivos..."
-        className="w-full pl-8 pr-8 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/25"
+        className="w-full pl-8 pr-8 py-1.5 rounded-lg bg-[var(--surface-header)] border border-[var(--muted-border)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-disabled)] focus:outline-none focus:border-[rgba(var(--accent-rgb)/0.50)] focus:ring-1 focus:ring-[rgba(var(--accent-rgb)/0.25)]"
       />
       {query && (
         <button
           type="button"
           onClick={handleClear}
           aria-label="Limpiar búsqueda"
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60"
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
         >
           <X className="w-3.5 h-3.5" />
         </button>

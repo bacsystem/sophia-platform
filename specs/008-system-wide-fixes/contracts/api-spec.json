@@ -1,0 +1,227 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Sophia Platform — System-Wide Fixes API Changes",
+    "version": "0.7.1",
+    "description": "Behavioral changes to existing endpoints for error resilience and session persistence"
+  },
+  "paths": {
+    "/api/settings/api-key": {
+      "put": {
+        "summary": "Save user API key (enhanced error handling)",
+        "description": "Validates format, verifies with Anthropic (1 retry on timeout/network), encrypts, stores. Returns differentiated error messages.",
+        "tags": ["Settings"],
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["apiKey"],
+                "properties": {
+                  "apiKey": {
+                    "type": "string",
+                    "pattern": "^sk-ant-",
+                    "description": "Anthropic API key"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Key saved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "configured": { "type": "boolean" },
+                        "last4": { "type": "string" },
+                        "verifiedAt": { "type": "string", "format": "date-time" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "API key is invalid (rejected by Anthropic 401/403)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "INVALID_API_KEY",
+                  "message": "La clave API es inválida. Verifica que la copiaste correctamente."
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (max 5 verifications per hour)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RateLimitError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Cannot reach Anthropic (timeout or network error after retry)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "timeout": {
+                    "value": {
+                      "error": "VERIFICATION_TIMEOUT",
+                      "message": "No se pudo verificar la clave: el servicio de Anthropic no respondió a tiempo. Intenta de nuevo."
+                    }
+                  },
+                  "network": {
+                    "value": {
+                      "error": "VERIFICATION_NETWORK_ERROR",
+                      "message": "No se pudo verificar la clave: problema de conexión temporal. Intenta de nuevo."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/session": {
+      "get": {
+        "summary": "Get current session info (new endpoint)",
+        "description": "Returns session metadata including token expiration time for proactive refresh calculation.",
+        "tags": ["Auth"],
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Session info",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "expiresAt": {
+                          "type": "integer",
+                          "description": "Unix timestamp (seconds) when access token expires"
+                        },
+                        "user": {
+                          "type": "object",
+                          "properties": {
+                            "id": { "type": "string" },
+                            "email": { "type": "string" },
+                            "name": { "type": "string" }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated"
+          }
+        }
+      }
+    },
+    "/api/specs/{projectId}/generate": {
+      "post": {
+        "summary": "Start spec generation (enhanced pre-validation)",
+        "description": "Now validates ANTHROPIC_API_KEY existence before starting background job. Returns 503 immediately if system key is not configured.",
+        "tags": ["Spec"],
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Generation started",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "jobId": { "type": "string" },
+                        "message": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "System API key not configured (ANTHROPIC_API_KEY missing)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "SERVICE_UNAVAILABLE",
+                  "message": "El servicio de generación no está disponible. Contacta al administrador."
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "access_token"
+      }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["error", "message"],
+        "properties": {
+          "error": { "type": "string" },
+          "message": { "type": "string" }
+        }
+      },
+      "RateLimitError": {
+        "type": "object",
+        "required": ["error", "message", "retryAfter"],
+        "properties": {
+          "error": { "type": "string" },
+          "message": { "type": "string" },
+          "retryAfter": { "type": "integer", "description": "Seconds until retry is allowed" }
+        }
+      }
+    }
+  }
+}

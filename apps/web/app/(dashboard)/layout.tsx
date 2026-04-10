@@ -1,47 +1,62 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { FolderOpen, Settings } from 'lucide-react';
-import { LogoutButton } from '@/components/auth/logout-button';
+import { FolderOpen, Settings, Cpu } from 'lucide-react';
+import { UserProfileMenu } from '@/components/auth/user-profile-menu';
+import { TokenRefreshProvider } from '@/components/auth/token-refresh-provider';
+import { ThemeToggle } from '@/components/theme/theme-toggle';
 
-/** @description Dashboard layout — shared nav wrapper for authenticated routes */
+/** @description Dashboard layout — shared nav wrapper for authenticated routes with premium fonts */
 export default function DashboardLayout({ children }: { readonly children: ReactNode }) {
   return (
-    <div className="min-h-screen flex flex-col">
-      <nav className="border-b border-white/10 bg-black/20 backdrop-blur-md sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center h-14 gap-6">
-          <Link href="/" className="flex items-center gap-2.5 shrink-0">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-glow-sm">
-              <span className="text-white font-bold text-sm">S</span>
+    <div className="h-screen flex flex-col overflow-hidden bg-[var(--bg-deep)]">
+      {/* Premium fonts loaded via next/font/google in root layout */}
+      <TokenRefreshProvider />
+
+      {/* ── Premium Navbar ── */}
+      <nav className="relative border-b border-[var(--border-subtle)] bg-[var(--nav-bg)]/90 backdrop-blur-xl shrink-0 z-50">
+        {/* Top accent line */}
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[rgba(var(--accent-rgb)/0.4)] to-transparent" />
+
+        <div className="max-w-[100rem] mx-auto px-4 sm:px-6 flex items-center h-14 gap-6">
+          <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center shadow-lg transition-shadow" style={{ background: 'linear-gradient(135deg, var(--accent-400), var(--accent-500))', boxShadow: 'rgba(var(--accent-rgb),0.25) 0 4px 14px' }}>
+              <Cpu className="w-4.5 h-4.5 text-white" />
             </div>
-            <span className="text-white font-semibold text-base tracking-tight hidden sm:block">
-              Sophia
+            <span
+              className="font-bold text-[15px] tracking-[0.12em] hidden sm:block group-hover:text-[var(--accent-400)] transition-colors text-[var(--text-primary)]"
+              style={{ fontFamily: "var(--font-display, 'Syne', sans-serif)" }}
+            >
+              SOPHIA
             </span>
           </Link>
 
-          <div className="flex items-center gap-1">
-            <Link
-              href="/projects"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-white/60 hover:text-white hover:bg-white/8 transition-colors"
-            >
-              <FolderOpen className="w-4 h-4" />
-              <span>Proyectos</span>
-            </Link>
-            <Link
-              href="/settings"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-white/60 hover:text-white hover:bg-white/8 transition-colors"
-            >
-              <Settings className="w-4 h-4" />
-              <span>Configuración</span>
-            </Link>
+          <div className="flex items-center gap-1 ml-3">
+            <NavLink href="/projects" icon={<FolderOpen className="w-4 h-4" />} label="Proyectos" />
+            <NavLink href="/settings" icon={<Settings className="w-4 h-4" />} label="Configuración" />
           </div>
 
-          <div className="ml-auto">
-            <LogoutButton />
+          <div className="ml-auto flex items-center gap-2">
+            <ThemeToggle />
+            <UserProfileMenu />
           </div>
         </div>
       </nav>
 
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 py-8">{children}</main>
+      <main className="flex-1 min-h-0 overflow-y-auto">{children}</main>
     </div>
+  );
+}
+
+/** @description Premium navigation link with hover glow */
+function NavLink({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
+  return (
+    <Link
+      href={href}
+      className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-[13px] text-[var(--text-secondary)] hover:text-[var(--accent-500)] hover:bg-[rgba(var(--accent-rgb)/0.07)] transition-all duration-200"
+      style={{ fontFamily: "var(--font-mono, 'Space Mono', monospace)" }}
+    >
+      {icon}
+      <span className="tracking-wide">{label}</span>
+    </Link>
   );
 }

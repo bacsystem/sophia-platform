@@ -107,14 +107,14 @@ interface DashboardStore {
   scrollPaused: boolean;
   unreadCount: number;
   selectedAgentId: string | null;
-  activeTab: 'logs' | 'files';
+  activeTab: 'logs' | 'progress' | 'files';
 
   // Actions
   setConnected: (connected: boolean) => void;
   setScrollPaused: (paused: boolean) => void;
   resetUnread: () => void;
   selectAgent: (agentId: string | null) => void;
-  setActiveTab: (tab: 'logs' | 'files') => void;
+  setActiveTab: (tab: 'logs' | 'progress' | 'files') => void;
   setProgress: (progress: number) => void;
   setCurrentLayer: (layer: number, name: string) => void;
   setStatus: (status: ProjectStatus) => void;
@@ -137,6 +137,7 @@ export const useDashboardStore = create<DashboardStore>((set) => ({
   logs: [],
   addLog: (log) =>
     set((state) => {
+      if (state.logs.some((l) => l.id === log.id)) return state;
       const next = [...state.logs, log];
       return {
         logs: next.length > MAX_LOGS ? next.slice(-MAX_LOGS) : next,
@@ -182,17 +183,26 @@ export const useDashboardStore = create<DashboardStore>((set) => ({
   setActiveAgents: (count) => set({ activeAgents: count }),
 
   applySnapshot: (snapshot) =>
-    set({
-      agents: snapshot.agents,
-      logs: snapshot.logs.slice(-MAX_LOGS),
-      files: snapshot.files,
-      progress: snapshot.progress,
-      currentLayer: snapshot.currentLayer,
-      currentLayerName: snapshot.currentLayerName,
-      status: snapshot.status,
-      tokensUsed: snapshot.tokensUsed,
-      totalFiles: snapshot.totalFiles,
-      activeAgents: snapshot.activeAgents,
+    set((state) => {
+      // Merge snapshot logs with live logs, deduplicating by id
+      const snapshotIds = new Set(snapshot.logs.map((l) => l.id));
+      const liveLogs = state.logs.filter((l) => !snapshotIds.has(l.id));
+      const merged = [...snapshot.logs, ...liveLogs];
+      const deduped = merged
+        .filter((l, i, arr) => arr.findIndex((x) => x.id === l.id) === i)
+        .slice(-MAX_LOGS);
+      return {
+        agents: snapshot.agents,
+        logs: deduped,
+        files: snapshot.files,
+        progress: snapshot.progress,
+        currentLayer: snapshot.currentLayer,
+        currentLayerName: snapshot.currentLayerName,
+        status: snapshot.status,
+        tokensUsed: snapshot.tokensUsed,
+        totalFiles: snapshot.totalFiles,
+        activeAgents: snapshot.activeAgents,
+      };
     }),
 
   reset: () =>

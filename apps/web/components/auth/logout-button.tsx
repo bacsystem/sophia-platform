@@ -30,7 +30,7 @@ export function LogoutButton() {
       onClick={handleLogout}
       disabled={loading}
       aria-label={loading ? 'Cerrando sesión...' : 'Cerrar sesión'}
-      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-white/60 hover:text-white hover:bg-white/8 transition-colors disabled:opacity-50"
+      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--row-hover)] transition-colors disabled:opacity-50"
     >
       <LogOut className="w-4 h-4" />
       <span className="hidden sm:inline">{loading ? 'Cerrando...' : 'Salir'}</span>

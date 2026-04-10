@@ -7,15 +7,15 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
 const AGENT_LABELS: Record<string, { label: string; className: string }> = {
-  'dba-agent': { label: 'DBA', className: 'bg-blue-500/20 text-blue-300' },
-  'seed-agent': { label: 'Seed', className: 'bg-teal-500/20 text-teal-300' },
-  'backend-agent': { label: 'Backend', className: 'bg-green-500/20 text-green-300' },
-  'frontend-agent': { label: 'Frontend', className: 'bg-purple-500/20 text-purple-300' },
-  'qa-agent': { label: 'QA', className: 'bg-orange-500/20 text-orange-300' },
-  'security-agent': { label: 'Security', className: 'bg-red-500/20 text-red-300' },
-  'docs-agent': { label: 'Docs', className: 'bg-yellow-500/20 text-yellow-300' },
-  'deploy-agent': { label: 'Deploy', className: 'bg-cyan-500/20 text-cyan-300' },
-  'integration-agent': { label: 'Integration', className: 'bg-pink-500/20 text-pink-300' },
+  'dba-agent': { label: 'DBA', className: 'bg-blue-500/20 text-blue-400' },
+  'seed-agent': { label: 'Seed', className: 'bg-teal-500/20 text-teal-400' },
+  'backend-agent': { label: 'Backend', className: 'bg-green-500/20 text-green-400' },
+  'frontend-agent': { label: 'Frontend', className: 'bg-purple-500/20 text-purple-400' },
+  'qa-agent': { label: 'QA', className: 'bg-orange-500/20 text-orange-400' },
+  'security-agent': { label: 'Security', className: 'bg-red-500/20 text-red-400' },
+  'docs-agent': { label: 'Docs', className: 'bg-yellow-500/20 text-yellow-500' },
+  'deploy-agent': { label: 'Deploy', className: 'bg-cyan-500/20 text-cyan-400' },
+  'integration-agent': { label: 'Integration', className: 'bg-pink-500/20 text-pink-400' },
 };
 
 const EXT_TO_LANG: Record<string, string> = {
@@ -167,7 +167,7 @@ export function FileViewer({ projectId, fileId }: FileViewerProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="w-5 h-5 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" />
+        <div className="w-5 h-5 border-2 border-[var(--accent-500)] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -176,24 +176,24 @@ export function FileViewer({ projectId, fileId }: FileViewerProps) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center p-6">
         <AlertTriangle className="w-8 h-8 text-red-400 mb-2" />
-        <p className="text-white/50 text-sm">No se pudo cargar el archivo</p>
+        <p className="text-[var(--text-secondary)] text-sm">No se pudo cargar el archivo</p>
       </div>
     );
   }
 
-  const agent = AGENT_LABELS[file.agentType] ?? { label: file.agentType, className: 'bg-white/10 text-white/50' };
+  const agent = AGENT_LABELS[file.agentType] ?? { label: file.agentType, className: 'bg-[var(--surface-header)] text-[var(--text-secondary)]' };
 
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex flex-wrap items-center gap-3 px-4 py-3 border-b border-white/10">
+      <div className="flex flex-wrap items-center gap-3 px-4 py-3 border-b border-[var(--muted-border)]">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <h3 className="text-sm font-medium text-white truncate">{file.name}</h3>
+          <h3 className="text-sm font-medium text-[var(--text-primary)] truncate">{file.name}</h3>
           <span className={`px-1.5 py-0.5 rounded text-[11px] font-medium shrink-0 ${agent.className}`}>
             {agent.label}
           </span>
         </div>
-        <div className="flex items-center gap-3 text-xs text-white/30 shrink-0">
+        <div className="flex items-center gap-3 text-xs text-[var(--text-disabled)] shrink-0">
           <span>{file.lineCount} líneas</span>
           <span>{formatSize(file.sizeBytes)}</span>
           <span>{formatDate(file.createdAt)}</span>
@@ -202,15 +202,14 @@ export function FileViewer({ projectId, fileId }: FileViewerProps) {
           <button
             type="button"
             onClick={handleCopy}
-            className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors"
-            aria-label={copied ? 'Copiado' : 'Copiar contenido'}
+            className="p-1.5 rounded-lg text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--row-hover)] transition-colors"
           >
-            {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+            {copied ? <Check className="w-4 h-4 text-[var(--color-success)]" /> : <Copy className="w-4 h-4" />}
           </button>
           <button
             type="button"
             onClick={handleDownload}
-            className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-lg text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--row-hover)] transition-colors"
             aria-label="Descargar archivo"
           >
             <Download className="w-4 h-4" />
@@ -220,9 +219,9 @@ export function FileViewer({ projectId, fileId }: FileViewerProps) {
 
       {/* Truncation warning */}
       {file.truncated && (
-        <div className="flex items-center gap-2 px-4 py-2 bg-yellow-500/10 border-b border-yellow-500/20">
-          <AlertTriangle className="w-4 h-4 text-yellow-400 shrink-0" />
-          <span className="text-xs text-yellow-300">
+        <div className="flex items-center gap-2 px-4 py-2 bg-[var(--color-warn-subtle)] border-b border-[rgba(217,119,6,0.20)]">
+          <AlertTriangle className="w-4 h-4 text-[var(--color-warn)] shrink-0" />
+          <span className="text-xs text-[var(--color-warn)]">
             Archivo demasiado grande para preview completo (&gt;1MB). Mostrando contenido truncado.
           </span>
         </div>
@@ -231,13 +230,13 @@ export function FileViewer({ projectId, fileId }: FileViewerProps) {
       {/* Binary file info */}
       {file.binary && (
         <div className="flex flex-col items-center justify-center flex-1 text-center p-6 gap-3">
-          <AlertTriangle className="w-8 h-8 text-white/20" />
-          <p className="text-white/50 text-sm">Archivo binario — no se puede previsualizar</p>
-          <p className="text-white/30 text-xs">{file.name} · {formatSize(file.sizeBytes)}</p>
+          <AlertTriangle className="w-8 h-8 text-[var(--text-disabled)]" />
+          <p className="text-[var(--text-secondary)] text-sm">Archivo binario — no se puede previsualizar</p>
+          <p className="text-[var(--text-tertiary)] text-xs">{file.name} · {formatSize(file.sizeBytes)}</p>
           <button
             type="button"
             onClick={handleDownload}
-            className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 text-xs text-white/60 hover:bg-white/5 transition-colors"
+            className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--muted-border)] text-xs text-[var(--text-secondary)] hover:bg-[var(--row-hover)] transition-colors"
           >
             <Download className="w-3.5 h-3.5" />
             Descargar archivo
@@ -261,10 +260,10 @@ export function FileViewer({ projectId, fileId }: FileViewerProps) {
                   transform: `translateY(${vRow.start}px)`,
                 }}
               >
-                <span className="w-12 shrink-0 text-right pr-3 text-white/20 select-none text-xs leading-5">
+                <span className="w-12 shrink-0 text-right pr-3 text-[var(--text-disabled)] select-none text-xs leading-5">
                   {vRow.index + 1}
                 </span>
-                <pre className="flex-1 text-white/80 whitespace-pre overflow-x-auto">
+                <pre className="flex-1 text-[var(--text-primary)] whitespace-pre overflow-x-auto">
                   {lines[vRow.index]}
                 </pre>
               </div>
@@ -272,9 +271,9 @@ export function FileViewer({ projectId, fileId }: FileViewerProps) {
           </div>
         ) : highlightedHtml ? (
           <div className="flex">
-            <div className="shrink-0 py-3 pr-3 text-right select-none border-r border-white/5">
+            <div className="shrink-0 py-3 pr-3 text-right select-none border-r border-[var(--muted-border)]">
               {lines.map((_, i) => (
-                <div key={i} className="text-xs leading-5 text-white/20 px-2">
+                <div key={i} className="text-xs leading-5 text-[var(--text-disabled)] px-2">
                   {i + 1}
                 </div>
               ))}
@@ -286,14 +285,14 @@ export function FileViewer({ projectId, fileId }: FileViewerProps) {
           </div>
         ) : (
           <div className="flex">
-            <div className="shrink-0 py-3 pr-3 text-right select-none border-r border-white/5">
+            <div className="shrink-0 py-3 pr-3 text-right select-none border-r border-[var(--muted-border)]">
               {lines.map((_, i) => (
-                <div key={i} className="text-xs leading-5 text-white/20 px-2">
+                <div key={i} className="text-xs leading-5 text-[var(--text-disabled)] px-2">
                   {i + 1}
                 </div>
               ))}
             </div>
-            <pre className="flex-1 py-3 pl-4 font-mono text-[13px] leading-5 text-white/80 overflow-x-auto whitespace-pre">
+            <pre className="flex-1 py-3 pl-4 font-mono text-[13px] leading-5 text-[var(--text-primary)] overflow-x-auto whitespace-pre">
               {file.content}
             </pre>
           </div>

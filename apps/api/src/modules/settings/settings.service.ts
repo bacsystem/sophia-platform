@@ -56,20 +56,41 @@ export async function saveApiKey(userId: string, input: SaveApiKeyInput) {
     };
   }
 
-  // Verify key with Anthropic
+  // Verify key with Anthropic (includes 1 automatic retry for transient errors)
   const verifyResult = await verifyKeyWithAnthropic(input.apiKey);
   if (!verifyResult.valid) {
-    if (verifyResult.reason === 'UPSTREAM_UNAVAILABLE') {
+    if (verifyResult.reason === 'INVALID_KEY') {
       return {
-        error: 'UPSTREAM_UNAVAILABLE' as const,
-        message: 'No se pudo conectar con Anthropic. Intenta más tarde.',
+        error: 'INVALID_KEY' as const,
+        message: 'La clave API es inválida',
+        status: 400,
+      };
+    }
+    if (verifyResult.reason === 'BILLING') {
+      return {
+        error: 'BILLING' as const,
+        message: 'La cuenta de Anthropic no tiene créditos suficientes. Revisa tu plan en console.anthropic.com.',
+        status: 402,
+      };
+    }
+    if (verifyResult.reason === 'RATE_LIMITED') {
+      return {
+        error: 'RATE_LIMITED' as const,
+        message: 'Anthropic está limitando las solicitudes. Intenta de nuevo en unos minutos.',
+        status: 503,
+      };
+    }
+    if (verifyResult.reason === 'TIMEOUT') {
+      return {
+        error: 'TIMEOUT' as const,
+        message: 'No se pudo verificar la clave: tiempo de conexión agotado. Intenta de nuevo.',
         status: 503,
       };
     }
     return {
-      error: 'API_KEY_VERIFICATION_FAILED' as const,
-      message: 'No se pudo verificar la API key con Anthropic',
-      status: 400,
+      error: 'NETWORK_ERROR' as const,
+      message: 'No se pudo verificar la clave: problema de conexión temporal. Intenta de nuevo.',
+      status: 503,
     };
   }
 
@@ -192,21 +213,42 @@ export async function verifyApiKey(userId: string) {
   const result = await verifyKeyWithAnthropic(apiKey);
 
   if (!result.valid) {
-    if (result.reason === 'UPSTREAM_UNAVAILABLE') {
+    if (result.reason === 'INVALID_KEY') {
+      await prisma.userSettings.update({
+        where: { userId },
+        data: { apiKeyVerifiedAt: null },
+      });
       return {
-        error: 'UPSTREAM_UNAVAILABLE' as const,
-        message: 'No se pudo conectar con Anthropic. Intenta más tarde.',
+        error: 'INVALID_KEY' as const,
+        message: 'La clave API ya no es válida con Anthropic',
+        status: 400,
+      };
+    }
+    if (result.reason === 'BILLING') {
+      return {
+        error: 'BILLING' as const,
+        message: 'La cuenta de Anthropic no tiene créditos suficientes. Revisa tu plan en console.anthropic.com.',
+        status: 402,
+      };
+    }
+    if (result.reason === 'RATE_LIMITED') {
+      return {
+        error: 'RATE_LIMITED' as const,
+        message: 'Anthropic está limitando las solicitudes. Intenta de nuevo en unos minutos.',
         status: 503,
       };
     }
-    await prisma.userSettings.update({
-      where: { userId },
-      data: { apiKeyVerifiedAt: null },
-    });
+    if (result.reason === 'TIMEOUT') {
+      return {
+        error: 'TIMEOUT' as const,
+        message: 'No se pudo verificar la clave: tiempo de conexión agotado. Intenta de nuevo.',
+        status: 503,
+      };
+    }
     return {
-      error: 'API_KEY_INVALID' as const,
-      message: 'La API key ya no es válida con Anthropic',
-      status: 400,
+      error: 'NETWORK_ERROR' as const,
+      message: 'No se pudo verificar la clave: problema de conexión temporal. Intenta de nuevo.',
+      status: 503,
     };
   }
 
@@ -378,34 +420,67 @@ function calculateCost(tokensInput: number, tokensOutput: number): number {
   return Math.round((inputCost + outputCost) * 100) / 100;
 }
 
-async function verifyKeyWithAnthropic(apiKey: string): Promise<{ valid: boolean; reason?: 'INVALID_KEY' | 'UPSTREAM_UNAVAILABLE' }> {
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
+type VerifyReason = 'INVALID_KEY' | 'BILLING' | 'RATE_LIMITED' | 'TIMEOUT' | 'NETWORK_ERROR';
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: ANTHROPIC_PRICING.model,
-        max_tokens: 1,
-        messages: [{ role: 'user', content: 'Hi' }],
-      }),
-      signal: controller.signal,
-    });
+async function verifyKeyWithAnthropic(apiKey: string): Promise<{ valid: boolean; reason?: VerifyReason }> {
+  const MAX_ATTEMPTS = 2;
+  const RETRY_DELAY_MS = 1000;
+  const TIMEOUT_MS = 5000;
 
-    clearTimeout(timeout);
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-    if (response.ok) return { valid: true };
-    if (response.status === 401 || response.status === 403) {
-      return { valid: false, reason: 'INVALID_KEY' };
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: ANTHROPIC_PRICING.model,
+          max_tokens: 1,
+          messages: [{ role: 'user', content: 'Hi' }],
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeout);
+
+      if (response.ok) return { valid: true };
+      if (response.status === 401 || response.status === 403) {
+        return { valid: false, reason: 'INVALID_KEY' };
+      }
+      if (response.status === 429 || response.status === 529) {
+        return { valid: false, reason: 'RATE_LIMITED' };
+      }
+      // 400 — check if billing/credit issue
+      if (response.status === 400) {
+        try {
+          const body = await response.json() as { error?: { message?: string } };
+          const msg = body?.error?.message ?? '';
+          if (msg.toLowerCase().includes('credit') || msg.toLowerCase().includes('billing')) {
+            return { valid: false, reason: 'BILLING' };
+          }
+        } catch { /* ignore parse errors — fall through to NETWORK_ERROR */ }
+      }
+      // Other HTTP error — retry if attempts remain
+      if (attempt < MAX_ATTEMPTS) {
+        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+        continue;
+      }
+      return { valid: false, reason: 'NETWORK_ERROR' };
+    } catch (err) {
+      const isTimeout = err instanceof DOMException && err.name === 'AbortError';
+      if (attempt < MAX_ATTEMPTS) {
+        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+        continue;
+      }
+      return { valid: false, reason: isTimeout ? 'TIMEOUT' : 'NETWORK_ERROR' };
     }
-    return { valid: false, reason: 'UPSTREAM_UNAVAILABLE' };
-  } catch {
-    return { valid: false, reason: 'UPSTREAM_UNAVAILABLE' };
   }
+
+  return { valid: false, reason: 'NETWORK_ERROR' };
 }

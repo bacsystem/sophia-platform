@@ -1,11 +1,13 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import prisma from '../lib/prisma.js';
+import { getRedisClient } from '../lib/redis.js';
 import { runAgent } from './base-agent.js';
 import { buildTaskPrompt } from './context-builder.js';
 import { emitEvent, buildEvent } from '../websocket/ws.emitter.js';
 
-const PROJECTS_BASE_DIR = process.env.PROJECTS_BASE_DIR ?? './projects';
+import { fileURLToPath } from 'node:url';
+
 const PAUSE_POLL_MS = 2000;
 
 /** Layer definitions: ordered list of all 9 agents */
@@ -21,7 +23,13 @@ const LAYERS = [
   { type: 'integration-agent', layer: 7,   systemFile: 'integration-agent/system.md', taskFile: 'integration-agent/task.md' },
 ] as const;
 
-const SKILLS_DIR = path.resolve(process.cwd(), 'skills');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const SKILLS_DIR = path.resolve(__dirname, '..', '..', '..', '..', 'skills');
+const PROJECTS_BASE_DIR = path.resolve(
+  process.env.PROJECTS_BASE_DIR ?? path.join(__dirname, '..', '..', '..', '..', 'projects'),
+);
 
 /**
  * @description Resolves the absolute project directory for a projectId.
@@ -42,11 +50,8 @@ async function readSkillFile(relativePath: string): Promise<string> {
  * The flag is a Redis key: `project:pause:{projectId}`
  */
 async function isPaused(projectId: string): Promise<boolean> {
-  const { createClient } = await import('redis');
-  const client = createClient({ url: process.env.REDIS_URL ?? 'redis://localhost:6379' });
-  await client.connect();
-  const val = await client.get(`project:pause:${projectId}`);
-  await client.disconnect();
+  const redis = getRedisClient();
+  const val = await redis.get(`project:pause:${projectId}`);
   return val === '1';
 }
 
@@ -86,6 +91,32 @@ async function getStartLayer(projectId: string): Promise<number> {
 }
 
 /**
+ * @description Writes the latest spec content from the DB into the project directory
+ * so agents can read spec.md, data-model.md, and api-design.md via the readFile tool.
+ */
+async function materializeSpec(projectId: string, projectDir: string): Promise<void> {
+  const spec = await prisma.projectSpec.findFirst({
+    where: { projectId },
+    orderBy: { version: 'desc' },
+    select: { content: true },
+  });
+  if (!spec?.content) return;
+
+  const content = spec.content as Record<string, string>;
+  const files: [string, string | undefined][] = [
+    ['spec.md', content.spec],
+    ['data-model.md', content.dataModel],
+    ['api-design.md', content.apiDesign],
+  ];
+
+  for (const [name, text] of files) {
+    if (text && text.length > 0) {
+      await fs.writeFile(path.join(projectDir, name), text, 'utf8');
+    }
+  }
+}
+
+/**
  * @description Main pipeline orchestrator.
  * Runs all 9 agent layers sequentially for a project.
  * On retry, skips layers whose agents are already completed in the DB.
@@ -95,6 +126,9 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
 
   // Ensure project directory exists
   await fs.mkdir(projectDir, { recursive: true });
+
+  // Materialize spec files from DB into the project directory so agents can read them
+  await materializeSpec(projectId, projectDir);
 
   // Determine start layer (supports retry from failed layer)
   const startLayer = await getStartLayer(projectId);
@@ -224,6 +258,8 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
         agentType: layerDef.type,
         layer: layerDef.layer,
         progress: pipelineProgress,
+        tokensUsed: result.tokensInput + result.tokensOutput,
+        filesCount: result.filesCreated.length,
       }));
     }
 

@@ -21,12 +21,12 @@ export function SpecVersionSelector({ versions, selectedVersion, onChange }: Spe
 
   return (
     <div className="relative inline-flex items-center gap-2">
-      <span className="text-xs text-white/40">Versión</span>
+      <span className="text-xs text-[var(--text-tertiary)]">Versión</span>
       <div className="relative">
         <select
           value={selectedVersion}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="appearance-none bg-white/5 border border-white/10 rounded-lg pl-3 pr-8 py-1.5 text-sm text-white/80 focus:outline-none focus:border-violet-500/50 cursor-pointer"
+          className="select-themed appearance-none pl-3 pr-8 py-1.5 text-sm focus:outline-none focus:border-[rgba(var(--accent-rgb)/0.50)] cursor-pointer"
           aria-label="Seleccionar versión de spec"
         >
           {versions.map((v) => {
@@ -45,14 +45,14 @@ export function SpecVersionSelector({ versions, selectedVersion, onChange }: Spe
             );
           })}
         </select>
-        <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />
+        <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-tertiary)] pointer-events-none" />
       </div>
       {/* Validity indicator for selected version */}
       {(() => {
         const selected = versions.find((v) => v.version === selectedVersion);
         if (!selected) return null;
         return selected.valid ? (
-          <CheckCircle2 className="w-4 h-4 text-emerald-400" aria-label="Spec válido" />
+          <CheckCircle2 className="w-4 h-4 text-[var(--color-success)]" aria-label="Spec válido" />
         ) : (
           <XCircle className="w-4 h-4 text-amber-400" aria-label="Spec con advertencias" />
         );

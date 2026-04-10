@@ -75,7 +75,7 @@ export function DeleteProjectDialog({ project, onClose, onSuccess }: DeleteProje
           type="button"
           onClick={onClose}
           aria-label="Cerrar"
-          className="absolute top-4 right-4 text-white/30 hover:text-white/70 transition-colors"
+          className="absolute top-4 right-4 text-[var(--text-disabled)] hover:text-[var(--text-secondary)] transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
@@ -85,10 +85,10 @@ export function DeleteProjectDialog({ project, onClose, onSuccess }: DeleteProje
             <AlertTriangle className="w-5 h-5 text-red-400" />
           </div>
           <div>
-            <h2 id="delete-dialog-title" className="text-base font-semibold text-white">
+            <h2 id="delete-dialog-title" className="text-base font-semibold text-[var(--text-primary)]">
               Eliminar proyecto
             </h2>
-            <p className="text-sm text-white/50 mt-1">
+            <p className="text-sm text-[var(--text-secondary)] mt-1">
               Esta acción no se puede deshacer. El proyecto y todos sus archivos serán eliminados.
             </p>
           </div>
@@ -98,7 +98,7 @@ export function DeleteProjectDialog({ project, onClose, onSuccess }: DeleteProje
           <div className="space-y-1.5">
             <label htmlFor="confirm-name" className="label-premium">
               Escribe{' '}
-              <strong className="text-white font-semibold">{project.name}</strong> para confirmar
+              <strong className="text-[var(--text-primary)] font-semibold">{project.name}</strong> para confirmar
             </label>
             <input
               ref={inputRef}
@@ -122,7 +122,7 @@ export function DeleteProjectDialog({ project, onClose, onSuccess }: DeleteProje
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-sm font-medium text-white/60 border border-white/10 hover:border-white/20 hover:text-white/80 transition-colors"
+              className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--text-secondary)] border border-[var(--muted-border)] hover:border-[rgba(var(--accent-rgb)/0.30)] hover:text-[var(--text-primary)] transition-colors"
             >
               Cancelar
             </button>

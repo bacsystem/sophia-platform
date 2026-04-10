@@ -19,14 +19,14 @@ export function FileBreadcrumb({ path, onNavigate }: FileBreadcrumbProps) {
 
         return (
           <span key={fullPath} className="flex items-center gap-1 shrink-0">
-            {index > 0 && <ChevronRight className="w-3 h-3 text-white/20" />}
+            {index > 0 && <ChevronRight className="w-3 h-3 text-[var(--text-disabled)]" />}
             {isLast ? (
-              <span className="text-white font-medium">{part}</span>
+              <span className="text-[var(--text-primary)] font-medium">{part}</span>
             ) : (
               <button
                 type="button"
                 onClick={() => onNavigate(fullPath)}
-                className="text-white/50 hover:text-white transition-colors"
+                className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
               >
                 {part}
               </button>

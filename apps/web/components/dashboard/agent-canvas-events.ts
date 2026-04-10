@@ -30,8 +30,8 @@ export function hitTestNode(
     const dx = lx - node.cx;
     const dy = ly - node.cy;
     const dist = Math.sqrt(dx * dx + dy * dy);
-    // Add a few px tolerance for easier clicking
-    if (dist <= node.radius + 4) {
+    // Add tolerance for easier clicking (covers outer ring area)
+    if (dist <= node.radius + 18) {
       return node;
     }
   }

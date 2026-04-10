@@ -2,7 +2,7 @@
 
 Resumen de progreso por módulo. Actualizar al completar cada fase o sprint.
 
-> Última actualización: 2026-04-09
+> Última actualización: 2026-04-10
 
 ---
 
@@ -17,7 +17,8 @@ Resumen de progreso por módulo. Actualizar al completar cada fase o sprint.
 | 4 | M5 Dashboard | HU-18→22 | 22 | 22 | 100% | ✅ Complete |
 | 4 | M6 File Manager | HU-23→25 | 23 | 23 | 100% | ✅ Complete |
 | 4 | M7 Settings | HU-26→28 | 26 | 26 | 100% | ✅ Complete |
-| **—** | **TOTAL** | **28** | **235** | **235** | **100%** | |
+| Hotfix | 008 System-wide fixes | — | 25 | 25 | 100% | ✅ Complete |
+| **—** | **TOTAL** | **28** | **260** | **260** | **100%** | |
 
 ### Leyenda de estados
 
@@ -109,6 +110,17 @@ Resumen de progreso por módulo. Actualizar al completar cada fase o sprint.
 | Phase 3 | HU-27 Ver Uso de Tokens | 5 | 5 | ✅ |
 | Phase 4 | HU-28 Editar Perfil | 7 | 7 | ✅ |
 | Phase 5 | Polish & Tests | 3 | 3 | ✅ |
+
+### 008 System-wide fixes (25 tareas)
+
+| Fase | Descripción | Tareas | Completadas | Estado |
+|------|-------------|--------|-------------|--------|
+| Phase 1 | Setup validation (lint/build/tests) | 5 | 5 | ✅ |
+| Phase 2 | API key verification resilience | 3 | 3 | ✅ |
+| Phase 3 | Spec generation error visibility | 5 | 5 | ✅ |
+| Phase 4 | Session persistence during active use | 8 | 8 | ✅ |
+| Phase 5 | Dev environment stability (`dev:clean`) | 2 | 2 | ✅ |
+| Phase 6 | Final polish validation | 2 | 2 | ✅ |
 
 ---
 

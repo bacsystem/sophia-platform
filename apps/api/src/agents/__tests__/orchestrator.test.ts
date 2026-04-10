@@ -12,6 +12,9 @@ vi.mock('../../lib/prisma.js', () => ({
       findMany: vi.fn().mockResolvedValue([]),
       update: vi.fn().mockResolvedValue({}),
     },
+    projectSpec: {
+      findFirst: vi.fn().mockResolvedValue(null),
+    },
     generatedFile: {
       upsert: vi.fn().mockResolvedValue({}),
       findFirst: vi.fn().mockResolvedValue(null),
@@ -117,6 +120,7 @@ describe('orchestrator — runPipeline', () => {
           upsert: vi.fn().mockResolvedValue({ id: 'agent-1' }),
           findMany: vi.fn().mockResolvedValue([{ layer: 1 }, { layer: 1.5 }]),
         },
+        projectSpec: { findFirst: vi.fn().mockResolvedValue(null) },
         generatedFile: { upsert: vi.fn().mockResolvedValue({}), findFirst: vi.fn().mockResolvedValue(null) },
         agentLog: { create: vi.fn().mockResolvedValue({}) },
       },

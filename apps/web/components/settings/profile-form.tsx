@@ -81,7 +81,7 @@ export function ProfileForm() {
   if (loading) {
     return (
       <section className="glass rounded-2xl p-6">
-        <div className="flex items-center gap-2 text-white/50">
+        <div className="flex items-center gap-2 text-[var(--text-secondary)]">
           <Loader2 className="w-4 h-4 animate-spin" />
           <span className="text-sm">Cargando perfil...</span>
         </div>
@@ -92,13 +92,13 @@ export function ProfileForm() {
   return (
     <section className="glass rounded-2xl p-6 space-y-4">
       <div className="flex items-center gap-3">
-        <User className="w-5 h-5 text-violet-400" />
-        <h2 className="text-lg font-semibold text-white">Perfil</h2>
+        <User className="w-5 h-5 text-[var(--accent-400)]" />
+        <h2 className="text-lg font-semibold text-[var(--text-primary)]">Perfil</h2>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <label htmlFor="profileEmail" className="block text-sm text-white/60 mb-1.5">
+          <label htmlFor="profileEmail" className="block text-sm text-[var(--text-secondary)] mb-1.5">
             Email
           </label>
           <input
@@ -106,19 +106,19 @@ export function ProfileForm() {
             type="email"
             value={email}
             disabled
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white/40 text-sm cursor-not-allowed"
+            className="w-full bg-[var(--surface-header)] border border-[var(--muted-border)] rounded-xl px-4 py-2.5 text-[var(--text-disabled)] text-sm cursor-not-allowed"
           />
-          <p className="text-xs text-white/30 mt-1">El email no se puede cambiar</p>
+          <p className="text-xs text-[var(--text-disabled)] mt-1">El email no se puede cambiar</p>
         </div>
 
         <div>
-          <label htmlFor="profileName" className="block text-sm text-white/60 mb-1.5">
+          <label htmlFor="profileName" className="block text-sm text-[var(--text-secondary)] mb-1.5">
             Nombre
           </label>
           <input
             id="profileName"
             type="text"
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/20 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/30"
+              className="w-full bg-[var(--surface-header)] border border-[var(--muted-border)] rounded-xl px-4 py-2.5 text-[var(--text-primary)] text-sm placeholder:text-[var(--text-disabled)] focus:outline-none focus:border-[rgba(var(--accent-rgb)/0.50)] focus:ring-1 focus:ring-[rgba(var(--accent-rgb)/0.30)]"
             {...register('name')}
           />
           {errors.name && (
@@ -134,13 +134,13 @@ export function ProfileForm() {
           <button
             type="submit"
             disabled={isSubmitting || !isDirty}
-            className="px-4 py-2 text-sm font-medium text-white bg-violet-600 rounded-xl hover:bg-violet-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="btn-primary px-4 py-2 text-sm font-medium rounded-xl flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
             Guardar
           </button>
           {success && (
-            <span className="flex items-center gap-1 text-green-400 text-sm">
+            <span className="flex items-center gap-1 text-[var(--color-success)] text-sm">
               <CheckCircle2 className="w-4 h-4" />
               Guardado
             </span>

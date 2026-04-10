@@ -52,15 +52,15 @@ export function AgentSelector({ value, onChange, error }: AgentSelectorProps) {
               aria-pressed={isSelected}
               className={`flex items-center gap-2.5 p-3 rounded-lg border text-left transition-all duration-150 ${
                 option.required
-                  ? 'border-violet-500/30 bg-violet-500/10 cursor-default opacity-80'
-                  : isSelected
-                  ? 'border-violet-500/50 bg-violet-500/10 hover:bg-violet-500/15'
-                  : 'border-white/10 bg-white/3 hover:border-white/20 hover:bg-white/5'
+                    ? 'border-[rgba(var(--accent-rgb)/0.25)] bg-[rgba(var(--accent-rgb)/0.08)] cursor-default opacity-80'
+                    : isSelected
+                    ? 'border-[rgba(var(--accent-rgb)/0.45)] bg-[rgba(var(--accent-rgb)/0.08)] hover:bg-[rgba(var(--accent-rgb)/0.12)]'
+                    : 'border-[var(--muted-border)] bg-[var(--surface-header)] hover:border-[rgba(var(--accent-rgb)/0.25)] hover:bg-[var(--row-hover)]'
               }`}
             >
               <div
                 className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${
-                  isSelected ? 'bg-violet-500 border-violet-400' : 'border-white/30'
+                  isSelected ? 'bg-[var(--accent-500)] border-[var(--accent-400)]' : 'border-[var(--text-tertiary)]'
                 }`}
               >
                 {isSelected && (
@@ -70,11 +70,11 @@ export function AgentSelector({ value, onChange, error }: AgentSelectorProps) {
                 )}
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-semibold text-white leading-tight">{option.label}</p>
-                <p className="text-[10px] text-white/40 leading-tight truncate">{option.description}</p>
+                <p className="text-xs font-semibold text-[var(--text-primary)] leading-tight">{option.label}</p>
+                <p className="text-[10px] text-[var(--text-tertiary)] leading-tight truncate">{option.description}</p>
               </div>
               {option.required && (
-                <span className="ml-auto shrink-0 text-[9px] font-bold text-violet-400 uppercase tracking-wide">
+                <span className="ml-auto shrink-0 text-[9px] font-bold text-[var(--accent-400)] uppercase tracking-wide">
                   req
                 </span>
               )}

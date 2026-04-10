@@ -78,11 +78,11 @@ export function PasswordForm() {
         aria-controls="password-form-content"
       >
         <div className="flex items-center gap-3">
-          <Lock className="w-5 h-5 text-violet-400" />
-          <h2 className="text-lg font-semibold text-white">Cambiar Contraseña</h2>
+          <Lock className="w-5 h-5 text-[var(--accent-400)]" />
+          <h2 className="text-lg font-semibold text-[var(--text-primary)]">Cambiar Contraseña</h2>
         </div>
         <ChevronDown
-          className={`w-5 h-5 text-white/40 transition-transform duration-200 ${
+          className={`w-5 h-5 text-[var(--text-tertiary)] transition-transform duration-200 ${
             open ? 'rotate-180' : ''
           }`}
         />
@@ -93,21 +93,20 @@ export function PasswordForm() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Current password */}
             <div>
-              <label htmlFor="currentPassword" className="block text-sm text-white/60 mb-1.5">
+              <label htmlFor="currentPassword" className="block text-sm text-[var(--text-secondary)] mb-1.5">
                 Contraseña actual
               </label>
               <div className="relative">
                 <input
                   id="currentPassword"
                   type={showCurrent ? 'text' : 'password'}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/20 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/30 pr-10"
+                  className="w-full glass-input rounded-xl px-4 py-2.5 text-sm pr-10"
                   {...register('currentPassword')}
                 />
                 <button
                   type="button"
                   onClick={() => setShowCurrent((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60"
-                  aria-label={showCurrent ? 'Ocultar contraseña actual' : 'Mostrar contraseña actual'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-disabled)] hover:text-[var(--text-secondary)] transition-colors"
                   aria-pressed={showCurrent}
                 >
                   {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -120,21 +119,20 @@ export function PasswordForm() {
 
             {/* New password */}
             <div>
-              <label htmlFor="newPassword" className="block text-sm text-white/60 mb-1.5">
+              <label htmlFor="newPassword" className="block text-sm text-[var(--text-secondary)] mb-1.5">
                 Nueva contraseña
               </label>
               <div className="relative">
                 <input
                   id="newPassword"
                   type={showNew ? 'text' : 'password'}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/20 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/30 pr-10"
+                  className="w-full bg-[var(--surface-header)] border border-[var(--muted-border)] rounded-xl px-4 py-2.5 text-[var(--text-primary)] text-sm placeholder:text-[var(--text-disabled)] focus:outline-none focus:border-[rgba(var(--accent-rgb)/0.50)] focus:ring-1 focus:ring-[rgba(var(--accent-rgb)/0.30)] pr-10"
                   {...register('newPassword')}
                 />
                 <button
                   type="button"
                   onClick={() => setShowNew((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60"
-                  aria-label={showNew ? 'Ocultar nueva contraseña' : 'Mostrar nueva contraseña'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-disabled)] hover:text-[var(--text-secondary)] transition-colors"
                   aria-pressed={showNew}
                 >
                   {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -147,13 +145,13 @@ export function PasswordForm() {
 
             {/* Confirm password */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm text-white/60 mb-1.5">
+              <label htmlFor="confirmPassword" className="block text-sm text-[var(--text-secondary)] mb-1.5">
                 Confirmar nueva contraseña
               </label>
               <input
                 id="confirmPassword"
                 type="password"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/20 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/30"
+                className="w-full bg-[var(--surface-header)] border border-[var(--muted-border)] rounded-xl px-4 py-2.5 text-[var(--text-primary)] text-sm placeholder:text-[var(--text-disabled)] focus:outline-none focus:border-[rgba(var(--accent-rgb)/0.50)] focus:ring-1 focus:ring-[rgba(var(--accent-rgb)/0.30)]"
                 {...register('confirmPassword')}
               />
               {errors.confirmPassword && (
@@ -169,13 +167,13 @@ export function PasswordForm() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-4 py-2 text-sm font-medium text-white bg-violet-600 rounded-xl hover:bg-violet-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-4 py-2 text-sm font-medium btn-primary rounded-xl flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                 Cambiar Contraseña
               </button>
               {success && (
-                <span className="flex items-center gap-1 text-green-400 text-sm">
+                <span className="flex items-center gap-1 text-[var(--color-success)] text-sm">
                   <CheckCircle2 className="w-4 h-4" />
                   Actualizada
                 </span>

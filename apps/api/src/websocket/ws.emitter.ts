@@ -1,4 +1,5 @@
 import type { WebSocket } from '@fastify/websocket';
+import Redis from 'ioredis';
 
 export type AgentEventType =
   | 'agent:started'
@@ -18,11 +19,29 @@ export interface AgentEvent {
   progress?: number; // 0–100
   message?: string;
   lastFile?: string | null;
+  tokensUsed?: number;
+  filesCount?: number;
   timestamp: string;
 }
 
-// Map of projectId → set of active WS connections
+const REDIS_CHANNEL = 'sophia:agent-events';
+const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379';
+
+// Map of projectId → set of active WS connections (API server process only)
 const connections = new Map<string, Set<WebSocket>>();
+
+// Redis publisher — used by both worker and server processes
+let publisher: Redis | null = null;
+
+function getPublisher(): Redis {
+  if (!publisher) {
+    publisher = new Redis(REDIS_URL, { maxRetriesPerRequest: 3, lazyConnect: true });
+    publisher.on('error', (err) => {
+      console.warn('[ws.emitter] Redis publisher error:', err.message);
+    });
+  }
+  return publisher;
+}
 
 /**
  * @description Registers a WebSocket connection for a project's event stream.
@@ -45,10 +64,9 @@ export function unregisterConnection(projectId: string, ws: WebSocket): void {
 }
 
 /**
- * @description Emits an event to all active WS connections for a project.
- * Dead connections are cleaned up automatically.
+ * @description Broadcasts an event to local WS connections for a project.
  */
-export function emitEvent(event: AgentEvent): void {
+function broadcastToLocal(event: AgentEvent): void {
   const set = connections.get(event.projectId);
   if (!set || set.size === 0) return;
 
@@ -64,6 +82,46 @@ export function emitEvent(event: AgentEvent): void {
       set.delete(ws);
     }
   }
+}
+
+/**
+ * @description Emits an event via Redis Pub/Sub so both API server and worker
+ * processes can produce events that reach WebSocket clients.
+ */
+export function emitEvent(event: AgentEvent): void {
+  // Publish to Redis — the subscriber in the API server broadcasts to WS clients
+  const pub = getPublisher();
+  pub.publish(REDIS_CHANNEL, JSON.stringify(event)).catch((err) => {
+    console.warn('[ws.emitter] Redis publish failed:', (err as Error).message);
+    // Fallback: try local broadcast (works if emitter is in-process with WS)
+    broadcastToLocal(event);
+  });
+}
+
+/**
+ * @description Subscribes to Redis channel and broadcasts events to local WS clients.
+ * Must be called once from the API server process at startup.
+ */
+export function startEventSubscriber(): void {
+  const subscriber = new Redis(REDIS_URL, { maxRetriesPerRequest: 3, lazyConnect: true });
+  subscriber.on('error', (err) => {
+    console.warn('[ws.emitter] Redis subscriber error:', err.message);
+  });
+
+  subscriber.subscribe(REDIS_CHANNEL).then(() => {
+    console.log('[ws.emitter] Subscribed to agent events channel');
+  }).catch((err) => {
+    console.error('[ws.emitter] Failed to subscribe:', (err as Error).message);
+  });
+
+  subscriber.on('message', (_channel: string, message: string) => {
+    try {
+      const event = JSON.parse(message) as AgentEvent;
+      broadcastToLocal(event);
+    } catch {
+      // Ignore malformed messages
+    }
+  });
 }
 
 /**

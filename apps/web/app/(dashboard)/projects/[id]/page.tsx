@@ -44,7 +44,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     <div className="space-y-6 max-w-5xl mx-auto">
       <Link
         href="/projects"
-        className="inline-flex items-center gap-1.5 text-sm text-white/40 hover:text-white/70 transition-colors"
+        className="inline-flex items-center gap-1.5 text-sm text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
         Mis proyectos

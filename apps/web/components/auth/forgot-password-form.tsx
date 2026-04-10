@@ -51,9 +51,9 @@ export function ForgotPasswordForm() {
 
   if (sent) {
     return (
-      <div className="rounded-2xl bg-green-500/10 border border-green-500/20 p-6 text-center space-y-3">
-        <CheckCircle2 className="mx-auto text-green-400" size={32} />
-        <p className="text-sm text-green-300">
+      <div className="rounded-2xl bg-[var(--color-success-subtle)] border border-[rgba(5,150,105,0.20)] p-6 text-center space-y-3">
+        <CheckCircle2 className="mx-auto text-[var(--color-success)]" size={32} />
+        <p className="text-sm text-[var(--color-success)]">
           Si el email existe, recibirás instrucciones para restablecer tu contraseña.
         </p>
       </div>

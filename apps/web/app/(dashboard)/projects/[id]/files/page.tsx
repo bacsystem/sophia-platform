@@ -69,7 +69,7 @@ export default async function FileManagerPage({ params }: { params: Promise<{ id
     <div className="space-y-4">
       <Link
         href={`/projects/${id}`}
-        className="inline-flex items-center gap-1.5 text-sm text-white/40 hover:text-white/70 transition-colors"
+        className="inline-flex items-center gap-1.5 text-sm text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
         Volver al proyecto

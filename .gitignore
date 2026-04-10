@@ -15,6 +15,7 @@ out/
 
 # ─── Generated projects (runtime output) ────────────────
 /projects/
+/apps/api/projects/
 
 # ─── Database ────────────────────────────────────────────
 *.sql.bak
