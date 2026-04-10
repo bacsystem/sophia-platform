@@ -5,23 +5,12 @@ import { getRedisClient } from '../lib/redis.js';
 import { runAgent } from './base-agent.js';
 import { buildTaskPrompt } from './context-builder.js';
 import { emitEvent, buildEvent } from '../websocket/ws.emitter.js';
+import { getNextLayers, AGENT_GRAPH } from './dependency-graph.js';
+import type { LayerNode } from './dependency-graph.js';
 
 import { fileURLToPath } from 'node:url';
 
 const PAUSE_POLL_MS = 2000;
-
-/** Layer definitions: ordered list of all 9 agents */
-const LAYERS = [
-  { type: 'dba-agent',         layer: 1,   systemFile: 'dba-agent/system.md',         taskFile: 'dba-agent/task.md' },
-  { type: 'seed-agent',        layer: 1.5, systemFile: 'seed-agent/system.md',        taskFile: 'seed-agent/task.md' },
-  { type: 'backend-agent',     layer: 2,   systemFile: 'backend-agent/system.md',     taskFile: 'backend-agent/task.md' },
-  { type: 'frontend-agent',    layer: 3,   systemFile: 'frontend-agent/system.md',    taskFile: 'frontend-agent/task.md' },
-  { type: 'qa-agent',          layer: 4,   systemFile: 'qa-agent/system.md',          taskFile: 'qa-agent/task.md' },
-  { type: 'security-agent',    layer: 4.5, systemFile: 'security-agent/system.md',    taskFile: 'security-agent/task.md' },
-  { type: 'docs-agent',        layer: 5,   systemFile: 'docs-agent/system.md',        taskFile: 'docs-agent/task.md' },
-  { type: 'deploy-agent',      layer: 6,   systemFile: 'deploy-agent/system.md',      taskFile: 'deploy-agent/task.md' },
-  { type: 'integration-agent', layer: 7,   systemFile: 'integration-agent/system.md', taskFile: 'integration-agent/task.md' },
-] as const;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -134,23 +123,6 @@ function sleep(ms: number): Promise<void> {
 }
 
 /**
- * @description Determines the layer number to start from for a retry.
- * Returns the layer number of the first non-completed agent, or 1 if none found.
- */
-async function getStartLayer(projectId: string): Promise<number> {
-  const completedAgents = await prisma.agent.findMany({
-    where: { projectId, status: 'completed' },
-    select: { layer: true },
-    orderBy: { layer: 'asc' },
-  });
-  if (completedAgents.length === 0) return 1;
-
-  const completedLayers = new Set(completedAgents.map((a) => a.layer));
-  const nextLayer = LAYERS.find((l) => !completedLayers.has(l.layer));
-  return nextLayer ? nextLayer.layer : 1;
-}
-
-/**
  * @description Writes the latest spec content from the DB into the project directory
  * so agents can read spec.md, data-model.md, and api-design.md via the readFile tool.
  */
@@ -193,8 +165,12 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
   // Load shared skills once for the entire pipeline (not per layer)
   const sharedSkills = await loadSharedSkills();
 
-  // Determine start layer (supports retry from failed layer)
-  const startLayer = await getStartLayer(projectId);
+  // Build set of already-completed layers for retry support
+  const completedAgents = await prisma.agent.findMany({
+    where: { projectId, status: 'completed' },
+    select: { layer: true },
+  });
+  const completedLayerNums = new Set<number>(completedAgents.map((a) => a.layer));
 
   // Update project status to 'running'
   await prisma.project.update({
@@ -202,27 +178,25 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
     data: { status: 'running' },
   });
 
-  const totalLayers = LAYERS.length;
-  // Count already-completed layers to calculate progress correctly
-  let completedLayers = LAYERS.filter((l) => l.layer < startLayer).length;
+  const totalLayers = AGENT_GRAPH.length;
 
   try {
-    for (const layerDef of LAYERS) {
-      // Skip layers already completed (retry support)
-      if (layerDef.layer < startLayer) continue;
+    while (true) {
+      const batch = getNextLayers(completedLayerNums);
+      if (batch.length === 0) break;
 
-      // Check pause before starting each layer
+      // Check pause before starting this batch
       if (await isPaused(projectId)) {
-        // Find last generated file for this project
+        const firstLayer = batch[0];
         const lastGenFile = await prisma.generatedFile.findFirst({
           where: { projectId },
           orderBy: { createdAt: 'desc' },
           select: { path: true },
         });
         emitEvent(buildEvent('project:paused', projectId, {
-          agentType: layerDef.type,
-          layer: layerDef.layer,
-          layerName: layerDef.type.replace('-agent', ''),
+          agentType: firstLayer.type,
+          layer: firstLayer.layer,
+          layerName: firstLayer.type.replace('-agent', ''),
           lastFile: lastGenFile?.path ?? null,
         }));
         await prisma.project.update({ where: { id: projectId }, data: { status: 'paused' } });
@@ -233,101 +207,30 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
         }
 
         await prisma.project.update({ where: { id: projectId }, data: { status: 'running' } });
-        emitEvent(buildEvent('agent:started', projectId, { agentType: layerDef.type, layer: layerDef.layer, message: 'Resumed' }));
+        for (const layerDef of batch) {
+          emitEvent(buildEvent('agent:started', projectId, { agentType: layerDef.type, layer: layerDef.layer, message: 'Resumed' }));
+        }
       }
 
-      // Get or create agent record
-      const agent = await prisma.agent.upsert({
-        where: { uq_agents_project_type: { projectId, type: layerDef.type } },
-        create: {
-          projectId,
-          type: layerDef.type,
-          layer: layerDef.layer,
-          status: 'running',
-          startedAt: new Date(),
-        },
-        update: {
-          status: 'running',
-          progress: 0,
-          error: null,
-          startedAt: new Date(),
-          completedAt: null,
-        },
-      });
-
-      // Read skill prompts and compose with shared skills
-      const agentSystemMd = await readSkillFile(layerDef.systemFile);
-      const systemPrompt = composeSystemPrompt(sharedSkills, agentSystemMd);
-      const taskTemplate = await readSkillFile(layerDef.taskFile);
-
-      // Build task prompt with context from prior layers
-      const taskPrompt = await buildTaskPrompt({
+      // Run all batch layers in parallel
+      await Promise.all(batch.map((layerDef: LayerNode) => runLayer(layerDef, {
         projectId,
         projectDir,
-        currentLayer: layerDef.layer,
-        taskTemplate,
-      });
+        sharedSkills,
+      })));
 
-      // Run the agent
-      const result = await runAgent({
-        agentId: agent.id,
-        projectId,
-        agentType: layerDef.type,
-        layer: layerDef.layer,
-        systemPrompt,
-        taskPrompt,
-        projectDir,
-      });
-
-      // Track generated files in DB
-      if (result.filesCreated.length > 0) {
-        await Promise.allSettled(
-          result.filesCreated.map(async (filePath) => {
-            const absPath = path.join(projectDir, filePath);
-            let size = 0;
-            try {
-              const stat = await fs.stat(absPath);
-              size = stat.size;
-            } catch { /* file may have been removed */ }
-
-            await prisma.generatedFile.upsert({
-              where: { uq_generated_files_project_path: { projectId, path: filePath } },
-              create: {
-                projectId,
-                agentId: agent.id,
-                name: path.basename(filePath),
-                path: filePath,
-                sizeBytes: size,
-                layer: layerDef.layer,
-              },
-              update: {
-                agentId: agent.id,
-                sizeBytes: size,
-              },
-            }).catch(() => { /* non-fatal */ });
-          }),
-        );
+      // Mark all batch layers as completed
+      for (const layerDef of batch) {
+        completedLayerNums.add(layerDef.layer);
       }
 
-      completedLayers++;
-      const pipelineProgress = Math.round((completedLayers / totalLayers) * 100);
-
-      // Append layer completion to project memory (non-fatal)
-      appendProjectMemory(projectDir, layerDef.layer, layerDef.type, result.summary).catch(() => { /* non-fatal */ });
-
-      // Persist progress and currentLayer in DB
+      // Update progress after each batch
+      const pipelineProgress = Math.round((completedLayerNums.size / totalLayers) * 100);
+      const lastLayer = batch[batch.length - 1];
       await prisma.project.update({
         where: { id: projectId },
-        data: { progress: pipelineProgress, currentLayer: layerDef.layer },
+        data: { progress: pipelineProgress, currentLayer: lastLayer.layer },
       });
-
-      emitEvent(buildEvent('agent:completed', projectId, {
-        agentType: layerDef.type,
-        layer: layerDef.layer,
-        progress: pipelineProgress,
-        tokensUsed: result.tokensInput + result.tokensOutput,
-        filesCount: result.filesCreated.length,
-      }));
     }
 
     // All layers done
@@ -348,4 +251,101 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
     emitEvent(buildEvent('project:error', projectId, { message }));
     throw err;
   }
+}
+
+interface RunLayerContext {
+  projectId: string;
+  projectDir: string;
+  sharedSkills: string[];
+}
+
+/**
+ * @description Runs a single agent layer end-to-end: upsert agent record, build prompts,
+ * execute runAgent, track files, append memory, emit progress.
+ */
+async function runLayer(layerDef: LayerNode, ctx: RunLayerContext): Promise<void> {
+  const { projectId, projectDir, sharedSkills } = ctx;
+
+  // Get or create agent record
+  const agent = await prisma.agent.upsert({
+    where: { uq_agents_project_type: { projectId, type: layerDef.type } },
+    create: {
+      projectId,
+      type: layerDef.type,
+      layer: layerDef.layer,
+      status: 'running',
+      startedAt: new Date(),
+    },
+    update: {
+      status: 'running',
+      progress: 0,
+      error: null,
+      startedAt: new Date(),
+      completedAt: null,
+    },
+  });
+
+  // Read skill prompts and compose with shared skills
+  const agentSystemMd = await readSkillFile(layerDef.systemFile);
+  const systemPrompt = composeSystemPrompt(sharedSkills, agentSystemMd);
+  const taskTemplate = await readSkillFile(layerDef.taskFile);
+
+  // Build task prompt with context from prior layers
+  const taskPrompt = await buildTaskPrompt({
+    projectId,
+    projectDir,
+    currentLayer: layerDef.layer,
+    taskTemplate,
+  });
+
+  // Run the agent
+  const result = await runAgent({
+    agentId: agent.id,
+    projectId,
+    agentType: layerDef.type,
+    layer: layerDef.layer,
+    systemPrompt,
+    taskPrompt,
+    projectDir,
+  });
+
+  // Track generated files in DB
+  if (result.filesCreated.length > 0) {
+    await Promise.allSettled(
+      result.filesCreated.map(async (filePath) => {
+        const absPath = path.join(projectDir, filePath);
+        let size = 0;
+        try {
+          const stat = await fs.stat(absPath);
+          size = stat.size;
+        } catch { /* file may have been removed */ }
+
+        await prisma.generatedFile.upsert({
+          where: { uq_generated_files_project_path: { projectId, path: filePath } },
+          create: {
+            projectId,
+            agentId: agent.id,
+            name: path.basename(filePath),
+            path: filePath,
+            sizeBytes: size,
+            layer: layerDef.layer,
+          },
+          update: {
+            agentId: agent.id,
+            sizeBytes: size,
+          },
+        }).catch(() => { /* non-fatal */ });
+      }),
+    );
+  }
+
+  // Append layer completion to project memory (non-fatal)
+  appendProjectMemory(projectDir, layerDef.layer, layerDef.type, result.summary).catch(() => { /* non-fatal */ });
+
+  emitEvent(buildEvent('agent:completed', projectId, {
+    agentType: layerDef.type,
+    layer: layerDef.layer,
+    tokensUsed: result.tokensInput + result.tokensOutput,
+    filesCount: result.filesCreated.length,
+  }));
 }
