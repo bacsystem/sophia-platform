@@ -291,10 +291,10 @@ Phase 6 (Pipeline Resilience) ← Phase 4 needed for resume verification
 - Sections: RED-GREEN-REFACTOR cycle, when to write tests, test file structure, naming conventions
 - Under 1000 tokens
 
-- [ ] Create `skills/_shared/test-driven-development.md` with TDD methodology
-- [ ] Include: cycle explanation, file naming (`*.test.ts` / `*.spec.ts`), describe/it structure, arrange-act-assert
-- [ ] Verify total `_shared/*.md` stays under 4000 tokens
-- [ ] Commit: `feat(M10-T014): create TDD shared skill`
+- [X] Create `skills/_shared/test-driven-development.md` with TDD methodology
+- [X] Include: cycle explanation, file naming (`*.test.ts` / `*.spec.ts`), describe/it structure, arrange-act-assert
+- [X] Verify total `_shared/*.md` stays under 4000 tokens
+- [X] Commit: `feat(M10-T014): create TDD shared skill`
 
 ### Task 15: Inject TDD skill selectively in orchestrator
 
@@ -305,12 +305,12 @@ Phase 6 (Pipeline Resilience) ← Phase 4 needed for resume verification
 - TDD skill injected only for backend-agent (layer 2) and frontend-agent (layer 3)
 - `composeSystemPrompt()` accepts optional extra skills per agent type
 
-- [ ] Write failing test: `composeSystemPrompt()` for backend-agent includes TDD skill
-- [ ] Write failing test: `composeSystemPrompt()` for dba-agent does NOT include TDD skill
-- [ ] Modify `composeSystemPrompt()` to accept `extraSkills?: string[]` parameter
-- [ ] In `runLayer()`, pass TDD skill for layers 2 and 3 only
-- [ ] Run tests — verify GREEN
-- [ ] Commit: `feat(M10-T015): inject TDD skill selectively for code agents`
+- [X] Write failing test: `composeSystemPrompt()` for backend-agent includes TDD skill
+- [X] Write failing test: `composeSystemPrompt()` for dba-agent does NOT include TDD skill
+- [X] Modify `composeSystemPrompt()` to accept `extraSkills?: string[]` parameter
+- [X] In `runLayer()`, pass TDD skill for layers 2 and 3 only
+- [X] Run tests — verify GREEN
+- [X] Commit: `feat(M10-T015): inject TDD skill selectively for code agents`
 
 ### Task 16: Update seed-agent to generate test contracts
 
@@ -321,9 +321,9 @@ Phase 6 (Pipeline Resilience) ← Phase 4 needed for resume verification
 - Seed-agent generates `test-contracts.md` alongside factories.ts and test-constants.ts
 - Contracts define expected TypeScript interfaces, function signatures, expected behaviors per entity
 
-- [ ] Add test-contracts.md generation instructions to `skills/seed-agent/system.md`
-- [ ] Define format: `### Entity: [name]` + interfaces + expected CRUD operations + validation rules
-- [ ] Commit: `feat(M10-T016): seed-agent generates test-contracts.md`
+- [X] Add test-contracts.md generation instructions to `skills/seed-agent/system.md`
+- [X] Define format: `### Entity: [name]` + interfaces + expected CRUD operations + validation rules
+- [X] Commit: `feat(M10-T016): seed-agent generates test-contracts.md`
 
 ### Task 17: Inject test contracts into code agents
 
@@ -334,11 +334,11 @@ Phase 6 (Pipeline Resilience) ← Phase 4 needed for resume verification
 - `test-contracts.md` injected into backend-agent (layer 2) and frontend-agent (layer 3)
 - Injected after execution-plan.md, before generated files
 
-- [ ] Write failing test: `buildTaskPrompt()` for layer 2 with test-contracts.md → injected
-- [ ] Write failing test: `buildTaskPrompt()` for layer 4 (QA) → NOT injected
-- [ ] Implement conditional injection for layers 2 and 3
-- [ ] Run tests — verify GREEN
-- [ ] Commit: `feat(M10-T017): inject test-contracts.md into code agent context`
+- [X] Write failing test: `buildTaskPrompt()` for layer 2 with test-contracts.md → injected
+- [X] Write failing test: `buildTaskPrompt()` for layer 4 (QA) → NOT injected
+- [X] Implement conditional injection for layers 2 and 3
+- [X] Run tests — verify GREEN
+- [X] Commit: `feat(M10-T017): inject test-contracts.md into code agent context`
 
 ### Task 18: Tests for TDD enforcement
 
@@ -346,18 +346,18 @@ Phase 6 (Pipeline Resilience) ← Phase 4 needed for resume verification
 - Modify: `apps/api/src/agents/__tests__/orchestrator.test.ts`
 - Modify: `apps/api/src/agents/__tests__/context-builder.test.ts`
 
-- [ ] Test: TDD skill present in composed prompt for backend-agent
-- [ ] Test: TDD skill absent in composed prompt for dba-agent
-- [ ] Test: test-contracts.md injected only for layers 2 and 3
-- [ ] Run `pnpm --filter @sophia/api test`
-- [ ] Commit: `test(M10-T018): TDD enforcement tests`
+- [X] Test: TDD skill present in composed prompt for backend-agent
+- [X] Test: TDD skill absent in composed prompt for dba-agent
+- [X] Test: test-contracts.md injected only for layers 2 and 3
+- [X] Run `pnpm --filter @sophia/api test`
+- [X] Commit: `test(M10-T018): TDD enforcement tests`
 
 **Phase 3 Checkpoint:**
-- [ ] Run `pnpm --filter @sophia/api lint` — zero violations
-- [ ] Run `pnpm --filter @sophia/api build` — zero errors
-- [ ] Run `pnpm --filter @sophia/api test` — all tests pass
-- [ ] Verify: `_shared/*.md` total < 4000 tokens
-- [ ] Verify: TDD skill injected only for backend + frontend agents
+- [X] Run `pnpm --filter @sophia/api lint` — zero violations
+- [X] Run `pnpm --filter @sophia/api build` — zero errors
+- [X] Run `pnpm --filter @sophia/api test` — all tests pass (273/273)
+- [X] Verify: `_shared/*.md` total < 4000 tokens (~3230 tokens)
+- [X] Verify: TDD skill injected only for backend + frontend agents
 
 ---
 
