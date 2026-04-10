@@ -1,3 +1,3 @@
-export * from './types/auth.js';
-export * from './types/projects.js';
-export * from '../constants/file-icons.js';
+export * from './types/auth';
+export * from './types/projects';
+export * from '../constants/file-icons';
