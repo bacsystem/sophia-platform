@@ -111,7 +111,7 @@ export function AgentLogPanel({ projectId, onViewHistory }: AgentLogPanelProps) 
       >
         {displayLogs.length === 0 && (
           <p className="text-[var(--text-tertiary)] text-[10px] text-center py-6" style={{ fontFamily: "var(--font-mono, 'Space Mono', monospace)" }}>
-            No logs available
+            Sin logs disponibles
           </p>
         )}
         {displayLogs.map((log) => (

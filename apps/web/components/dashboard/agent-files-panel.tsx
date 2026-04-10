@@ -19,7 +19,7 @@ import {
   FolderOpen,
 } from 'lucide-react';
 import { useDashboardStore, type GeneratedFile } from '@/hooks/use-dashboard-store';
-import { getFileIcon } from '@sophia/shared/constants/file-icons';
+import { getFileIcon } from '@sophia/shared';
 
 interface AgentFilesPanelProps {
   onFileClick?: (file: GeneratedFile) => void;

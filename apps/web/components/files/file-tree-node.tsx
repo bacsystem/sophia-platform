@@ -15,7 +15,7 @@ import {
   Folder,
   FolderOpen,
 } from 'lucide-react';
-import { getFileIcon as getSharedFileIcon } from '@sophia/shared/constants/file-icons';
+import { getFileIcon as getSharedFileIcon } from '@sophia/shared';
 import type { FileTreeNodeData } from '@/lib/file-tree-builder';
 
 const AGENT_COLORS: Record<string, string> = {
