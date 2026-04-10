@@ -53,7 +53,45 @@ Archivos coherentes con lo que cada agente genera:
 apps/api/prisma/seed.ts                    → Script principal de seed
 apps/api/src/test-utils/factories.ts       → Factories para tests (reutilizable por qa-agent)
 apps/api/src/test-utils/test-constants.ts  → IDs y datos constantes para tests
+test-contracts.md                          → Contratos de test para backend y frontend agents
 ```
+
+## test-contracts.md
+
+Genera un archivo `test-contracts.md` en la raíz del proyecto generado. Este archivo define contratos de testing que backend-agent y frontend-agent deben cumplir.
+
+### Formato obligatorio
+
+```markdown
+# Test Contracts
+
+## Entity: [NombreEntidad]
+
+### Expected interfaces
+- `Create[Entidad]Input` — campos requeridos y opcionales
+- `Update[Entidad]Input` — campos editables (todos opcionales)
+- `[Entidad]Response` — shape del DTO de respuesta
+
+### CRUD operations
+- `POST /api/[recurso]` → 201, validates required fields, rejects duplicates
+- `GET /api/[recurso]` → 200, paginated with `{ data, meta }`
+- `GET /api/[recurso]/:id` → 200 | 404
+- `PUT /api/[recurso]/:id` → 200 | 404 | 403 (ownership)
+- `DELETE /api/[recurso]/:id` → 204 | 404 | 403
+
+### Validation rules
+- [campo]: required, minLength(N), maxLength(N)
+- [campo]: unique per [scope]
+- [campo]: enum([valores])
+
+### Edge cases
+- Empty string for required fields → 400
+- Unauthorized access → 401
+- Access to other user's resource → 403
+```
+
+Genera una sección `## Entity:` por cada tabla principal del data model (excluye tablas join/pivot).
+
 
 ## Factory pattern
 

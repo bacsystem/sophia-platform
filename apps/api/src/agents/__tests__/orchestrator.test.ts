@@ -317,3 +317,51 @@ describe('orchestrator — plan:generated event (M10-T011/T013)', () => {
     expect(planCalls[0][1]).toBe('proj-plan-evt');
   });
 });
+
+describe('orchestrator — TDD skill injection (M10-T015/T018)', () => {
+  it('composeSystemPrompt includes extraSkills for TDD layers', async () => {
+    const { composeSystemPrompt } = await import('../../agents/orchestrator.js');
+    const sharedSkills = ['# Conventions'];
+    const agentSystem = '# Backend Agent';
+    const tddSkill = '# TDD Methodology\nRED-GREEN-REFACTOR';
+
+    const result = composeSystemPrompt(sharedSkills, agentSystem, [tddSkill]);
+
+    expect(result).toContain('# TDD Methodology');
+    expect(result).toContain('RED-GREEN-REFACTOR');
+    // TDD skill should be between shared skills and agent system
+    expect(result.indexOf('# Conventions')).toBeLessThan(result.indexOf('# TDD Methodology'));
+    expect(result.indexOf('# TDD Methodology')).toBeLessThan(result.indexOf('# Backend Agent'));
+  });
+
+  it('composeSystemPrompt does NOT include TDD for non-TDD agents', async () => {
+    const { composeSystemPrompt } = await import('../../agents/orchestrator.js');
+    const sharedSkills = ['# Conventions'];
+    const agentSystem = '# DBA Agent';
+
+    const result = composeSystemPrompt(sharedSkills, agentSystem);
+
+    expect(result).not.toContain('TDD');
+    expect(result).toContain('# DBA Agent');
+  });
+
+  it('composeSystemPrompt with undefined extraSkills behaves like no extras', async () => {
+    const { composeSystemPrompt } = await import('../../agents/orchestrator.js');
+    const sharedSkills = ['# Conventions'];
+    const agentSystem = '# QA Agent';
+
+    const result = composeSystemPrompt(sharedSkills, agentSystem, undefined);
+
+    expect(result).not.toContain('TDD');
+  });
+
+  it('TDD_LAYERS contains only layers 2 and 3', async () => {
+    const { TDD_LAYERS } = await import('../../agents/orchestrator.js');
+    expect(TDD_LAYERS.has(2)).toBe(true);
+    expect(TDD_LAYERS.has(3)).toBe(true);
+    expect(TDD_LAYERS.has(0)).toBe(false);
+    expect(TDD_LAYERS.has(1)).toBe(false);
+    expect(TDD_LAYERS.has(4)).toBe(false);
+    expect(TDD_LAYERS.has(7)).toBe(false);
+  });
+});

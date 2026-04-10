@@ -17,7 +17,7 @@
 | 008 System Fixes | `008-system-wide-fixes` | 25/25 | v0.8.0 | ✅ Completo |
 | M9 Improvements | `009-m9-improvements` | 70/70 | v0.9.0 | ✅ Completo |
 
-**Tests:** 160/160 passing ✅ | **API build:** ✅ | **Web build:** ✅ (11 páginas)
+**Tests:** 254/254 passing ✅ | **API build:** ✅ | **Web build:** ✅ (11 páginas)
 **Próximo módulo:** Definir con el usuario antes de iniciar.
 
 ---

@@ -167,9 +167,10 @@ const PROJECTS_BASE_DIR = path.resolve(
  * before the agent-specific system.md content.
  * Order: conventions → anti-patterns → output-format → agent system.md
  */
-export function composeSystemPrompt(sharedSkills: string[], agentSystemMd: string): string {
-  if (sharedSkills.length === 0) return agentSystemMd;
-  return [...sharedSkills, agentSystemMd].join('\n\n---\n\n');
+export function composeSystemPrompt(sharedSkills: string[], agentSystemMd: string, extraSkills?: string[]): string {
+  const allSkills = [...sharedSkills, ...(extraSkills ?? [])];
+  if (allSkills.length === 0) return agentSystemMd;
+  return [...allSkills, agentSystemMd].join('\n\n---\n\n');
 }
 
 /**
@@ -180,6 +181,16 @@ export function composeSystemPrompt(sharedSkills: string[], agentSystemMd: strin
 export async function loadSharedSkills(): Promise<string[]> {
   const sharedFiles = ['conventions.md', 'anti-patterns.md', 'output-format.md'];
   return Promise.all(sharedFiles.map((f) => readSkillFile(`_shared/${f}`)));
+}
+
+/** TDD skill layers: backend-agent (2) and frontend-agent (3) */
+export const TDD_LAYERS = new Set([2, 3]);
+
+/**
+ * @description Loads the TDD shared skill. Called once per pipeline run.
+ */
+export async function loadTddSkill(): Promise<string> {
+  return readSkillFile('_shared/test-driven-development.md');
 }
 
 const MAX_MEMORY_CHARS = 20_000; // ≈ 5000 tokens at 4 chars/token
@@ -306,6 +317,7 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
 
   // Load shared skills once for the entire pipeline (not per layer)
   const sharedSkills = await loadSharedSkills();
+  const tddSkill = await loadTddSkill();
 
   // Build set of already-completed layers for retry support
   const completedAgents = await prisma.agent.findMany({
@@ -377,6 +389,7 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
               projectId,
               projectDir,
               sharedSkills,
+              tddSkill,
               completedLayers: new Set(completedLayerNums),
               batchSignal: batchController.signal,
             });
@@ -446,6 +459,8 @@ interface RunLayerContext {
   projectId: string;
   projectDir: string;
   sharedSkills: string[];
+  /** TDD shared skill content — injected for layers in TDD_LAYERS */
+  tddSkill: string;
   /** Layers completed before this batch started — passed to context-builder for parallel-safe injection */
   completedLayers: Set<number>;
   /** Abort signal from the batch AbortController — fired when a sibling parallel agent fails */
@@ -457,7 +472,7 @@ interface RunLayerContext {
  * execute runAgent, track files, append memory, emit progress.
  */
 async function runLayer(layerDef: LayerNode, ctx: RunLayerContext): Promise<void> {
-  const { projectId, projectDir, sharedSkills, completedLayers, batchSignal } = ctx;
+  const { projectId, projectDir, sharedSkills, tddSkill, completedLayers, batchSignal } = ctx;
 
   // Get or create agent record
   const agent = await prisma.agent.upsert({
@@ -480,7 +495,8 @@ async function runLayer(layerDef: LayerNode, ctx: RunLayerContext): Promise<void
 
   // Read skill prompts and compose with shared skills
   const agentSystemMd = await readSkillFile(layerDef.systemFile);
-  const systemPrompt = composeSystemPrompt(sharedSkills, agentSystemMd);
+  const extraSkills = TDD_LAYERS.has(layerDef.layer) ? [tddSkill] : undefined;
+  const systemPrompt = composeSystemPrompt(sharedSkills, agentSystemMd, extraSkills);
   const taskTemplate = await readSkillFile(layerDef.taskFile);
 
   // Build task prompt with context from prior layers

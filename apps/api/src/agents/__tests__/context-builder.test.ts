@@ -436,3 +436,131 @@ describe('context-builder — execution-plan injection (M10-T010)', () => {
     expect(memoryIdx).toBeGreaterThan(planIdx);
   });
 });
+
+describe('context-builder — test-contracts injection (M10-T017/T018)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockFindMany.mockResolvedValue([]);
+    mockCount.mockResolvedValue(0);
+  });
+
+  it('injects test-contracts.md for layer 2 (backend-agent)', async () => {
+    const fsMod = await import('node:fs/promises');
+    (fsMod.default.readFile as ReturnType<typeof vi.fn>).mockImplementation((p: unknown) => {
+      const filePath = String(p);
+      if (filePath.includes('spec.md')) return Promise.resolve('# Spec');
+      if (filePath.endsWith('test-contracts.md')) return Promise.resolve('## Entity: User\n### CRUD operations\nPOST /api/users');
+      if (filePath.includes('project_memory.md')) return Promise.reject(new Error('ENOENT'));
+      return Promise.reject(new Error('ENOENT'));
+    });
+
+    const { buildTaskPrompt } = await import('../../agents/context-builder.js');
+    const result = await buildTaskPrompt({
+      projectId: 'p1',
+      projectDir: '/proj',
+      completedLayers: new Set([0, 1]),
+      taskTemplate: 'Spec: {{SPEC}}\nFiles: {{FILES_LIST}}',
+      currentLayer: 2,
+    });
+
+    expect(result).toContain('Test Contracts');
+    expect(result).toContain('Entity: User');
+    expect(result).toContain('POST /api/users');
+  });
+
+  it('injects test-contracts.md for layer 3 (frontend-agent)', async () => {
+    const fsMod = await import('node:fs/promises');
+    (fsMod.default.readFile as ReturnType<typeof vi.fn>).mockImplementation((p: unknown) => {
+      const filePath = String(p);
+      if (filePath.includes('spec.md')) return Promise.resolve('# Spec');
+      if (filePath.endsWith('test-contracts.md')) return Promise.resolve('## Entity: Project\nExpected UI');
+      if (filePath.includes('project_memory.md')) return Promise.reject(new Error('ENOENT'));
+      return Promise.reject(new Error('ENOENT'));
+    });
+
+    const { buildTaskPrompt } = await import('../../agents/context-builder.js');
+    const result = await buildTaskPrompt({
+      projectId: 'p1',
+      projectDir: '/proj',
+      completedLayers: new Set([0, 1, 2]),
+      taskTemplate: 'Spec: {{SPEC}}\nFiles: {{FILES_LIST}}',
+      currentLayer: 3,
+    });
+
+    expect(result).toContain('Test Contracts');
+    expect(result).toContain('Entity: Project');
+  });
+
+  it('does NOT inject test-contracts.md for layer 4 (QA agent)', async () => {
+    const fsMod = await import('node:fs/promises');
+    (fsMod.default.readFile as ReturnType<typeof vi.fn>).mockImplementation((p: unknown) => {
+      const filePath = String(p);
+      if (filePath.includes('spec.md')) return Promise.resolve('# Spec');
+      if (filePath.endsWith('test-contracts.md')) return Promise.resolve('## Entity: User\nShould not appear');
+      if (filePath.includes('project_memory.md')) return Promise.reject(new Error('ENOENT'));
+      return Promise.reject(new Error('ENOENT'));
+    });
+
+    const { buildTaskPrompt } = await import('../../agents/context-builder.js');
+    const result = await buildTaskPrompt({
+      projectId: 'p1',
+      projectDir: '/proj',
+      completedLayers: new Set([0, 1, 2, 3]),
+      taskTemplate: 'Spec: {{SPEC}}\nFiles: {{FILES_LIST}}',
+      currentLayer: 4,
+    });
+
+    expect(result).not.toContain('Test Contracts');
+    expect(result).not.toContain('Should not appear');
+  });
+
+  it('handles missing test-contracts.md gracefully', async () => {
+    const fsMod = await import('node:fs/promises');
+    (fsMod.default.readFile as ReturnType<typeof vi.fn>).mockImplementation((p: unknown) => {
+      const filePath = String(p);
+      if (filePath.includes('spec.md')) return Promise.resolve('# Spec');
+      return Promise.reject(new Error('ENOENT'));
+    });
+
+    const { buildTaskPrompt } = await import('../../agents/context-builder.js');
+    const result = await buildTaskPrompt({
+      projectId: 'p1',
+      projectDir: '/proj',
+      completedLayers: new Set([0, 1]),
+      taskTemplate: 'Spec: {{SPEC}}\nFiles: {{FILES_LIST}}',
+      currentLayer: 2,
+    });
+
+    expect(result).not.toContain('Test Contracts');
+  });
+
+  it('injects test-contracts after execution-plan and before memory', async () => {
+    const fsMod = await import('node:fs/promises');
+    (fsMod.default.readFile as ReturnType<typeof vi.fn>).mockImplementation((p: unknown) => {
+      const filePath = String(p);
+      if (filePath.includes('spec.md')) return Promise.resolve('# Spec');
+      if (filePath.endsWith('plan/execution-plan.md')) return Promise.resolve('PLAN_HERE');
+      if (filePath.endsWith('test-contracts.md')) return Promise.resolve('CONTRACTS_HERE');
+      if (filePath.includes('project_memory.md')) return Promise.resolve('MEMORY_HERE');
+      return Promise.reject(new Error('ENOENT'));
+    });
+
+    const { buildTaskPrompt } = await import('../../agents/context-builder.js');
+    const result = await buildTaskPrompt({
+      projectId: 'p1',
+      projectDir: '/proj',
+      completedLayers: new Set([0, 1]),
+      taskTemplate: 'Spec: {{SPEC}}\nFiles: {{FILES_LIST}}',
+      currentLayer: 2,
+    });
+
+    const planIdx = result.indexOf('PLAN_HERE');
+    const contractsIdx = result.indexOf('CONTRACTS_HERE');
+    const memoryIdx = result.indexOf('MEMORY_HERE');
+    expect(planIdx).toBeGreaterThan(-1);
+    expect(contractsIdx).toBeGreaterThan(-1);
+    expect(memoryIdx).toBeGreaterThan(-1);
+    expect(contractsIdx).toBeGreaterThan(planIdx);
+    expect(memoryIdx).toBeGreaterThan(contractsIdx);
+  });
+});
