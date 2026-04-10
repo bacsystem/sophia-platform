@@ -29,6 +29,7 @@ vi.mock('../../lib/prisma.js', () => ({
     },
     generatedFile: { upsert: vi.fn().mockResolvedValue({}), findMany: vi.fn().mockResolvedValue([]) },
     agentLog: { create: vi.fn().mockResolvedValue({}) },
+    agentMessage: { create: vi.fn().mockResolvedValue({}), findMany: vi.fn().mockResolvedValue([]) },
     projectSpec: { findFirst: vi.fn().mockResolvedValue({ specDoc: '# Test spec' }) },
   },
 }));

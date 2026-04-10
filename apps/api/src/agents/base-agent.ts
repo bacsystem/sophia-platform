@@ -69,6 +69,9 @@ export async function runAgent(config: AgentRunConfig): Promise<AgentRunResult> 
     totalInput += response.usage.input_tokens;
     totalOutput += response.usage.output_tokens;
 
+    // Persist assistant message (fire-and-forget — non-fatal)
+    void persistMessage(agentId, projectId, turns, 'assistant', response.content, response.usage.output_tokens);
+
     // Collect text content for logging
     const textContent = response.content
       .filter((b) => b.type === 'text')
@@ -131,6 +134,9 @@ export async function runAgent(config: AgentRunConfig): Promise<AgentRunResult> 
     }
 
     messages.push({ role: 'user', content: toolResults });
+
+    // Persist user tool-result message (fire-and-forget — non-fatal)
+    void persistMessage(agentId, projectId, turns, 'user', toolResults, 0);
 
     if (done) break;
   }
@@ -202,3 +208,40 @@ async function callWithBackoff<T>(fn: () => Promise<T>): Promise<T> {
   // Unreachable — TypeScript needs this
   throw new Error('callWithBackoff: all retries exhausted');
 }
+
+/**
+ * @description Persists a single conversation message to agent_messages table.
+ * Fire-and-forget: failures are silently swallowed to never interrupt the agent.
+ */
+async function persistMessage(
+  agentId: string,
+  projectId: string,
+  turn: number,
+  role: 'user' | 'assistant',
+  content: unknown,
+  tokens: number,
+): Promise<void> {
+  try {
+    await prisma.agentMessage.create({
+      data: { agentId, projectId, turn, role, content: content as import('@prisma/client').Prisma.InputJsonValue, tokens },
+    });
+  } catch {
+    // Non-fatal — message persistence must not interrupt the agent
+  }
+}
+
+/**
+ * @description Reconstructs the MessageParam conversation history from the agent_messages table.
+ * Used on crash recovery to resume from the last persisted message instead of starting fresh.
+ */
+export async function reconstructMessages(agentId: string): Promise<MessageParam[]> {
+  const rows = await prisma.agentMessage.findMany({
+    where: { agentId },
+    orderBy: { turn: 'asc' },
+    select: { role: true, content: true, turn: true },
+  });
+  // Also sort client-side as a defensive measure
+  rows.sort((a, b) => a.turn - b.turn);
+  return rows.map((r) => ({ role: r.role as 'user' | 'assistant', content: r.content as MessageParam['content'] }));
+}
+
