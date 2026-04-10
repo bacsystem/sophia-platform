@@ -83,6 +83,18 @@ async function readProjectMemory(projectDir: string): Promise<string> {
   }
 }
 
+/**
+ * @description Reads a spec artifact (ambiguities.md, brainstorm.md) from the spec directory.
+ * Returns empty string if file doesn't exist (e.g. pipeline hasn't reached spec-agent yet).
+ */
+async function readSpecArtifact(projectDir: string, filename: string): Promise<string> {
+  try {
+    return await fs.readFile(path.join(projectDir, 'spec', filename), 'utf8');
+  } catch {
+    return '';
+  }
+}
+
 interface ContextOptions {
   projectId: string;
   projectDir: string;
@@ -110,7 +122,20 @@ export async function buildTaskPrompt(opts: ContextOptions): Promise<string> {
     ? `\n\n## Project Memory (decisiones y patrones acumulados)\n${projectMemory}`
     : '';
 
-  // 1.6. For integration agent (L7), inject criteriaMap + test-mapping.json if present
+  // 1.6. Read spec artifacts (ambiguities.md, brainstorm.md) for layers >= 1
+  let specArtifactsSection = '';
+  if (currentLayer !== undefined && currentLayer >= 1) {
+    const ambiguities = await readSpecArtifact(projectDir, 'ambiguities.md');
+    const brainstorm = await readSpecArtifact(projectDir, 'brainstorm.md');
+    if (ambiguities) {
+      specArtifactsSection += `\n\n## Ambiguities (supuestos del spec-agent)\n${ambiguities}`;
+    }
+    if (brainstorm) {
+      specArtifactsSection += `\n\n## Brainstorm (decisiones arquitectónicas)\n${brainstorm}`;
+    }
+  }
+
+  // 1.7. For integration agent (L7), inject criteriaMap + test-mapping.json if present
   let criteriaMapSection = '';
   let testMappingSection = '';
   if (currentLayer === 7) {
@@ -177,6 +202,6 @@ export async function buildTaskPrompt(opts: ContextOptions): Promise<string> {
   }
 
   return taskTemplate
-    .replace('{{SPEC}}', specContent + memorySection + criteriaMapSection + testMappingSection)
+    .replace('{{SPEC}}', specContent + specArtifactsSection + memorySection + criteriaMapSection + testMappingSection)
     .replace('{{FILES_LIST}}', filesContext || '(sin archivos previos)');
 }
