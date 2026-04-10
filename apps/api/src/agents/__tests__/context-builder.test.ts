@@ -65,10 +65,9 @@ describe('context-builder — file summarization (T20)', () => {
     const result = await buildTaskPrompt({
       projectId: 'p1',
       projectDir: '/proj',
-      currentLayer: 2,
+      completedLayers: new Set([1]),
       taskTemplate: 'Spec: {{SPEC}}\nFiles: {{FILES_LIST}}',
     });
-
     // Should contain summary indicator
     expect(result).toContain('large-file.ts');
     // Should NOT contain all 200 lines (it's summarized)
@@ -98,7 +97,7 @@ describe('context-builder — project_memory injection (T17/T21)', () => {
     const result = await buildTaskPrompt({
       projectId: 'p1',
       projectDir: '/proj',
-      currentLayer: 2,
+      completedLayers: new Set([1]),
       taskTemplate: 'Spec: {{SPEC}}\nFiles: {{FILES_LIST}}',
     });
 
@@ -118,11 +117,43 @@ describe('context-builder — project_memory injection (T17/T21)', () => {
     const result = await buildTaskPrompt({
       projectId: 'p1',
       projectDir: '/proj',
-      currentLayer: 1,
+      completedLayers: new Set([]),
       taskTemplate: 'Spec: {{SPEC}}\nFiles: {{FILES_LIST}}',
     });
 
     expect(result).not.toContain('Project Memory');
+  });
+});
+
+describe('context-builder — parallel-safe injection (T30)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockFindMany.mockResolvedValue([]);
+    mockCount.mockResolvedValue(0);
+  });
+
+  it('queries using completedLayers set (in) for parallel-safe injection', async () => {
+    const fsMod = await import('node:fs/promises');
+    (fsMod.default.readFile as ReturnType<typeof vi.fn>).mockImplementation((p: unknown) => {
+      if (String(p).includes('spec.md')) return Promise.resolve('# Spec');
+      return Promise.reject(new Error('ENOENT'));
+    });
+
+    const { buildTaskPrompt } = await import('../../agents/context-builder.js');
+    await buildTaskPrompt({
+      projectId: 'p1',
+      projectDir: '/proj',
+      completedLayers: new Set([1, 1.5, 2, 3]),
+      taskTemplate: '{{SPEC}}\n{{FILES_LIST}}',
+    });
+
+    expect(mockFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          layer: { in: [1, 1.5, 2, 3] },
+        }),
+      }),
+    );
   });
 });
 
@@ -155,7 +186,7 @@ describe('context-builder — token budget (T20)', () => {
     const result = await buildTaskPrompt({
       projectId: 'p1',
       projectDir: '/proj',
-      currentLayer: 3,
+      completedLayers: new Set([1, 1.5, 2]),
       taskTemplate: '{{SPEC}}\n{{FILES_LIST}}',
     });
 

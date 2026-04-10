@@ -217,6 +217,7 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
         projectId,
         projectDir,
         sharedSkills,
+        completedLayers: new Set(completedLayerNums),
       })));
 
       // Mark all batch layers as completed
@@ -257,6 +258,8 @@ interface RunLayerContext {
   projectId: string;
   projectDir: string;
   sharedSkills: string[];
+  /** Layers completed before this batch started — passed to context-builder for parallel-safe injection */
+  completedLayers: Set<number>;
 }
 
 /**
@@ -264,7 +267,7 @@ interface RunLayerContext {
  * execute runAgent, track files, append memory, emit progress.
  */
 async function runLayer(layerDef: LayerNode, ctx: RunLayerContext): Promise<void> {
-  const { projectId, projectDir, sharedSkills } = ctx;
+  const { projectId, projectDir, sharedSkills, completedLayers } = ctx;
 
   // Get or create agent record
   const agent = await prisma.agent.upsert({
@@ -294,7 +297,7 @@ async function runLayer(layerDef: LayerNode, ctx: RunLayerContext): Promise<void
   const taskPrompt = await buildTaskPrompt({
     projectId,
     projectDir,
-    currentLayer: layerDef.layer,
+    completedLayers,
     taskTemplate,
   });
 

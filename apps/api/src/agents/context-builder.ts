@@ -85,8 +85,8 @@ async function readProjectMemory(projectDir: string): Promise<string> {
 interface ContextOptions {
   projectId: string;
   projectDir: string;
-  /** Current layer number — files from layers < currentLayer are included in context */
-  currentLayer: number;
+  /** Set of layer numbers that have already completed — only these are injected as context */
+  completedLayers: Set<number>;
   /** Skill task prompt template (will have {{FILES_LIST}} and {{SPEC}} replaced) */
   taskTemplate: string;
 }
@@ -96,7 +96,7 @@ interface ContextOptions {
  * a summary of previously generated files from earlier layers.
  */
 export async function buildTaskPrompt(opts: ContextOptions): Promise<string> {
-  const { projectId, projectDir, currentLayer, taskTemplate } = opts;
+  const { projectId, projectDir, completedLayers, taskTemplate } = opts;
 
   // 1. Read spec.md
   const specContent = await readSpecMd(projectDir);
@@ -109,7 +109,7 @@ export async function buildTaskPrompt(opts: ContextOptions): Promise<string> {
 
   // 2. Fetch all previously generated files (no count limit — budget controls inclusion)
   const priorFiles = await prisma.generatedFile.findMany({
-    where: { projectId, layer: { lte: currentLayer } },
+    where: { projectId, layer: { in: [...completedLayers] } },
     orderBy: [{ layer: 'desc' }, { sizeBytes: 'desc' }],
     select: { path: true, sizeBytes: true, layer: true },
   });
@@ -150,7 +150,7 @@ export async function buildTaskPrompt(opts: ContextOptions): Promise<string> {
     }
 
     filesContext = parts.join('');
-  } else if (currentLayer > 1) {
+  } else if (completedLayers.size > 0) {
     // List files from filesystem as fallback
     const allFiles = await listAllFiles(projectDir, projectDir);
     if (allFiles.length > 0) {
