@@ -89,6 +89,8 @@ interface ContextOptions {
   completedLayers: Set<number>;
   /** Skill task prompt template (will have {{FILES_LIST}} and {{SPEC}} replaced) */
   taskTemplate: string;
+  /** Current layer number — used to inject layer-specific context (e.g. test-mapping.json for L7) */
+  currentLayer?: number;
 }
 
 /**
@@ -96,7 +98,7 @@ interface ContextOptions {
  * a summary of previously generated files from earlier layers.
  */
 export async function buildTaskPrompt(opts: ContextOptions): Promise<string> {
-  const { projectId, projectDir, completedLayers, taskTemplate } = opts;
+  const { projectId, projectDir, completedLayers, taskTemplate, currentLayer } = opts;
 
   // 1. Read spec.md
   const specContent = await readSpecMd(projectDir);
@@ -106,6 +108,15 @@ export async function buildTaskPrompt(opts: ContextOptions): Promise<string> {
   const memorySection = projectMemory
     ? `\n\n## Project Memory (decisiones y patrones acumulados)\n${projectMemory}`
     : '';
+
+  // 1.6. For integration agent (L7), inject test-mapping.json if present
+  let testMappingSection = '';
+  if (currentLayer === 7) {
+    try {
+      const raw = await fs.readFile(path.join(projectDir, 'test-mapping.json'), 'utf8');
+      testMappingSection = `\n\n## test-mapping.json (generado por QA agent)\n\`\`\`json\n${raw}\n\`\`\``;
+    } catch { /* non-fatal — agent falls back to its own instructions */ }
+  }
 
   // 2. Fetch all previously generated files (no count limit — budget controls inclusion)
   const priorFiles = await prisma.generatedFile.findMany({
@@ -159,6 +170,6 @@ export async function buildTaskPrompt(opts: ContextOptions): Promise<string> {
   }
 
   return taskTemplate
-    .replace('{{SPEC}}', specContent + memorySection)
+    .replace('{{SPEC}}', specContent + memorySection + testMappingSection)
     .replace('{{FILES_LIST}}', filesContext || '(sin archivos previos)');
 }

@@ -37,4 +37,27 @@ Valida la consistencia cross-layer de todo el código generado y genera un repor
 1. Compilar todos los hallazgos
 2. Generar `docs/integration-report.md`
 3. Si faltan tipos compartidos, generar en `packages/shared/src/types/`
-4. `taskComplete` con resumen
+
+### Fase 7 — Certification matrix (OBLIGATORIO)
+1. `readFile` de `test-mapping.json` en la raíz del proyecto
+   - Si no existe, registrar aviso y continuar sin la fase de certificación
+2. Leer la sección de criterios de aceptación del spec (buscar `### HU-XX` con checkboxes `- [ ]`)
+3. Construir la matriz de trazabilidad HU → criterio → test:
+
+```markdown
+# Certification Report
+
+Coverage: X/Y criteria (Z%)
+
+| HU | Criterion | Test | Test File | Status |
+|---|---|---|---|---|
+| HU-14 — Create project | HU-14.CA-01: User can create a project | should create project | src/__tests__/project.test.ts | ✅ COVERED |
+| HU-14 — Create project | HU-14.CA-02: Duplicate names rejected | — | — | ❌ MISSING |
+```
+
+**Reglas de estado:**
+- `✅ COVERED` — testFile en test-mapping.json es no nulo para este criterio
+- `❌ MISSING` — testFile es null o el criterio no aparece en test-mapping.json
+
+4. Generar `docs/certification.md` con la matriz completa
+5. `taskComplete` con resumen incluyendo porcentaje de cobertura

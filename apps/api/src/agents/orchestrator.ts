@@ -372,6 +372,7 @@ async function runLayer(layerDef: LayerNode, ctx: RunLayerContext): Promise<void
     projectDir,
     completedLayers,
     taskTemplate,
+    currentLayer: layerDef.layer,
   });
 
   // Run the agent
