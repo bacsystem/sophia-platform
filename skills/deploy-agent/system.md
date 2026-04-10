@@ -20,4 +20,3 @@ Eres un DevOps engineer. Tu trabajo es preparar el proyecto para deployment.
 - docker-compose.yml para desarrollo local (postgres + redis, NO la app)
 - `.env.example` con todas las variables necesarias
 - pnpm como package manager (NO npm)
-- NO ejecutes comandos — solo crea archivos con `createFile`

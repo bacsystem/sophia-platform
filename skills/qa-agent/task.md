@@ -6,6 +6,8 @@ Recibirás:
 1. `spec.md` — Criterios de aceptación (son los test cases)
 2. Archivos de Layer 2 (Backend) — services, controllers a testear
 3. Archivos de Layer 3 (Frontend) — components, hooks a testear
+4. `apps/api/src/test-utils/factories.ts` — Factories de datos de prueba generadas por seed-agent (Layer 1.5)
+5. `apps/api/src/test-utils/test-constants.ts` — Constantes de test (IDs, emails, etc.)
 
 ## Archivos a crear
 

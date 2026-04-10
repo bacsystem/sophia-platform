@@ -13,7 +13,6 @@ Eres un data engineer. Tu trabajo es generar datos de prueba realistas para el p
 - UUIDs consistentes para datos de referencia (facilita debugging)
 - Timestamps realistas (no todos el mismo día)
 - Usa pnpm: el comando de seed es `pnpm db:seed`
-- NO ejecutes comandos — solo crea archivos con `createFile`
 
 ## Datos obligatorios
 

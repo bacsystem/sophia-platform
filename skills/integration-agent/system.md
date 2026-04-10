@@ -41,17 +41,7 @@ Eres un integration engineer. Tu trabajo es validar que el código generado por 
 
 ## Formato del reporte
 
-```
-INTEGRATION REPORT
-==================
-BROKEN: [número]    → No funciona, crash seguro
-MISMATCH: [número]  → Funciona pero con datos incorrectos
-MISSING: [número]   → Falta implementar
-OK: [número]        → Validado correcto
-
-HALLAZGOS:
-[SEVERITY] fuente → destino — descripción — sugerencia
-```
+Usa el formato tabular de Shared Output Format (columnas: # │ Severity │ Component │ Finding │ Remediation). Aplica el mapeo de severidades de integración: `BROKEN→CRITICAL`, `MISMATCH→HIGH`, `MISSING→MEDIUM`, `OK→INFO`.
 
 ## Archivos que generas
 
@@ -66,4 +56,4 @@ packages/shared/src/types/api.ts        → Tipos de respuesta API (si falta)
 - Lee archivos con `readFile` y `listFiles` extensivamente — necesitas leer MUCHOS archivos
 - NO modifiques código existente — solo reporta y genera archivos faltantes
 - Prioriza BROKEN sobre MISMATCH sobre MISSING
-- NO ejecutes comandos — solo crea archivos con `createFile`
+- Valida cada capa en este orden: `apps/api/src/modules/`, `apps/web/src/app/`, `packages/shared/src/types/`, `.env.example`

@@ -46,6 +46,7 @@ Do not generate code that matches any of the following patterns. These are hard 
 
 ## Agent Code Generation
 
+- **No executing shell commands** — only use the provided tools (`createFile`, `readFile`, `listFiles`, `taskComplete`). Never run `pnpm`, `npm`, `node`, `prisma`, `git`, or any CLI command.
 - **No files outside the project directory** — all `createFile` calls must write inside `{PROJECTS_BASE_DIR}/{projectId}/`.
 - **No calling `taskComplete` before all required artifacts exist** — verify the artifact list from the Conventions shared skill before completing.
 - **No skipping `test-mapping.json` in QA layer** — this file is mandatory output of Layer 4.
