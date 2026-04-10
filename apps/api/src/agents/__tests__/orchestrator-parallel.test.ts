@@ -71,11 +71,11 @@ describe('orchestrator — graph-driven parallel execution (T29/T34)', () => {
     });
   });
 
-  it('calls all 9 agents using graph-driven execution', async () => {
+  it('calls all 10 agents using graph-driven execution', async () => {
     const { runPipeline } = await import('../../agents/orchestrator.js');
     await runPipeline('proj-graph-1', 'user-1');
 
-    expect(mockRunAgent).toHaveBeenCalledTimes(9);
+    expect(mockRunAgent).toHaveBeenCalledTimes(10);
   });
 
   it('calls L4 and L4.5 in the same batch (before L5 and L6)', async () => {
@@ -88,7 +88,7 @@ describe('orchestrator — graph-driven parallel execution (T29/T34)', () => {
     const { runPipeline } = await import('../../agents/orchestrator.js');
     await runPipeline('proj-graph-2', 'user-1');
 
-    expect(callLog).toHaveLength(9);
+    expect(callLog).toHaveLength(10);
     expect(callLog).toContain(4);
     expect(callLog).toContain(4.5);
 
@@ -114,9 +114,9 @@ describe('orchestrator — graph-driven parallel execution (T29/T34)', () => {
   });
 
   it('skips completed layers and starts from next ready batch', async () => {
-    // Simulate L1, L1.5, L2, L3 already completed
+    // Simulate L0, L1, L1.5, L2, L3 already completed
     mockAgentFindMany.mockResolvedValue([
-      { layer: 1 }, { layer: 1.5 }, { layer: 2 }, { layer: 3 },
+      { layer: 0 }, { layer: 1 }, { layer: 1.5 }, { layer: 2 }, { layer: 3 },
     ]);
 
     const { runPipeline } = await import('../../agents/orchestrator.js');
@@ -127,9 +127,9 @@ describe('orchestrator — graph-driven parallel execution (T29/T34)', () => {
   });
 
   it('aborts parallel sibling signal when one batch agent fails (T31)', async () => {
-    // Start with L1-L3 already done so we jump straight to L4/L4.5 parallel batch
+    // Start with L0-L3 already done so we jump straight to L4/L4.5 parallel batch
     mockAgentFindMany.mockResolvedValue([
-      { layer: 1 }, { layer: 1.5 }, { layer: 2 }, { layer: 3 },
+      { layer: 0 }, { layer: 1 }, { layer: 1.5 }, { layer: 2 }, { layer: 3 },
     ]);
 
     let l45Signal: AbortSignal | undefined;
@@ -156,9 +156,9 @@ describe('orchestrator — graph-driven parallel execution (T29/T34)', () => {
   });
 
   it('emits agent:completed for both L4 and L4.5 in parallel batch (T32)', async () => {
-    // Start with L1-L3 done to isolate L4/L4.5 batch
+    // Start with L0-L3 done to isolate L4/L4.5 batch
     mockAgentFindMany.mockResolvedValue([
-      { layer: 1 }, { layer: 1.5 }, { layer: 2 }, { layer: 3 },
+      { layer: 0 }, { layer: 1 }, { layer: 1.5 }, { layer: 2 }, { layer: 3 },
     ]);
 
     const { runPipeline } = await import('../../agents/orchestrator.js');
@@ -174,9 +174,9 @@ describe('orchestrator — graph-driven parallel execution (T29/T34)', () => {
   });
 
   it('retry restarts only the failed layer when sibling already completed (T33)', async () => {
-    // Simulate: L1, L1.5, L2, L3, L4 (qa-agent) are done; L4.5 (security) is NOT done (was aborted)
+    // Simulate: L0, L1, L1.5, L2, L3, L4 (qa-agent) are done; L4.5 (security) is NOT done (was aborted)
     mockAgentFindMany.mockResolvedValue([
-      { layer: 1 }, { layer: 1.5 }, { layer: 2 }, { layer: 3 }, { layer: 4 },
+      { layer: 0 }, { layer: 1 }, { layer: 1.5 }, { layer: 2 }, { layer: 3 }, { layer: 4 },
     ]);
 
     const calledLayers: number[] = [];

@@ -11,47 +11,52 @@ import {
 } from '../dependency-graph.js';
 
 describe('dependency-graph — sequential resolution (T28)', () => {
-  it('returns layer 1 (dba-agent) when no layers completed', () => {
+  it('returns layer 0 (planner-agent) when no layers completed', () => {
     const next = getNextLayers(new Set());
+    expect(next.map((n) => n.layer)).toEqual([0]);
+  });
+
+  it('returns layer 1 (dba-agent) after layer 0 is complete', () => {
+    const next = getNextLayers(new Set([0]));
     expect(next.map((n) => n.layer)).toEqual([1]);
   });
 
   it('returns layer 1.5 (seed-agent) after layer 1 is complete', () => {
-    const next = getNextLayers(new Set([1]));
+    const next = getNextLayers(new Set([0, 1]));
     expect(next.map((n) => n.layer)).toEqual([1.5]);
   });
 
   it('returns layer 2 (backend-agent) after layers 1 and 1.5 completed', () => {
-    const next = getNextLayers(new Set([1, 1.5]));
+    const next = getNextLayers(new Set([0, 1, 1.5]));
     expect(next.map((n) => n.layer)).toEqual([2]);
   });
 
   it('returns layer 3 (frontend-agent) after layer 2 completed', () => {
-    const next = getNextLayers(new Set([1, 1.5, 2]));
+    const next = getNextLayers(new Set([0, 1, 1.5, 2]));
     expect(next.map((n) => n.layer)).toEqual([3]);
   });
 });
 
 describe('dependency-graph — parallel resolution (T28)', () => {
   it('returns L4 and L4.5 in parallel when L3 is complete', () => {
-    const next = getNextLayers(new Set([1, 1.5, 2, 3]));
+    const next = getNextLayers(new Set([0, 1, 1.5, 2, 3]));
     const layers = next.map((n) => n.layer).sort();
     expect(layers).toEqual([4, 4.5]);
   });
 
   it('returns L5 and L6 in parallel when L4 and L4.5 are complete', () => {
-    const next = getNextLayers(new Set([1, 1.5, 2, 3, 4, 4.5]));
+    const next = getNextLayers(new Set([0, 1, 1.5, 2, 3, 4, 4.5]));
     const layers = next.map((n) => n.layer).sort();
     expect(layers).toEqual([5, 6]);
   });
 
   it('returns L7 (integration-agent) after L5 and L6 complete', () => {
-    const next = getNextLayers(new Set([1, 1.5, 2, 3, 4, 4.5, 5, 6]));
+    const next = getNextLayers(new Set([0, 1, 1.5, 2, 3, 4, 4.5, 5, 6]));
     expect(next.map((n) => n.layer)).toEqual([7]);
   });
 
   it('returns empty array when all layers completed', () => {
-    const next = getNextLayers(new Set([1, 1.5, 2, 3, 4, 4.5, 5, 6, 7]));
+    const next = getNextLayers(new Set([0, 1, 1.5, 2, 3, 4, 4.5, 5, 6, 7]));
     expect(next).toEqual([]);
   });
 });
@@ -67,14 +72,14 @@ describe('dependency-graph — LayerNode structure (T28)', () => {
     }
   });
 
-  it('has exactly 9 nodes', () => {
-    expect(AGENT_GRAPH).toHaveLength(9);
+  it('has exactly 10 nodes (including planner)', () => {
+    expect(AGENT_GRAPH).toHaveLength(10);
   });
 });
 
 describe('dependency-graph — getNextLayers edge cases (T28)', () => {
   it('does not return already-completed layers', () => {
-    const completed = new Set<number>([1, 1.5, 2, 3, 4]);
+    const completed = new Set<number>([0, 1, 1.5, 2, 3, 4]);
     const next = getNextLayers(completed);
     for (const node of next) {
       expect(completed.has(node.layer)).toBe(false);

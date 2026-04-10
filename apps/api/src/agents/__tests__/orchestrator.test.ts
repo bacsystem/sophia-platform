@@ -96,12 +96,12 @@ describe('orchestrator — runPipeline', () => {
     expect(updateCalls.some((c: unknown[]) => (c[0] as { data: { status: string } }).data.status === 'done')).toBe(true);
   });
 
-  it('runs all 9 layers when no layers are completed', async () => {
+  it('runs all 10 layers (including planner) when no layers are completed', async () => {
     const { runPipeline } = await import('../../agents/orchestrator.js');
     await runPipeline('project-1', 'user-1');
 
-    // runAgent called 9 times (one per layer)
-    expect(runAgent).toHaveBeenCalledTimes(9);
+    // runAgent called 10 times (one per layer including planner at L0)
+    expect(runAgent).toHaveBeenCalledTimes(10);
   });
 
   it('skips completed layers on retry (T031)', async () => {
@@ -158,8 +158,8 @@ describe('orchestrator — runPipeline', () => {
     const { runAgent: runAgent2 } = await import('../../agents/base-agent.js');
     await runPipeline2('project-2', 'user-1');
 
-    // Should only run 7 remaining layers (9 - 2 completed)
-    expect(runAgent2).toHaveBeenCalledTimes(7);
+    // Should only run 8 remaining layers (10 - 2 completed)
+    expect(runAgent2).toHaveBeenCalledTimes(8);
   });
 
   it('sets project to error status when a layer fails', async () => {
