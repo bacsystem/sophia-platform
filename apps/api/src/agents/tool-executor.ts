@@ -56,12 +56,13 @@ async function listFilesRecursive(dir: string, baseDir: string): Promise<string[
 /**
  * @description Executes a Tool Use tool call from Claude.
  * Returns the tool result to send back in the next API call.
- * File metadata is NOT tracked in DB here — the orchestrator does that after completion.
+ * If onFileCheckpoint is provided, it is called immediately after each createFile (non-fatal).
  */
 export async function executeTool(
   toolName: string,
   toolInput: ToolInput,
   projectDir: string,
+  onFileCheckpoint?: (relPath: string, sizeBytes: number) => Promise<void>,
 ): Promise<{ result: ToolResult; done: boolean; summary?: string }> {
   switch (toolName) {
     case 'createFile': {
@@ -80,6 +81,12 @@ export async function executeTool(
       const absPath = safePath(projectDir, relPath);
       await fs.mkdir(path.dirname(absPath), { recursive: true });
       await fs.writeFile(absPath, content, 'utf8');
+
+      // Immediate checkpoint — non-fatal
+      if (onFileCheckpoint) {
+        const sizeBytes = Buffer.byteLength(content, 'utf8');
+        onFileCheckpoint(relPath, sizeBytes).catch(() => { /* non-fatal */ });
+      }
 
       return { result: { type: 'text', text: `File created: ${relPath}` }, done: false };
     }

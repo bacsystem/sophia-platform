@@ -26,6 +26,9 @@ vi.mock('../../lib/prisma.js', () => ({
       create: mockAgentMessageCreate,
       findMany: mockAgentMessageFindMany,
     },
+    generatedFile: {
+      upsert: vi.fn().mockResolvedValue({}),
+    },
   },
 }));
 

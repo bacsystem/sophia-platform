@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
@@ -98,5 +98,37 @@ describe('executeTool — unknown tool', () => {
     await expect(
       executeTool('unknownTool', {}, tmpDir),
     ).rejects.toThrow();
+  });
+});
+
+describe('executeTool — createFile checkpoint (T18)', () => {
+  it('calls onFileCheckpoint immediately after file is written', async () => {
+    const checkpoint = vi.fn().mockResolvedValue(undefined);
+
+    await executeTool('createFile', { path: 'src/schema.sql', content: 'CREATE TABLE t' }, tmpDir, checkpoint);
+
+    expect(checkpoint).toHaveBeenCalledTimes(1);
+    expect(checkpoint).toHaveBeenCalledWith('src/schema.sql', expect.any(Number));
+  });
+
+  it('does NOT call checkpoint for other tools', async () => {
+    const checkpoint = vi.fn().mockResolvedValue(undefined);
+    await fs.writeFile(path.join(tmpDir, 'existing.ts'), 'x', 'utf8');
+
+    await executeTool('readFile', { path: 'existing.ts' }, tmpDir, checkpoint);
+
+    expect(checkpoint).not.toHaveBeenCalled();
+  });
+
+  it('checkpoint failure does not break createFile (non-fatal)', async () => {
+    const checkpoint = vi.fn().mockRejectedValue(new Error('DB down'));
+
+    const result = await executeTool('createFile', { path: 'a.sql', content: 'SELECT 1' }, tmpDir, checkpoint);
+
+    expect(result.result.text).toContain('a.sql');
+    expect(result.done).toBe(false);
+    // File was still created despite checkpoint failure
+    const content = await fs.readFile(path.join(tmpDir, 'a.sql'), 'utf8');
+    expect(content).toBe('SELECT 1');
   });
 });

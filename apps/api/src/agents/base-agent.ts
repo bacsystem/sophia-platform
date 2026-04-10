@@ -105,7 +105,13 @@ export async function runAgent(config: AgentRunConfig): Promise<AgentRunResult> 
       const { id: toolUseId, name, input } = block;
 
       try {
-        const result = await executeTool(name, input as Record<string, string>, projectDir);
+        const result = await executeTool(name, input as Record<string, string>, projectDir, async (relPath, sizeBytes) => {
+          await prisma.generatedFile.upsert({
+            where: { uq_generated_files_project_path: { projectId, path: relPath } },
+            create: { projectId, agentId, name: relPath.split('/').pop() ?? relPath, path: relPath, sizeBytes, layer },
+            update: { agentId, sizeBytes },
+          });
+        });
 
         if (name === 'createFile' && (input as Record<string, string>).path) {
           filesCreated.push((input as Record<string, string>).path);
