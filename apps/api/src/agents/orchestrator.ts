@@ -51,6 +51,46 @@ export async function loadSharedSkills(): Promise<string[]> {
   return Promise.all(sharedFiles.map((f) => readSkillFile(`_shared/${f}`)));
 }
 
+const MAX_MEMORY_CHARS = 20_000; // ≈ 5000 tokens at 4 chars/token
+
+/**
+ * @description Appends a memory section for a completed agent layer to project_memory.md.
+ * Creates the memory directory and file if they don't exist.
+ * Caps the total file at MAX_MEMORY_CHARS by discarding oldest sections first.
+ */
+export async function appendProjectMemory(
+  projectDir: string,
+  layer: number,
+  agentType: string,
+  summary: string,
+): Promise<void> {
+  const memoryDir = path.join(projectDir, 'memory');
+  const memoryFile = path.join(memoryDir, 'project_memory.md');
+
+  await fs.mkdir(memoryDir, { recursive: true });
+
+  let existing = '';
+  try {
+    existing = await fs.readFile(memoryFile, 'utf8');
+  } catch {
+    // File doesn't exist yet — start fresh
+  }
+
+  const section = `\n## Layer ${layer}: ${agentType}\n### Summary\n${summary.trim()}\n`;
+  let combined = existing + section;
+
+  // Cap at MAX_MEMORY_CHARS by removing oldest layer sections
+  if (combined.length > MAX_MEMORY_CHARS) {
+    const sections = combined.split(/\n(?=## Layer )/);
+    while (combined.length > MAX_MEMORY_CHARS && sections.length > 1) {
+      sections.shift(); // remove oldest section
+      combined = sections.join('\n## Layer ');
+    }
+  }
+
+  await fs.writeFile(memoryFile, combined, 'utf8');
+}
+
 /**
  * @description Resolves the absolute project directory for a projectId.
  */
@@ -271,6 +311,9 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
 
       completedLayers++;
       const pipelineProgress = Math.round((completedLayers / totalLayers) * 100);
+
+      // Append layer completion to project memory (non-fatal)
+      appendProjectMemory(projectDir, layerDef.layer, layerDef.type, result.summary).catch(() => { /* non-fatal */ });
 
       // Persist progress and currentLayer in DB
       await prisma.project.update({

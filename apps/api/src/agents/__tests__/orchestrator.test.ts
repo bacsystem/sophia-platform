@@ -61,6 +61,7 @@ vi.mock('node:fs/promises', () => ({
   default: {
     mkdir: vi.fn().mockResolvedValue(undefined),
     readFile: vi.fn().mockResolvedValue('skill prompt content'),
+    writeFile: vi.fn().mockResolvedValue(undefined),
     stat: vi.fn().mockResolvedValue({ size: 100 }),
   },
 }));
@@ -148,6 +149,7 @@ describe('orchestrator — runPipeline', () => {
       default: {
         mkdir: vi.fn().mockResolvedValue(undefined),
         readFile: vi.fn().mockResolvedValue('skill content'),
+        writeFile: vi.fn().mockResolvedValue(undefined),
         stat: vi.fn().mockResolvedValue({ size: 100 }),
       },
     }));
@@ -228,3 +230,61 @@ describe('orchestrator — composeSystemPrompt', () => {
   });
 });
 
+describe('orchestrator — appendProjectMemory', () => {
+  it('creates memory directory and writes layer section', async () => {
+    vi.resetModules();
+    const fsMod = await import('node:fs/promises');
+    const mkdirMock = fsMod.default.mkdir as ReturnType<typeof vi.fn>;
+    const readFileMock = fsMod.default.readFile as ReturnType<typeof vi.fn>;
+    const writeFileMock = fsMod.default.writeFile as ReturnType<typeof vi.fn>;
+
+    // First call: memory file doesn't exist yet
+    readFileMock.mockRejectedValueOnce(new Error('ENOENT'));
+
+    const { appendProjectMemory } = await import('../../agents/orchestrator.js');
+    await appendProjectMemory('/projects/abc', 1, 'dba-agent', 'Schema created.');
+
+    expect(mkdirMock).toHaveBeenCalledWith(expect.stringContaining('memory'), { recursive: true });
+    expect(writeFileMock).toHaveBeenCalledWith(
+      expect.stringContaining('project_memory.md'),
+      expect.stringContaining('## Layer 1: dba-agent'),
+      'utf8',
+    );
+    expect(writeFileMock).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.stringContaining('Schema created.'),
+      'utf8',
+    );
+  });
+
+  it('appends new section when memory file already exists', async () => {
+    vi.resetModules();
+    const fsMod = await import('node:fs/promises');
+    const readFileMock = fsMod.default.readFile as ReturnType<typeof vi.fn>;
+    const writeFileMock = fsMod.default.writeFile as ReturnType<typeof vi.fn>;
+
+    const existing = '\n## Layer 1: dba-agent\n### Summary\nFirst layer.\n';
+    readFileMock.mockImplementation((p: unknown) => {
+      if (String(p).includes('project_memory.md')) return Promise.resolve(existing);
+      return Promise.resolve('skill content');
+    });
+
+    const { appendProjectMemory } = await import('../../agents/orchestrator.js');
+    await appendProjectMemory('/projects/abc', 2, 'seed-agent', 'Seed data created.');
+
+    expect(writeFileMock).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.stringContaining('## Layer 2: seed-agent'),
+      'utf8',
+    );
+    expect(writeFileMock).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.stringContaining('Seed data created.'),
+      'utf8',
+    );
+    // Both sections should be in the written content
+    const writtenContent = (writeFileMock.mock.calls.at(-1) as unknown[])[1] as string;
+    expect(writtenContent).toContain('## Layer 1: dba-agent');
+    expect(writtenContent).toContain('## Layer 2: seed-agent');
+  });
+});
