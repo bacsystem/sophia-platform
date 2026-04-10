@@ -25,6 +25,8 @@ export interface AgentRunConfig {
   systemPrompt: string;
   taskPrompt: string;
   projectDir: string;
+  /** Abort signal from the batch orchestrator — fired when a sibling parallel agent fails */
+  batchSignal?: AbortSignal;
 }
 
 export interface AgentRunResult {
@@ -67,6 +69,16 @@ export async function runAgent(config: AgentRunConfig): Promise<AgentRunResult> 
       });
       emit(projectId, 'project:paused', agentType, layer, 'Agent paused due to shutdown signal');
       return { success: false, summary: 'paused', tokensInput: totalInput, tokensOutput: totalOutput, filesCreated };
+    }
+
+    // Batch abort — sibling parallel agent failed
+    if (config.batchSignal?.aborted) {
+      await prisma.agent.update({
+        where: { id: agentId },
+        data: { status: 'paused' },
+      });
+      emit(projectId, 'project:paused', agentType, layer, 'Agent cancelled: parallel sibling failed');
+      return { success: false, summary: 'cancelled', tokensInput: totalInput, tokensOutput: totalOutput, filesCreated };
     }
 
     turns++;

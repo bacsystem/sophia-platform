@@ -122,4 +122,33 @@ describe('orchestrator — graph-driven parallel execution (T29/T34)', () => {
     // Should only call 5 remaining agents (L4, L4.5, L5, L6, L7)
     expect(mockRunAgent).toHaveBeenCalledTimes(5);
   });
+
+  it('aborts parallel sibling signal when one batch agent fails (T31)', async () => {
+    // Start with L1-L3 already done so we jump straight to L4/L4.5 parallel batch
+    mockAgentFindMany.mockResolvedValue([
+      { layer: 1 }, { layer: 1.5 }, { layer: 2 }, { layer: 3 },
+    ]);
+
+    let l45Signal: AbortSignal | undefined;
+
+    mockRunAgent.mockImplementation(
+      async (opts: { layer: number; batchSignal?: AbortSignal }) => {
+        if (opts.layer === 4) throw new Error('L4 failed');
+        if (opts.layer === 4.5) {
+          l45Signal = opts.batchSignal;
+          // Yield to event loop so L4's failure can abort the controller
+          await new Promise<void>((resolve) => setTimeout(resolve, 0));
+          return { success: true, summary: '', tokensInput: 0, tokensOutput: 0, filesCreated: [] };
+        }
+        return { success: true, summary: '', tokensInput: 0, tokensOutput: 0, filesCreated: [] };
+      },
+    );
+
+    const { runPipeline } = await import('../../agents/orchestrator.js');
+    await expect(runPipeline('proj-abort', 'user-1')).rejects.toThrow('L4 failed');
+
+    // L4.5 should have received batchSignal and it should now be aborted
+    expect(l45Signal).toBeDefined();
+    expect(l45Signal?.aborted).toBe(true);
+  });
 });
