@@ -41,6 +41,18 @@ async function listAllFiles(dir: string, rootDir: string): Promise<string[]> {
   return result;
 }
 
+/**
+ * @description Reads project_memory.md from the memory directory.
+ * Returns empty string if file doesn't exist yet (early pipeline stages).
+ */
+async function readProjectMemory(projectDir: string): Promise<string> {
+  try {
+    return await fs.readFile(path.join(projectDir, 'memory', 'project_memory.md'), 'utf8');
+  } catch {
+    return '';
+  }
+}
+
 interface ContextOptions {
   projectId: string;
   projectDir: string;
@@ -59,6 +71,12 @@ export async function buildTaskPrompt(opts: ContextOptions): Promise<string> {
 
   // 1. Read spec.md
   const specContent = await readSpecMd(projectDir);
+
+  // 1.5. Read project_memory.md (always included — max priority)
+  const projectMemory = await readProjectMemory(projectDir);
+  const memorySection = projectMemory
+    ? `\n\n## Project Memory (decisiones y patrones acumulados)\n${projectMemory}`
+    : '';
 
   // 2. List all previously generated files (layers < currentLayer)
   const priorFiles = await prisma.generatedFile.findMany({
@@ -105,6 +123,6 @@ export async function buildTaskPrompt(opts: ContextOptions): Promise<string> {
   }
 
   return taskTemplate
-    .replace('{{SPEC}}', specContent)
+    .replace('{{SPEC}}', specContent + memorySection)
     .replace('{{FILES_LIST}}', filesContext || '(sin archivos previos)');
 }
