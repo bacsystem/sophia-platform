@@ -155,18 +155,18 @@ Módulos con autenticación agregan `{nombre}.middleware.ts` (hooks de auth/rate
 - Tipos compartidos desde `@sophia/shared`
 - **Lint obligatorio**: ejecutar `pnpm --filter @sophia/web lint` después de cada cambio en `apps/web/`
 
-### Speckit Artifacts per Module
+### Implementation Artifacts per Module
 
-Cada módulo debe tener los siguientes artefactos en `specs/<módulo>/`. Si alguno no existe, **créalo antes de implementar**:
+Cada módulo tiene un plan de implementación en `docs/superpowers/plans/` (driver de ejecución) y documentos de referencia en `specs/<módulo>/`:
 
 ```
-specs/<módulo>/
-├── spec.md              # Requisitos de negocio (obligatorio)
-├── plan.md              # Plan de implementación (obligatorio)
-├── tasks.md             # Checklist de tareas (obligatorio)
+docs/superpowers/plans/
+└── YYYY-MM-DD-<feature-name>.md   # Plan superpowers (driver de implementación)
+
+specs/<módulo>/                     # Referencia de negocio
+├── spec.md              # Requisitos de negocio, HUs, criterios de aceptación
 ├── research.md          # Investigación técnica (decisiones, libs, trade-offs)
 ├── data-model.md        # Modelo de datos (tablas, índices, relaciones, Prisma schema)
-├── quickstart.md        # Guía rápida para empezar a implementar
 └── contracts/
     └── api-spec.json    # Contrato OpenAPI 3.0 de los endpoints del módulo
 ```
@@ -182,11 +182,12 @@ Dentro de cada módulo, el orden de implementación es:
 5. **Validación de rutas** (ver regla abajo)
 6. Documentación
 
-> **Pre-implementación obligatoria**: al iniciar cualquier módulo, feature, o fix que tenga artefactos speckit (`spec.md`, `plan.md`, `tasks.md`):
-> 1. Ejecutar `/speckit.clarify` — responder **todas** las preguntas automáticamente eligiendo la opción recomendada (marcada como `recommended`) sin preguntar al usuario
-> 2. Ejecutar `/speckit.analyze` — análisis de consistencia cross-artefacto
-> 3. **Remediar todos los findings** automáticamente (editar `spec.md`, `tasks.md`, `plan.md` según corresponda) — no preguntar al usuario, aplicar todas las correcciones
-> 4. Solo entonces proceder con la implementación
+> **Pre-implementación obligatoria**: al iniciar cualquier módulo o feature:
+> 1. Leer el plan superpowers correspondiente en `docs/superpowers/plans/`
+> 2. Revisar críticamente — identificar dudas o concerns antes de empezar
+> 3. Usar `superpowers:subagent-driven-development` para ejecutar tareas (dispatch implementer → spec-reviewer → code-quality-reviewer)
+> 4. Usar `superpowers:test-driven-development` — RED-GREEN-REFACTOR obligatorio para todo código nuevo
+> 5. Usar `superpowers:verification-before-completion` al cerrar cada fase — evidencia real antes de claims
 
 > **Lint obligatorio**: ejecutar `pnpm --filter @sophia/web lint` y `pnpm --filter @sophia/api lint` después de cada cambio en `apps/web/` o `apps/api/` respectivamente.
 > **Build obligatorio**: ejecutar `pnpm --filter @sophia/api build` y `pnpm --filter @sophia/web build` para verificar que compila sin errores antes de commit.
@@ -212,9 +213,9 @@ Al completar un módulo, feature, o fix que involucre frontend:
 Reglas para minimizar consumo de contexto al trabajar con agentes IA.
 
 **Al iniciar sesión:**
-1. Lee SOLO `CLAUDE.md` y el `tasks.md` del módulo activo (`specs/<módulo>/tasks.md`)
+1. Lee SOLO `CLAUDE.md` y el plan superpowers del módulo activo (`docs/superpowers/plans/*.md`)
 2. NO leas archivos de código hasta que una tarea específica lo requiera
-3. Identifica la próxima tarea pendiente en `tasks.md`
+3. Identifica la próxima tarea pendiente en el plan
 
 **Al implementar una tarea:**
 1. Lee SOLO los archivos del módulo que vas a tocar (ver Context Map en `docs/context-map.md`)
@@ -234,54 +235,45 @@ Reglas para minimizar consumo de contexto al trabajar con agentes IA.
 
 ---
 
-## Speckit Integration
+## Superpowers Integration
 
-This project also uses `speckit` for spec-driven development. It provides:
+This project uses **Superpowers** (v5.0.7) as the implementation methodology. It provides:
 
-- A `.specify/` directory with scripts, templates, and memory that orchestrate a structured spec → plan → tasks → implement pipeline
-- Claude Code skills (`.claude/skills/speckit-*/SKILL.md`) that power the `/speckit.*` slash commands
-- Integration manifests (`.specify/integrations/`) for Claude and other AI agents
+- 14 skills installed at `~/.copilot/installed-plugins/superpowers-marketplace/superpowers/skills/`
+- Subagent prompt templates (implementer, spec-reviewer, code-quality-reviewer)
+- Agent definition: `agents/code-reviewer.md`
 
-## Speckit Workflow (Primary Feature Pipeline)
+## Superpowers Workflow (Primary Feature Pipeline)
 
-Features move through this ordered sequence — each step gates the next:
+Feature implementation follows this sequence:
 
-1. `/speckit.specify <description>` — Creates a feature branch + `specs/<branch>/spec.md` (business requirements, no implementation details)
-2. `/speckit.clarify` — Refines the spec interactively (max 5 questions); run before planning
-3. `/speckit.plan` — Generates `plan.md`, `research.md`, `data-model.md`, and `contracts/`; runs `.specify/scripts/bash/setup-plan.sh --json`
-4. `/speckit.checklist <domain>` — Creates quality checklists (e.g., `ux.md`, `security.md`) under `specs/<branch>/checklists/`
-5. `/speckit.tasks` — Generates `tasks.md` with dependency-ordered, user-story-grouped tasks
-6. `/speckit.analyze` — Cross-artifact consistency analysis across `spec.md`, `plan.md`, `tasks.md` (read-only)
-7. `/speckit.implement` — Executes tasks from `tasks.md` phase by phase; marks tasks `[X]` as completed
-8. `/speckit.constitution` — Creates/updates the project constitution at `.specify/memory/constitution.md`
-9. `/speckit.taskstoissues` — Converts `tasks.md` tasks into GitHub Issues (only for GitHub remotes)
+1. **Spec** — Create `specs/<branch>/spec.md` with business requirements, HUs, and acceptance criteria
+2. **Plan** — Create implementation plan at `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md` using `superpowers:writing-plans` format (Goal, Architecture, Tech Stack, Task N with TDD steps)
+3. **Execute** — Use `superpowers:subagent-driven-development`: dispatch fresh implementer subagent per task → spec-reviewer → code-quality-reviewer. Each subagent follows `superpowers:test-driven-development` (RED-GREEN-REFACTOR)
+4. **Verify** — Use `superpowers:verification-before-completion` at each phase checkpoint: run lint + build + test with evidence before claiming completion
+5. **Debug** — Use `superpowers:systematic-debugging` when issues arise: root cause investigation → pattern analysis → hypothesis → fix
+6. **Parallel** — Use `superpowers:dispatching-parallel-agents` for independent tasks that can run concurrently
+7. **Finish** — Use `superpowers:finishing-a-development-branch`: verify tests → present options (merge/PR/keep/discard) → cleanup
 
-## Key Scripts
+## Active Superpowers Skills (7/14 used)
 
-All scripts are in `.specify/scripts/bash/` and source `common.sh` for shared path resolution:
-
-- `create-new-feature.sh` — Creates a git branch + `specs/<N>-<short-name>/spec.md`. Branch numbers are auto-detected from existing branches/specs. Supports `--timestamp` for timestamp prefixes instead of sequential numbers.
-- `check-prerequisites.sh` — Validates feature context (current branch → feature dir → required docs). Used by most skills at startup. Flags: `--json`, `--require-tasks`, `--include-tasks`, `--paths-only`.
-- `setup-plan.sh` — Copies the plan template into the feature dir. Called by `/speckit.plan`.
-- `update-agent-context.sh` — Parses `plan.md` and updates agent context files (CLAUDE.md, AGENTS.md, etc.) with tech stack info. Called with agent type: `update-agent-context.sh claude`.
+| Skill | Purpose |
+|-------|---------|
+| `subagent-driven-development` | Primary workflow: 1 subagent/task + 2-stage review (spec + quality) |
+| `test-driven-development` | RED-GREEN-REFACTOR iron law — no code without failing test |
+| `verification-before-completion` | Evidence before claims — run commands, read output, then report |
+| `systematic-debugging` | 4-phase debugging: root cause → pattern → hypothesis → fix |
+| `dispatching-parallel-agents` | Parallel dispatch for independent problem domains |
+| `finishing-a-development-branch` | Branch completion: verify → options → cleanup |
+| `requesting-code-review` | Final code review before PR |
 
 ## Constitution
 
-`.specify/memory/constitution.md` is the project constitution — non-negotiable principles that `/speckit.analyze` enforces. Constitution violations are always CRITICAL severity. To modify it, use `/speckit.constitution`.
+`.specify/memory/constitution.md` is the project constitution — non-negotiable principles that must be enforced. Constitution violations are always CRITICAL severity.
 
 ## Branch Numbering
 
-Branch prefix mode is set in `.specify/init-options.json` under `branch_numbering`:
-- `"sequential"` (default) — `001-feature-name`
-- `"timestamp"` — `20260407-123456-feature-name`
-
-## Integration Context Updates
-
-After `/speckit.plan`, run `.specify/scripts/bash/update-agent-context.sh claude` to regenerate CLAUDE.md with current feature tech stack. The script reads `plan.md` fields (`Language/Version`, `Primary Dependencies`, `Storage`, `Project Type`) and updates the `## Active Technologies` and `## Recent Changes` sections.
-
-## Extension Hooks
-
-All skills check `.specify/extensions.yml` for `hooks.before_<command>` and `hooks.after_<command>` entries. Hooks with `optional: false` execute automatically; `optional: true` hooks are presented to the user for manual invocation.
+Branch prefix mode is sequential: `001-feature-name`, `002-feature-name`, etc. Auto-detected from existing branches/specs.
 
 ---
 
@@ -321,8 +313,7 @@ Reglas:
 | `docs/context-map.md` | Mapa de dependencias entre módulos — qué archivos lee cada módulo | Al agregar dependencias cross-module o nuevos archivos compartidos |
 | `docs/task-tracker.md` | Resumen de progreso global — tareas completadas vs pendientes por módulo | Al completar una fase o sprint |
 | `specs/<módulo>/spec.md` | Versión en header | Al modificar requisitos, endpoints, o modelo de datos |
-| `specs/<módulo>/plan.md` | Constitution Check table | Al cambiar decisiones de arquitectura |
-| `specs/<módulo>/tasks.md` | Checkboxes `[X]` | Inmediatamente al completar cada tarea |
+| `docs/superpowers/plans/*.md` | Checkboxes `[X]` | Inmediatamente al completar cada tarea |
 | `.specify/memory/constitution.md` | Version field | Al enmendar principios (requiere actualizar CLAUDE.md también) |
 | `CHANGELOG.md` | Entradas por módulo | Al cerrar un sprint, completar analyze, o hacer cambios significativos |
 | `docs/system-design.html` | Documento visual de arquitectura (HTML standalone) | Al cambiar capas, agentes, ERD, decisiones técnicas o infraestructura |
@@ -330,7 +321,7 @@ Reglas:
 ### Regla de Actualización
 
 **Al completar cualquier tarea o grupo de tareas:**
-1. Marcar `[X]` en `tasks.md`
+1. Marcar `[X]` en el plan superpowers (`docs/superpowers/plans/*.md`)
 2. Actualizar `docs/task-tracker.md` con el nuevo conteo
 3. Si hubo cambios en spec/plan, incrementar versión y agregar entrada en `CHANGELOG.md`
 4. Si se agregaron dependencias cross-module, actualizar `docs/context-map.md`
