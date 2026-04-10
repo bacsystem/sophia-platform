@@ -64,6 +64,7 @@ sophia-platform/
 | M5 Dashboard | `005-m5-dashboard` | 22/22 | v0.5.0 | feat(M5): dashboard module complete — all 22 tasks done |
 | M6 File Manager | `006-m6-file-manager` | 23/23 | v0.6.0 | feat(M6): file manager complete — all 23 tasks done |
 | M7 Settings | `007-m7-settings` | 26/26 | v0.7.0 | feat(M7): settings module complete — all 26 tasks done |
+| M9 Agent Improvements | `009-m9-improvements` | 70/70 | v0.9.0 | docs(M9): phase 5 polish — CHANGELOG v0.9.0, context-map, task-tracker |
 
 ### Key Commands
 

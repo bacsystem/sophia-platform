@@ -1,6 +1,6 @@
 # Certificaciones — Sophia Platform
 
-Última actualización: 2026-04-09
+Última actualización: 2026-04-10
 
 ---
 
@@ -15,7 +15,8 @@
 | M5 Dashboard | 5 | 62 | 62 | 100% | ✅ CERTIFICADO |
 | M6 File Manager | 3 | 43 | 43 | 100% | ✅ CERTIFICADO |
 | M7 Settings | 3 | 34 | 34 | 100% | ✅ CERTIFICADO |
-| **TOTAL** | **28** | **283** | **283** | **100%** | **✅ 100% certificado** |
+| M9 Agent Improvements | 19 | 104 | 104 | 100% | ✅ CERTIFICADO |
+| **TOTAL** | **47** | **387** | **387** | **100%** | **✅ 100% certificado** |
 
 ---
 
@@ -104,10 +105,43 @@ Fixes aplicados durante certificación:
 
 ---
 
+## M9 — AGENT IMPROVEMENTS
+
+**Estado:** ✅ CERTIFICADO — 104/104 criterios
+**Spec:** `specs/009-m9-improvements/spec.md`
+
+19 HUs certificadas:
+- **HU-29** Grafo de dependencias entre agentes (6 criterios)
+- **HU-30** Ejecución paralela de capas independientes (5 criterios)
+- **HU-31** WebSocket y tracking para capas paralelas (5 criterios)
+- **HU-32** Crear skills compartidas (5 criterios)
+- **HU-33** Composición de prompts con skills compartidas (5 criterios)
+- **HU-34** Estandarización de reportes entre agentes (5 criterios)
+- **HU-35** Referencias cruzadas entre agentes (5 criterios)
+- **HU-36** Persistencia de conversación Claude (6 criterios)
+- **HU-37** Memoria acumulativa de proyecto (5 criterios)
+- **HU-38** Checkpoint granular por archivo (4 criterios)
+- **HU-39** Context window inteligente (5 criterios)
+- **HU-40** Extractor de criterios de aceptación (6 criterios)
+- **HU-41** Mapeo criterio → test por QA-agent (4 criterios)
+- **HU-42** Quality gate de cobertura de criterios (6 criterios)
+- **HU-43** Certification report con trazabilidad (5 criterios)
+- **HU-44** Graceful shutdown del worker (7 criterios)
+- **HU-45** Timeout por llamada individual a Claude API (5 criterios)
+- **HU-46** Thread-safety del Anthropic client para paralelismo (5 criterios)
+- **HU-47** Monitoreo de memoria por agente (7 criterios)
+
+Fixes aplicados durante implementación:
+- Singleton Anthropic client validado como thread-safe (ADR documentado)
+- Quality gate con max 2 re-runs de QA antes de continuar con warning
+- `PARTIAL` status para test-mapping entries con testFile pero sin testName
+
+---
+
 ## VALIDACIÓN GLOBAL
 
 - **Lint**: `pnpm --filter @sophia/web lint` ✅ | `pnpm --filter @sophia/api lint` ✅
-- **Tests**: 16 archivos, 160/160 passing ✅
+- **Tests**: 30 archivos, 254/254 passing ✅
 - **API build** (tsc): ✅
 - **Web build** (next build): ✅ — 11 páginas compiladas
 

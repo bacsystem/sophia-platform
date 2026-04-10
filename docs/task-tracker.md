@@ -18,8 +18,8 @@ Resumen de progreso por módulo. Actualizar al completar cada fase o sprint.
 | 4 | M6 File Manager | HU-23→25 | 23 | 23 | 100% | ✅ Complete |
 | 4 | M7 Settings | HU-26→28 | 26 | 26 | 100% | ✅ Complete |
 | Hotfix | 008 System-wide fixes | — | 25 | 25 | 100% | ✅ Complete |
-| 5–6 | M9 Agent Improvements | HU-29→47 | 52 | 52 | 100% | ✅ Complete |
-| **—** | **TOTAL** | **28+19** | **312** | **312** | **100%** | |
+| 5–6 | M9 Agent Improvements | HU-29→47 | 70 | 70 | 100% | ✅ Complete |
+| **—** | **TOTAL** | **28+19** | **330** | **330** | **100%** | |
 
 ### Leyenda de estados
 
