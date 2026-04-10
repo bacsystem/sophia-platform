@@ -5,6 +5,7 @@ import { executeTool } from './tool-executor.js';
 import type { AgentEventType } from '../websocket/ws.emitter.js';
 import { emitEvent, buildEvent } from '../websocket/ws.emitter.js';
 import prisma from '../lib/prisma.js';
+import { isShuttingDown } from '../lib/shutdown-state.js';
 
 const MODEL = 'claude-opus-4-5';
 const MAX_TOKENS = 8192;
@@ -12,6 +13,7 @@ const TOOL_USE_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes per agent
 const MAX_TURNS = 50; // safety limit
 const MAX_RETRIES = 3; // exponential backoff retries for rate limit errors
 const BACKOFF_BASE_MS = 1000; // 1s, 2s, 4s
+const CLAUDE_CALL_TIMEOUT_MS = parseInt(process.env.CLAUDE_CALL_TIMEOUT_MS ?? '120000', 10);
 
 export interface AgentRunConfig {
   agentId: string;
@@ -54,16 +56,29 @@ export async function runAgent(config: AgentRunConfig): Promise<AgentRunResult> 
       throw new Error(`Agent timeout after ${TOOL_USE_TIMEOUT_MS / 1000}s`);
     }
 
+    // Graceful shutdown — pause agent before next Claude call
+    if (isShuttingDown()) {
+      await prisma.agent.update({
+        where: { id: agentId },
+        data: { status: 'paused' },
+      });
+      emit(projectId, 'project:paused', agentType, layer, 'Agent paused due to shutdown signal');
+      return { success: false, summary: 'paused', tokensInput: totalInput, tokensOutput: totalOutput, filesCreated };
+    }
+
     turns++;
 
-    const response = await callWithBackoff(() =>
-      client.messages.create({
-        model: MODEL,
-        max_tokens: MAX_TOKENS,
-        system: systemPrompt,
-        tools: agentTools,
-        messages,
-      }),
+    const response = await callWithBackoff((signal) =>
+      client.messages.create(
+        {
+          model: MODEL,
+          max_tokens: MAX_TOKENS,
+          system: systemPrompt,
+          tools: agentTools,
+          messages,
+        },
+        { signal },
+      ),
     );
 
     totalInput += response.usage.input_tokens;
@@ -194,21 +209,26 @@ function emit(
  * @description Calls an async function with exponential backoff on rate limit (HTTP 429) errors.
  * Retries up to MAX_RETRIES times with delays of BACKOFF_BASE_MS * 2^attempt ms.
  */
-async function callWithBackoff<T>(fn: () => Promise<T>): Promise<T> {
+async function callWithBackoff<T>(fn: (signal: AbortSignal) => Promise<T>): Promise<T> {
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), CLAUDE_CALL_TIMEOUT_MS);
     try {
-      return await fn();
+      return await fn(controller.signal);
     } catch (err) {
       const isRateLimit =
         (err instanceof Error && err.message.includes('rate_limit')) ||
         (typeof err === 'object' && err !== null && (err as { status?: number }).status === 429);
+      const isAbort = err instanceof Error && err.name === 'AbortError';
 
-      if (isRateLimit && attempt < MAX_RETRIES) {
+      if ((isRateLimit || isAbort) && attempt < MAX_RETRIES) {
         const delay = BACKOFF_BASE_MS * Math.pow(2, attempt);
         await new Promise((resolve) => setTimeout(resolve, delay));
         continue;
       }
       throw err;
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
   // Unreachable — TypeScript needs this
