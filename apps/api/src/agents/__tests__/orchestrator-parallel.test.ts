@@ -10,6 +10,9 @@ const mockRunAgent = vi.fn();
 const mockAgentUpsert = vi.fn().mockResolvedValue({ id: 'agent-1' });
 const mockAgentFindMany = vi.fn().mockResolvedValue([]);
 const mockProjectUpdate = vi.fn().mockResolvedValue({});
+const mockBuildEvent = vi.fn().mockImplementation(
+  (type: string, _pid: string, data: Record<string, unknown>) => ({ type, ...data }),
+);
 
 vi.mock('../../lib/prisma.js', () => ({
   default: {
@@ -31,7 +34,7 @@ vi.mock('../../agents/context-builder.js', () => ({
 
 vi.mock('../../websocket/ws.emitter.js', () => ({
   emitEvent: vi.fn(),
-  buildEvent: vi.fn().mockReturnValue({}),
+  buildEvent: (...args: unknown[]) => mockBuildEvent(...args),
 }));
 
 vi.mock('redis', () => ({
@@ -150,5 +153,47 @@ describe('orchestrator — graph-driven parallel execution (T29/T34)', () => {
     // L4.5 should have received batchSignal and it should now be aborted
     expect(l45Signal).toBeDefined();
     expect(l45Signal?.aborted).toBe(true);
+  });
+
+  it('emits agent:completed for both L4 and L4.5 in parallel batch (T32)', async () => {
+    // Start with L1-L3 done to isolate L4/L4.5 batch
+    mockAgentFindMany.mockResolvedValue([
+      { layer: 1 }, { layer: 1.5 }, { layer: 2 }, { layer: 3 },
+    ]);
+
+    const { runPipeline } = await import('../../agents/orchestrator.js');
+    await runPipeline('proj-ws-t32', 'user-1');
+
+    // Both parallel agents should have emitted agent:completed events
+    const completedLayers = mockBuildEvent.mock.calls
+      .filter(([type]) => type === 'agent:completed')
+      .map(([, , data]) => (data as { layer: number }).layer);
+
+    expect(completedLayers).toContain(4);
+    expect(completedLayers).toContain(4.5);
+  });
+
+  it('retry restarts only the failed layer when sibling already completed (T33)', async () => {
+    // Simulate: L1, L1.5, L2, L3, L4 (qa-agent) are done; L4.5 (security) is NOT done (was aborted)
+    mockAgentFindMany.mockResolvedValue([
+      { layer: 1 }, { layer: 1.5 }, { layer: 2 }, { layer: 3 }, { layer: 4 },
+    ]);
+
+    const calledLayers: number[] = [];
+    mockRunAgent.mockImplementation(async (opts: { layer: number }) => {
+      calledLayers.push(opts.layer);
+      return { success: true, summary: '', tokensInput: 0, tokensOutput: 0, filesCreated: [] };
+    });
+
+    const { runPipeline } = await import('../../agents/orchestrator.js');
+    await runPipeline('proj-retry-t33', 'user-1');
+
+    // Only L4.5, L5, L6, L7 should run (not L4 which is already done)
+    expect(calledLayers).not.toContain(4);
+    expect(calledLayers).toContain(4.5);
+    expect(calledLayers).toContain(5);
+    expect(calledLayers).toContain(6);
+    expect(calledLayers).toContain(7);
+    expect(calledLayers).toHaveLength(4);
   });
 });

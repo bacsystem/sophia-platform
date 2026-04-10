@@ -212,22 +212,56 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
         }
       }
 
-      // Run all batch layers in parallel — abort siblings on any failure
+      // Run all batch layers in parallel — abort siblings on any failure or user pause
       const batchController = new AbortController();
-      await Promise.all(batch.map(async (layerDef: LayerNode) => {
-        try {
-          await runLayer(layerDef, {
-            projectId,
-            projectDir,
-            sharedSkills,
-            completedLayers: new Set(completedLayerNums),
-            batchSignal: batchController.signal,
-          });
-        } catch (err) {
-          batchController.abort();
-          throw err;
+      let pauseWatcherActive = true;
+
+      // Pause watcher: polls Redis while batch runs; aborts batchController if user pauses
+      void (async () => {
+        while (pauseWatcherActive && !batchController.signal.aborted) {
+          await sleep(PAUSE_POLL_MS);
+          if (!pauseWatcherActive || batchController.signal.aborted) break;
+          if (await isPaused(projectId)) {
+            batchController.abort();
+            break;
+          }
         }
-      }));
+      })();
+
+      try {
+        await Promise.all(batch.map(async (layerDef: LayerNode) => {
+          try {
+            await runLayer(layerDef, {
+              projectId,
+              projectDir,
+              sharedSkills,
+              completedLayers: new Set(completedLayerNums),
+              batchSignal: batchController.signal,
+            });
+          } catch (err) {
+            batchController.abort();
+            throw err;
+          }
+        }));
+      } finally {
+        pauseWatcherActive = false;
+      }
+
+      // If pause was triggered during batch, wait for resume before continuing
+      if (await isPaused(projectId)) {
+        emitEvent(buildEvent('project:paused', projectId, {
+          agentType: batch[0].type,
+          layer: batch[0].layer,
+          layerName: batch[0].type.replace('-agent', ''),
+          lastFile: null,
+        }));
+        await prisma.project.update({ where: { id: projectId }, data: { status: 'paused' } });
+        const resumed = await waitForResume(projectId);
+        if (!resumed) {
+          throw new Error('Pipeline cancelled: pause timeout exceeded');
+        }
+        await prisma.project.update({ where: { id: projectId }, data: { status: 'running' } });
+      }
 
       // Mark all batch layers as completed
       for (const layerDef of batch) {
