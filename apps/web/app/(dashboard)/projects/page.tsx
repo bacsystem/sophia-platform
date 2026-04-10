@@ -34,11 +34,13 @@ export default async function ProjectsPage() {
   const { projects, meta } = await fetchProjects();
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Mis proyectos</h1>
-          <p className="text-sm text-white/40 mt-1">
+          <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-wide" style={{ fontFamily: "var(--font-display, 'Syne', sans-serif)" }}>
+            Mis proyectos
+          </h1>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">
             {meta.total > 0 ? `${meta.total} proyecto${meta.total !== 1 ? 's' : ''}` : 'Sin proyectos aún'}
           </p>
         </div>

@@ -101,20 +101,20 @@ export function ProjectGrid({ initialProjects, initialMeta }: ProjectGridProps) 
       )}
 
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-disabled)] pointer-events-none" />
           <input
             type="search"
             value={search}
             onChange={(e) => handleSearch(e.target.value)}
             placeholder="Buscar proyectos..."
-            className="glass-input w-full pl-9 pr-4 py-2.5 rounded-xl text-sm"
+            className="glass-input w-full pl-10 pr-4 py-2.5 rounded-xl text-sm"
           />
         </div>
         <Link
           href="/projects/new"
-          className="btn-primary flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white shrink-0"
+          className="btn-primary flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold shrink-0"
         >
           <Plus className="w-4 h-4" />
           Nuevo proyecto
@@ -128,11 +128,7 @@ export function ProjectGrid({ initialProjects, initialMeta }: ProjectGridProps) 
             key={tab.value}
             type="button"
             onClick={() => handleFilter(tab.value)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              activeFilter === tab.value
-                ? 'bg-violet-500/20 text-violet-300 border border-violet-500/30'
-                : 'text-white/40 hover:text-white/70 hover:bg-white/5 border border-transparent'
-            }`}
+            className={`tab-btn ${activeFilter === tab.value ? 'active' : ''}`}
           >
             {tab.label}
           </button>
@@ -147,13 +143,13 @@ export function ProjectGrid({ initialProjects, initialMeta }: ProjectGridProps) 
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="glass rounded-2xl p-5 animate-pulse h-36" />
+                <div key={i} className="glass-card rounded-xl p-5 animate-pulse h-36" />
               ))}
             </div>
           ) : (
             <>
               {projects.length === 0 ? (
-                <p className="text-center text-white/40 py-16 text-sm">
+                <p className="text-center text-[var(--text-secondary)] py-16 text-sm">
                   No se encontraron proyectos.
                 </p>
               ) : (
@@ -178,10 +174,10 @@ export function ProjectGrid({ initialProjects, initialMeta }: ProjectGridProps) 
                     type="button"
                     onClick={() => handlePage(page)}
                     aria-label={`Página ${page}`}
-                    className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
+                    className={`w-9 h-9 rounded-lg text-sm font-medium transition-all duration-200 ${
                       isActive
-                        ? 'bg-violet-500/20 text-violet-300 border border-violet-500/30'
-                        : 'text-white/40 hover:text-white/70 hover:bg-white/5 border border-white/10'
+                        ? 'bg-cyan-500/10 text-cyan-300 border border-cyan-500/30'
+                        : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] hover:bg-[var(--row-hover)] border border-[var(--muted-border)]'
                     }`}
                   >
                     {page}

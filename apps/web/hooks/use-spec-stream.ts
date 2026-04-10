@@ -4,6 +4,9 @@ import { useEffect, useRef, useState } from 'react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
+/** Safety timeout: if no SSE events arrive within this window, assume connection is dead. */
+const SAFETY_TIMEOUT_MS = 90_000;
+
 export type SseEventType = 'start' | 'chunk' | 'validated' | 'done' | 'error';
 
 export interface SseStartEvent {
@@ -73,6 +76,7 @@ export function useSpecStream(
   });
 
   const esRef = useRef<EventSource | null>(null);
+  const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!projectId || !jobId) return;
@@ -84,7 +88,23 @@ export function useSpecStream(
     const es = new EventSource(url, { withCredentials: true });
     esRef.current = es;
 
+    // Safety timeout — triggers if no events arrive at all
+    const resetSafetyTimer = () => {
+      if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
+      safetyTimerRef.current = setTimeout(() => {
+        setState((prev) =>
+          prev.status === 'done' || prev.status === 'error'
+            ? prev
+            : { ...prev, status: 'error', errorMessage: 'La generación no respondió a tiempo. Intenta de nuevo.' },
+        );
+        es.close();
+      }, SAFETY_TIMEOUT_MS);
+    };
+
+    resetSafetyTimer();
+
     es.onmessage = (e: MessageEvent<string>) => {
+      resetSafetyTimer();
       try {
         const event = JSON.parse(e.data) as SseEvent;
 
@@ -128,19 +148,27 @@ export function useSpecStream(
       }
     };
 
-    es.onerror = () => {
+    es.onerror = (_evt: Event) => {
+      // When readyState is CLOSED the server/browser gave up — surface error.
+      // When CONNECTING the browser will auto-retry, but we still reset the
+      // safety timer. Handling every state avoids `[object Event]` leaking
+      // to the Next.js error overlay as an unhandled runtime error.
       if (es.readyState === EventSource.CLOSED) {
         setState((prev) =>
           prev.status === 'done' || prev.status === 'error'
             ? prev
-            : { ...prev, status: 'error', errorMessage: 'Conexión perdida' },
+            : { ...prev, status: 'error', errorMessage: 'Conexión perdida con el servidor' },
         );
       }
+      // For CONNECTING (auto-retry) just reset safety timer — if it truly
+      // can't connect, the safety timeout will eventually fire.
+      resetSafetyTimer();
     };
 
     return () => {
       es.close();
       esRef.current = null;
+      if (safetyTimerRef.current) clearTimeout(safetyTimerRef.current);
     };
   }, [projectId, jobId]);
 

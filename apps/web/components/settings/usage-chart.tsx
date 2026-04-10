@@ -66,18 +66,18 @@ export function UsageChart() {
     <section className="glass rounded-2xl p-6 space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <TrendingUp className="w-5 h-5 text-violet-400" />
-          <h2 className="text-lg font-semibold text-white">Consumo Diario</h2>
+          <TrendingUp className="w-5 h-5 text-[var(--accent-400)]" />
+          <h2 className="text-lg font-semibold text-[var(--text-primary)]">Consumo Diario</h2>
         </div>
-        <div className="flex gap-1 bg-white/5 rounded-lg p-0.5">
+        <div className="flex gap-1 bg-[var(--surface-header)] rounded-lg p-0.5">
           {PERIOD_OPTIONS.map((opt) => (
             <button
               key={opt.days}
               onClick={() => setDays(opt.days)}
               className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
                 days === opt.days
-                  ? 'bg-violet-600 text-white'
-                  : 'text-white/40 hover:text-white/60'
+                  ? 'bg-[var(--accent-500)] text-white'
+                  : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
               }`}
               aria-label={`Ver últimos ${opt.label}`}
               aria-pressed={days === opt.days}
@@ -89,22 +89,22 @@ export function UsageChart() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-12 text-white/50">
+        <div className="flex items-center justify-center py-12 text-[var(--text-secondary)]">
           <Loader2 className="w-4 h-4 animate-spin mr-2" />
           <span className="text-sm">Cargando gráfico...</span>
         </div>
       ) : data.length === 0 ? (
-        <p className="text-sm text-white/30 text-center py-12">
+        <p className="text-sm text-[var(--text-tertiary)] text-center py-12">
           Sin datos en los últimos {days} días
         </p>
       ) : (
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--muted-border)" />
               <XAxis
                 dataKey="date"
-                tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 11 }}
+                tick={{ fill: 'var(--text-tertiary)', fontSize: 11 }}
                 tickFormatter={(v: string) => {
                   const d = new Date(v);
                   return `${d.getDate()}/${d.getMonth() + 1}`;
@@ -113,7 +113,7 @@ export function UsageChart() {
                 tickLine={false}
               />
               <YAxis
-                tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 11 }}
+                tick={{ fill: 'var(--text-tertiary)', fontSize: 11 }}
                 tickFormatter={formatK}
                 axisLine={false}
                 tickLine={false}
@@ -121,11 +121,11 @@ export function UsageChart() {
               />
               <Tooltip
                 contentStyle={{
-                  background: 'rgba(15,15,20,0.95)',
-                  border: '1px solid rgba(255,255,255,0.1)',
+                  background: 'var(--surface-console)',
+                  border: '1px solid var(--muted-border)',
                   borderRadius: 12,
                   fontSize: 12,
-                  color: 'white',
+                  color: 'var(--text-primary)',
                 }}
                 labelFormatter={(v) => new Date(String(v)).toLocaleDateString('es')}
                 formatter={(value, name) => [

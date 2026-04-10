@@ -1,8 +1,13 @@
-/** @description Particle system — particles traveling along active connections */
+/** @description Particle system — neon data-stream particles traveling along active connections */
 
 import type { RenderContext } from './agent-canvas-renderer';
 import type { AgentNode } from '@/hooks/use-dashboard-store';
 import { CANVAS_LOGICAL_WIDTH, CANVAS_LOGICAL_HEIGHT } from '@/lib/agent-config';
+
+export interface ActiveConnection {
+  from: AgentNode;
+  to: AgentNode;
+}
 
 export interface Particle {
   fromX: number;
@@ -10,14 +15,15 @@ export interface Particle {
   toX: number;
   toY: number;
   color: string;
-  progress: number; // 0 → 1
+  progress: number;
   speed: number;
   createdAt: number;
+  size: number;
 }
 
-const PARTICLE_LIFETIME_MS = 2000;
-const PARTICLE_RADIUS = 3;
-const SPAWN_INTERVAL_MS = 400;
+const PARTICLE_LIFETIME_MS = 1400;
+const SPAWN_INTERVAL_MS = 150;
+const MAX_PARTICLES = 40;
 
 export interface ParticleSystem {
   particles: Particle[];
@@ -29,37 +35,35 @@ export function createParticleSystem(): ParticleSystem {
   return { particles: [], lastSpawnTime: 0 };
 }
 
-/** @description Updates the particle system — spawns new particles on active connections, advances existing */
+/** @description Updates particles — spawns on random active connections, advances existing */
 export function updateParticles(
   system: ParticleSystem,
-  activeFromNode: AgentNode | null,
-  activeToNode: AgentNode | null,
+  activeConnections: ActiveConnection[],
   now: number,
 ): void {
-  // Spawn new particles on active connection
-  if (activeFromNode && activeToNode && now - system.lastSpawnTime > SPAWN_INTERVAL_MS) {
+  if (activeConnections.length > 0 && now - system.lastSpawnTime > SPAWN_INTERVAL_MS && system.particles.length < MAX_PARTICLES) {
+    const conn = activeConnections[Math.floor(Math.random() * activeConnections.length)];
     system.particles.push({
-      fromX: activeFromNode.cx,
-      fromY: activeFromNode.cy,
-      toX: activeToNode.cx,
-      toY: activeToNode.cy,
-      color: activeToNode.color,
+      fromX: conn.from.cx,
+      fromY: conn.from.cy,
+      toX: conn.to.cx,
+      toY: conn.to.cy,
+      color: conn.to.color,
       progress: 0,
       speed: 1 / PARTICLE_LIFETIME_MS,
       createdAt: now,
+      size: 2 + Math.random() * 2.5,
     });
     system.lastSpawnTime = now;
   }
 
-  // Update positions and remove expired
   system.particles = system.particles.filter((p) => {
-    const age = now - p.createdAt;
-    p.progress = Math.min(1, age * p.speed);
+    p.progress = Math.min(1, (now - p.createdAt) * p.speed);
     return p.progress < 1;
   });
 }
 
-/** @description Renders all particles in the system */
+/** @description Renders particles with ease-in-out motion, glow, and bright core */
 export function drawParticles(rc: RenderContext, system: ParticleSystem): void {
   const { ctx, width, height } = rc;
   const sx = width / CANVAS_LOGICAL_WIDTH;
@@ -67,16 +71,31 @@ export function drawParticles(rc: RenderContext, system: ParticleSystem): void {
   const scale = Math.min(sx, sy);
 
   for (const p of system.particles) {
-    const x = (p.fromX + (p.toX - p.fromX) * p.progress) * sx;
-    const y = (p.fromY + (p.toY - p.fromY) * p.progress) * sy;
-    const alpha = 1 - p.progress * 0.5;
+    const t = p.progress;
+    const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+    const hx = (p.fromX + (p.toX - p.fromX) * ease) * sx;
+    const hy = (p.fromY + (p.toY - p.fromY) * ease) * sy;
+    const alpha = t < 0.1 ? t * 10 : t > 0.85 ? (1 - t) * 6.67 : 1;
 
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.beginPath();
-    ctx.arc(x, y, PARTICLE_RADIUS * scale, 0, Math.PI * 2);
+
+    // Outer glow
+    ctx.shadowColor = p.color;
+    ctx.shadowBlur = 12 * scale;
     ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(hx, hy, p.size * scale, 0, Math.PI * 2);
     ctx.fill();
+
+    // Bright white core
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = alpha * 0.9;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(hx, hy, p.size * scale * 0.35, 0, Math.PI * 2);
+    ctx.fill();
+
     ctx.restore();
   }
 }

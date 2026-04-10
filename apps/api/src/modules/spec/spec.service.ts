@@ -37,6 +37,16 @@ interface SpecJob {
 
 const jobs = new Map<string, SpecJob>();
 
+/** TTL for completed/errored jobs — 10 minutes. */
+const JOB_TTL_MS = 10 * 60 * 1000;
+
+/** Schedules cleanup of a completed job after TTL. */
+function scheduleJobCleanup(jobId: string): void {
+  setTimeout(() => {
+    jobs.delete(jobId);
+  }, JOB_TTL_MS).unref();
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -272,9 +282,25 @@ async function runGeneration(job: SpecJob, project: {
       files: ['spec.md', 'data-model.md', 'api-design.md'],
     });
     job.status = 'done';
+    scheduleJobCleanup(job.jobId);
   } catch (err) {
     const isAuthError = (err as { code?: string }).code === 'ANTHROPIC_AUTH_ERROR';
-    const message = (err as Error).message ?? 'Error desconocido';
+    const isConfigError = (err as Error).message?.includes('ANTHROPIC_API_KEY');
+    const rawMessage = (err as Error).message ?? 'Error desconocido';
+
+    // Classify error for user-facing message
+    let userMessage: string;
+    let retryable: boolean;
+    if (isAuthError) {
+      userMessage = 'Error de autenticación con Anthropic API';
+      retryable = false;
+    } else if (isConfigError) {
+      userMessage = 'El servicio de generación no está disponible';
+      retryable = false;
+    } else {
+      userMessage = rawMessage;
+      retryable = true;
+    }
 
     // Try to save partial content (C1 — save what we have with valid:false)
     const hasPartial =
@@ -308,10 +334,11 @@ async function runGeneration(job: SpecJob, project: {
     emitJobEvent(job, {
       type: 'error',
       file: failedFile,
-      message: isAuthError ? 'Error de autenticación con Anthropic API' : message,
-      retryable: !isAuthError,
+      message: userMessage,
+      retryable,
     });
     job.status = 'error';
+    scheduleJobCleanup(job.jobId);
   }
 }
 
@@ -345,6 +372,14 @@ export async function startSpecGeneration(
     throw Object.assign(
       new Error('La descripción debe tener al menos 20 caracteres'),
       { code: 'DESCRIPTION_TOO_SHORT', status: 422 },
+    );
+  }
+
+  // Pre-validate ANTHROPIC_API_KEY before background job
+  if (!process.env.ANTHROPIC_API_KEY) {
+    throw Object.assign(
+      new Error('El servicio de generación no está disponible: falta configuración del sistema'),
+      { code: 'SERVICE_UNAVAILABLE', status: 503 },
     );
   }
 
@@ -410,6 +445,26 @@ export function subscribeToSpecJob(
   return () => {
     job.listeners.delete(onEvent);
   };
+}
+
+// ---------------------------------------------------------------------------
+// Job recovery — when in-memory job is lost (server restart)
+// ---------------------------------------------------------------------------
+
+/**
+ * @description Checks if a spec exists in DB for a project. Used as fallback
+ * when an SSE client reconnects but the in-memory job was lost (e.g., after
+ * server restart in dev). Returns the latest version or null.
+ */
+export async function recoverSpecJob(
+  projectId: string,
+): Promise<{ version: number } | null> {
+  const spec = await prisma.projectSpec.findFirst({
+    where: { projectId },
+    orderBy: { version: 'desc' },
+    select: { version: true },
+  });
+  return spec ? { version: spec.version } : null;
 }
 
 // ---------------------------------------------------------------------------

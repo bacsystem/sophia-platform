@@ -8,6 +8,7 @@ import { projectRoutes } from './modules/projects/project.routes.js';
 import { templateRoutes } from './modules/templates/template.routes.js';
 import { specRoutes } from './modules/spec/spec.routes.js';
 import { wsRoutes } from './websocket/ws.routes.js';
+import { startEventSubscriber } from './websocket/ws.emitter.js';
 import { agentRoutes } from './modules/agents/agent.routes.js';
 import { fileRoutes } from './modules/files/file.routes.js';
 import { settingsRoutes } from './modules/settings/settings.routes.js';
@@ -51,6 +52,9 @@ export async function buildApp() {
 
   // WebSocket support (before WS routes)
   await app.register(websocket);
+
+  // Start Redis Pub/Sub subscriber for cross-process agent events
+  startEventSubscriber();
 
   // Routes
   await app.register(authRoutes, { prefix: '/api/auth' });

@@ -21,7 +21,7 @@ export function AgentListMobile({ onAgentClick }: AgentListMobileProps) {
           <button
             key={agent.id}
             onClick={() => onAgentClick(agent)}
-            className="flex items-center gap-3 w-full rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2 text-left hover:bg-white/5 transition-colors"
+            className="flex items-center gap-3 w-full rounded-lg border border-[var(--muted-border)] bg-[var(--row-hover)] px-3 py-2 text-left hover:bg-[var(--surface-header)] transition-colors"
           >
             {/* Status dot */}
             <div
@@ -31,17 +31,17 @@ export function AgentListMobile({ onAgentClick }: AgentListMobileProps) {
 
             {/* Agent name */}
             <div className="flex-1 min-w-0">
-              <span className="text-xs font-medium text-white/80 block truncate">
+              <span className="text-xs font-medium text-[var(--text-primary)] block truncate">
                 {AGENT_CONFIGS[agent.type]?.label ?? agent.type}
               </span>
               {agent.currentTask && (
-                <span className="text-[10px] text-white/40 block truncate">{agent.currentTask}</span>
+                <span className="text-[10px] text-[var(--text-tertiary)] block truncate">{agent.currentTask}</span>
               )}
             </div>
 
             {/* Progress */}
             <div className="w-16 shrink-0">
-              <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+              <div className="h-1.5 bg-[var(--muted-border)] rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all duration-300"
                   style={{
@@ -53,7 +53,7 @@ export function AgentListMobile({ onAgentClick }: AgentListMobileProps) {
             </div>
 
             {/* Percentage */}
-            <span className="text-[10px] font-mono text-white/40 w-8 text-right">
+            <span className="text-[10px] font-mono text-[var(--text-tertiary)] w-8 text-right">
               {Math.round(agent.progress)}%
             </span>
           </button>

@@ -69,6 +69,7 @@ sophia-platform/
 
 ```bash
 pnpm dev                    # Dev (turbo: web + api)
+pnpm dev:clean              # Dev con limpieza de caché (.next)
 pnpm db:migrate             # Prisma migrations
 pnpm build                  # Build all
 pnpm test                   # Tests all
@@ -391,3 +392,11 @@ Cada PR pasa por revisión automática de CodeRabbit. Al recibir findings:
 - Backend (`apps/api/src/**`): JSDoc en todas las funciones exported de `*.service.ts`, `*.controller.ts`, `*.routes.ts`
 - Frontend (`apps/web/**`): JSDoc en todos los componentes React exported y hooks custom
 - Formato mínimo: `/** @description ... */` o `/** descripción de una línea */`
+
+## Active Technologies
+- TypeScript 5.x, Node.js 22, Next.js 15 + Fastify, Prisma, Anthropic SDK, Zustand, Tailwind CSS, shadcn/ui (008-system-wide-fixes)
+- PostgreSQL 16, Redis 7 (rate limiting + sessions) (008-system-wide-fixes)
+
+## Recent Changes
+- 008-system-wide-fixes: hardened runtime behavior with proactive session refresh, resilient API key verification, clearer SSE/spec errors, and `pnpm dev:clean`
+- 008-system-wide-fixes: completed the system-wide visual refresh with persistent light/dark/system themes, accent palettes, typography unification, and `/settings/profile` split

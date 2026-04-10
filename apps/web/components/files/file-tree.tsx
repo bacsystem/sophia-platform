@@ -89,11 +89,11 @@ export function FileTree({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-3 border-b border-white/10">
+      <div className="p-3 border-b border-[var(--muted-border)]">
         <div className="flex items-center gap-2 mb-2">
-          <Files className="w-4 h-4 text-violet-400" />
-          <span className="text-sm font-medium text-white">Archivos</span>
-          <span className="text-xs text-white/30 ml-auto">
+          <Files className="w-4 h-4 text-[var(--accent-400)]" />
+          <span className="text-sm font-medium text-[var(--text-primary)]">Archivos</span>
+          <span className="text-xs text-[var(--text-tertiary)] ml-auto">
             {totalFiles} archivos &middot; {formatSize(totalSizeBytes)}
           </span>
         </div>
@@ -103,7 +103,7 @@ export function FileTree({
       <div className="flex-1 overflow-y-auto p-1">
         {displayTree.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-center">
-            <p className="text-white/30 text-sm">
+            <p className="text-[var(--text-tertiary)] text-sm">
               {searchQuery ? 'No se encontraron archivos' : 'Sin archivos generados'}
             </p>
           </div>

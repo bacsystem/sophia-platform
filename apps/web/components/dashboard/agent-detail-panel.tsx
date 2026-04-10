@@ -2,6 +2,7 @@
 
 /** @description AgentDetailPanel — expandable panel showing agent details on node click */
 
+import { useMemo } from 'react';
 import { X, Clock, FileCode, Coins } from 'lucide-react';
 import { useDashboardStore, type AgentNode } from '@/hooks/use-dashboard-store';
 import { useElapsedTime } from '@/hooks/use-elapsed-time';
@@ -9,113 +10,130 @@ import { useElapsedTime } from '@/hooks/use-elapsed-time';
 interface AgentDetailPanelProps {
   agentId: string;
   onClose: () => void;
+  position?: { left: number; top: number };
 }
 
-/** @description Expandable panel with agent logs, files, progress, and timing */
-export function AgentDetailPanel({ agentId, onClose }: AgentDetailPanelProps) {
+/** @description Floating card with agent logs, files, progress, and timing — positioned beside the clicked node */
+export function AgentDetailPanel({ agentId, onClose, position }: AgentDetailPanelProps) {
   const agent = useDashboardStore((s) => s.agents.find((a) => a.id === agentId));
-  const logs = useDashboardStore((s) =>
-    s.logs.filter((l) => l.agentType === agentId),
-  );
-  const files = useDashboardStore((s) =>
-    s.files.filter((f) => f.agentType === agentId),
-  );
+  const allLogs = useDashboardStore((s) => s.logs);
+  const allFiles = useDashboardStore((s) => s.files);
+  const logs = useMemo(() => allLogs.filter((l) => l.agentType === agentId), [allLogs, agentId]);
+  const files = useMemo(() => allFiles.filter((f) => f.agentType === agentId), [allFiles, agentId]);
   const elapsed = useElapsedTime(agent?.startedAt ?? null);
 
   if (!agent) return null;
 
   return (
-    <div className="border-t border-white/10 bg-black/30 backdrop-blur-sm">
-      <div className="max-w-5xl mx-auto p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
+    <div
+      className="absolute z-30 w-64 pointer-events-auto"
+      style={position ? { left: position.left, top: position.top } : { left: 16, top: 16 }}
+    >
+      <div
+        className="bg-[var(--surface-console)]/96 backdrop-blur-xl rounded-2xl overflow-hidden"
+        style={{
+          border: `1px solid ${agent.color}28`,
+          boxShadow: `0 8px 40px rgba(0,0,0,0.35), 0 0 0 1px ${agent.color}12, 0 0 24px ${agent.color}0a`,
+        }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-3 py-2.5 border-b border-[var(--muted-border)]">
+          <div className="flex items-center gap-2 min-w-0">
             <div
-              className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: agent.color }}
+              className="w-2 h-2 rounded-full shrink-0"
+              style={{ backgroundColor: agent.color, boxShadow: `0 0 6px ${agent.color}90` }}
             />
-            <h3 className="text-white font-medium capitalize">
+            <span
+              className="text-[var(--text-primary)] font-bold capitalize text-xs tracking-wide truncate"
+              style={{ fontFamily: "var(--font-display, 'Syne', sans-serif)" }}
+            >
               {agent.type as string}
-            </h3>
+            </span>
             <StatusBadge status={agent.status} />
           </div>
           <button
             onClick={onClose}
-            className="text-white/40 hover:text-white/70 transition-colors"
-            aria-label="Cerrar panel de detalle"
+            className="text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors p-0.5 rounded shrink-0 ml-1"
+            aria-label="Cerrar detalle del agente"
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        {/* Metrics row */}
-        <div className="flex gap-6 text-sm text-white/50 mb-3">
-          <span className="flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5" />
+        {/* Metrics */}
+        <div
+          className="flex items-center gap-3 px-3 py-1.5 border-b border-[var(--muted-border)] text-[10px] text-[var(--text-tertiary)]"
+          style={{ fontFamily: "var(--font-mono, 'Space Mono', monospace)" }}
+        >
+          <span className="flex items-center gap-1">
+            <Clock className="w-3 h-3 text-[var(--color-info)]" />
             {elapsed}
           </span>
-          <span className="flex items-center gap-1.5">
-            <FileCode className="w-3.5 h-3.5" />
-            {agent.filesCreated} archivos
+          <span className="flex items-center gap-1">
+            <FileCode className="w-3 h-3 text-[var(--color-success)]" />
+            {agent.filesCreated}
           </span>
-          <span className="flex items-center gap-1.5">
-            <Coins className="w-3.5 h-3.5" />
-            {agent.tokensUsed.toLocaleString()} tokens
+          <span className="flex items-center gap-1">
+            <Coins className="w-3 h-3 text-[var(--accent-500)]" />
+            {agent.tokensUsed.toLocaleString()}
           </span>
         </div>
 
         {/* Progress bar */}
-        <div className="w-full h-1.5 bg-white/5 rounded-full mb-4">
-          <div
-            className="h-full rounded-full transition-all duration-300"
-            style={{
-              width: `${agent.progress}%`,
-              backgroundColor: agent.color,
-            }}
-          />
+        <div className="px-3 pt-2.5 pb-1">
+          <div className="w-full h-[3px] bg-[var(--muted-border)] rounded-full">
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{ width: `${agent.progress}%`, backgroundColor: agent.color, boxShadow: `0 0 6px ${agent.color}60` }}
+            />
+          </div>
         </div>
 
-        {/* Recent logs */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <h4 className="text-xs font-medium text-white/40 uppercase tracking-wider mb-2">
-              Logs recientes
-            </h4>
-            <div className="space-y-1 max-h-32 overflow-y-auto text-xs">
-              {logs.length === 0 && (
-                <p className="text-white/30">Sin logs aún</p>
-              )}
-              {logs.slice(-8).map((log) => (
-                <div key={log.id} className="flex gap-2 text-white/60">
-                  <span className="text-white/30 shrink-0">
-                    {new Date(log.timestamp).toLocaleTimeString('es', {
-                      minute: '2-digit',
-                      second: '2-digit',
-                    })}
+        {/* Logs */}
+        <div className="px-3 pb-1">
+          <p
+            className="label-caption mb-1.5 mt-1"
+          >
+            Logs recientes
+          </p>
+          <div
+            className="space-y-0.5 max-h-[88px] overflow-y-auto text-[10px]"
+            style={{ fontFamily: "var(--font-mono, 'Space Mono', monospace)" }}
+          >
+            {logs.length === 0 ? (
+              <p className="text-[var(--text-tertiary)] italic">Sin logs aún</p>
+            ) : (
+              logs.slice(-6).map((log) => (
+                <div key={log.id} className="flex gap-1.5 text-[var(--text-secondary)]">
+                  <span className="text-[var(--text-tertiary)] shrink-0">
+                    {new Date(log.timestamp).toLocaleTimeString('es', { minute: '2-digit', second: '2-digit' })}
                   </span>
                   <LogIcon level={log.level} />
                   <span className="truncate">{log.message}</span>
                 </div>
-              ))}
-            </div>
+              ))
+            )}
           </div>
+        </div>
 
-          <div>
-            <h4 className="text-xs font-medium text-white/40 uppercase tracking-wider mb-2">
-              Archivos generados
-            </h4>
-            <div className="space-y-1 max-h-32 overflow-y-auto text-xs">
-              {files.length === 0 && (
-                <p className="text-white/30">Sin archivos aún</p>
-              )}
-              {files.slice(-8).map((file) => (
-                <div
-                  key={file.path}
-                  className="text-white/60 truncate"
-                >
-                  {file.path}
-                </div>
-              ))}
-            </div>
+        {/* Files */}
+        <div className="px-3 pb-3">
+          <p
+            className="label-caption mb-1.5 mt-1 border-t border-[var(--muted-border)] pt-2"
+          >
+            Archivos generados
+          </p>
+          <div
+            className="space-y-0.5 max-h-[72px] overflow-y-auto text-[10px] text-[var(--text-secondary)]"
+            style={{ fontFamily: "var(--font-mono, 'Space Mono', monospace)" }}
+          >
+            {files.length === 0 ? (
+              <p className="text-[var(--text-tertiary)] italic">Sin archivos aún</p>
+            ) : (
+              files.slice(-5).map((file) => (
+                <div key={file.path} className="truncate">{file.path}</div>
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -125,17 +143,17 @@ export function AgentDetailPanel({ agentId, onClose }: AgentDetailPanelProps) {
 
 function StatusBadge({ status }: { status: AgentNode['status'] }) {
   const config: Record<string, { label: string; className: string }> = {
-    idle: { label: 'Inactivo', className: 'bg-gray-500/20 text-gray-400' },
-    queued: { label: 'En cola', className: 'bg-gray-500/20 text-gray-400' },
-    working: { label: 'Trabajando', className: 'bg-blue-500/20 text-blue-400' },
-    done: { label: 'Completado', className: 'bg-green-500/20 text-green-400' },
-    error: { label: 'Error', className: 'bg-red-500/20 text-red-400' },
-    paused: { label: 'Pausado', className: 'bg-amber-500/20 text-amber-400' },
+    idle:    { label: 'Inactivo',    className: 'bg-[var(--muted-border)] text-[var(--text-tertiary)]' },
+    queued:  { label: 'En cola',    className: 'bg-[var(--muted-border)] text-[var(--text-tertiary)]' },
+    working: { label: 'Trabajando', className: 'badge-info' },
+    done:    { label: 'Completado', className: 'badge-success' },
+    error:   { label: 'Error',      className: 'badge-error' },
+    paused:  { label: 'Pausado',    className: 'badge-warn' },
   };
   const c = config[status] ?? config.idle;
 
   return (
-    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${c.className}`}>
+    <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${c.className}`}>
       {c.label}
     </span>
   );
@@ -143,13 +161,9 @@ function StatusBadge({ status }: { status: AgentNode['status'] }) {
 
 function LogIcon({ level }: { level: string }) {
   switch (level) {
-    case 'ok':
-      return <span className="text-green-400">✓</span>;
-    case 'warn':
-      return <span className="text-amber-400">⚠</span>;
-    case 'error':
-      return <span className="text-red-400">✕</span>;
-    default:
-      return <span className="text-gray-500">●</span>;
+    case 'ok':    return <span className="text-[var(--color-success)]">✓</span>;
+    case 'warn':  return <span className="text-[var(--color-warn)]">⚠</span>;
+    case 'error': return <span className="text-[var(--color-error)]">✕</span>;
+    default:      return <span className="text-[var(--text-disabled)]">●</span>;
   }
 }

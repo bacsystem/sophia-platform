@@ -4,6 +4,7 @@ import prisma from '../../lib/prisma.js';
 import { hashPassword, comparePasswordSafe } from '../../lib/hash.js';
 import {
   signAccessToken,
+  verifyAccessToken,
   getRefreshTtlSeconds,
   ACCESS_TTL_SECONDS,
 } from '../../lib/jwt.js';
@@ -23,6 +24,10 @@ function generateToken(): string {
 function setAuthCookies(reply: FastifyReply, accessToken: string, refreshToken: string, rememberMe = false) {
   const refreshTtl = getRefreshTtlSeconds(rememberMe);
 
+  // Clear stale cookies first to avoid duplicates in the browser
+  reply.clearCookie('access_token', { path: '/' });
+  reply.clearCookie('refresh_token', { path: '/' });
+
   reply.setCookie('access_token', accessToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -35,14 +40,14 @@ function setAuthCookies(reply: FastifyReply, accessToken: string, refreshToken: 
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
-    path: '/api/auth',
+    path: '/',
     maxAge: refreshTtl,
   });
 }
 
 function clearAuthCookies(reply: FastifyReply) {
   reply.clearCookie('access_token', { path: '/' });
-  reply.clearCookie('refresh_token', { path: '/api/auth' });
+  reply.clearCookie('refresh_token', { path: '/' });
 }
 
 async function createTokenPair(userId: string, email: string, name: string, rememberMe = false) {
@@ -145,8 +150,8 @@ export async function login(input: LoginInput, reply: FastifyReply) {
   });
 }
 
-export async function refresh(refreshCookie: string | undefined, reply: FastifyReply) {
-  if (!refreshCookie) {
+export async function refresh(refreshTokens: string[], reply: FastifyReply) {
+  if (refreshTokens.length === 0) {
     reply.status(401).send({
       error: 'INVALID_REFRESH_TOKEN',
       message: 'Sesión expirada',
@@ -154,16 +159,22 @@ export async function refresh(refreshCookie: string | undefined, reply: FastifyR
     return;
   }
 
-  const hashedToken = hashToken(refreshCookie);
-
-  const storedToken = await prisma.refreshToken.findFirst({
-    where: {
-      token: hashedToken,
-      revokedAt: null,
-      expiresAt: { gt: new Date() },
-    },
-    include: { user: true },
-  });
+  // Try each refresh token (handles duplicate cookies where first may be revoked)
+  const storedToken = await (async () => {
+    for (const token of refreshTokens) {
+      const hashedToken = hashToken(token);
+      const candidate = await prisma.refreshToken.findFirst({
+        where: {
+          token: hashedToken,
+          revokedAt: null,
+          expiresAt: { gt: new Date() },
+        },
+        include: { user: true },
+      });
+      if (candidate) return candidate;
+    }
+    return null;
+  })();
 
   if (!storedToken) {
     reply.status(401).send({
@@ -327,4 +338,39 @@ export async function getMe(userId: string, reply: FastifyReply) {
       createdAt: user.createdAt.toISOString(),
     },
   });
+}
+
+/** @description Decodes access_token and returns session info with expiry. */
+export async function getSession(accessToken: string | undefined, reply: FastifyReply) {
+  if (!accessToken) {
+    reply.status(401).send({
+      error: 'UNAUTHORIZED',
+      message: 'No autenticado',
+    });
+    return;
+  }
+
+  try {
+    const payload = verifyAccessToken(accessToken);
+    // JWT payload has `exp` in seconds since epoch
+    const decoded = JSON.parse(
+      Buffer.from(accessToken.split('.')[1], 'base64').toString(),
+    ) as { exp: number };
+
+    reply.status(200).send({
+      data: {
+        expiresAt: new Date(decoded.exp * 1000).toISOString(),
+        user: {
+          id: payload.sub,
+          email: payload.email,
+          name: payload.name,
+        },
+      },
+    });
+  } catch {
+    reply.status(401).send({
+      error: 'UNAUTHORIZED',
+      message: 'Token inválido o expirado',
+    });
+  }
 }

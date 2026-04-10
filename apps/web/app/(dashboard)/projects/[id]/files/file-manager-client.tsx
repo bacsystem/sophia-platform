@@ -41,10 +41,10 @@ export function FileManagerClient({ project, tree, totalFiles, totalSizeBytes }:
   return (
     <div className="glass rounded-2xl overflow-hidden">
       {/* Title bar */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--muted-border)]">
         <div className="flex items-center gap-2">
-          <h2 className="text-base font-semibold text-white">{project.name}</h2>
-          <span className="text-xs text-white/30">Archivos generados</span>
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">{project.name}</h2>
+          <span className="text-xs text-[var(--text-disabled)]">Archivos generados</span>
         </div>
         <DownloadButton
           projectId={project.id}
@@ -55,7 +55,7 @@ export function FileManagerClient({ project, tree, totalFiles, totalSizeBytes }:
 
       {/* Breadcrumb */}
       {selectedFile && (
-        <div className="px-4 py-2 border-b border-white/5 bg-white/[0.02]">
+          <div className="px-4 py-2 border-b border-[var(--muted-border)] bg-[var(--surface-header)]">
           <FileBreadcrumb
             path={selectedFile.path}
             onNavigate={handleBreadcrumbNavigate}
@@ -66,7 +66,7 @@ export function FileManagerClient({ project, tree, totalFiles, totalSizeBytes }:
       {/* Main content — sidebar + viewer */}
       <div className="flex flex-col md:flex-row" style={{ minHeight: '60vh' }}>
         {/* Tree sidebar */}
-        <div className="w-full md:w-72 lg:w-80 border-b md:border-b-0 md:border-r border-white/10 shrink-0 max-h-[40vh] md:max-h-none overflow-hidden">
+          <div className="w-full md:w-72 lg:w-80 border-b md:border-b-0 md:border-r border-[var(--muted-border)] shrink-0 max-h-[40vh] md:max-h-none overflow-hidden">
           <FileTree
             tree={tree}
             totalFiles={totalFiles}
@@ -82,8 +82,8 @@ export function FileManagerClient({ project, tree, totalFiles, totalSizeBytes }:
             <FileViewer projectId={project.id} fileId={selectedFile.id} />
           ) : (
             <div className="flex flex-col items-center justify-center h-full py-20 text-center">
-              <FileCode className="w-12 h-12 text-white/10 mb-3" />
-              <p className="text-white/30 text-sm">Selecciona un archivo del árbol para ver su contenido</p>
+              <FileCode className="w-12 h-12 text-[var(--text-disabled)] mb-3" />
+              <p className="text-[var(--text-disabled)] text-sm">Selecciona un archivo del árbol para ver su contenido</p>
             </div>
           )}
         </div>

@@ -29,7 +29,15 @@ export async function loginHandler(request: FastifyRequest, reply: FastifyReply)
 }
 
 export async function refreshHandler(request: FastifyRequest, reply: FastifyReply) {
-  return authService.refresh(request.cookies.refresh_token, reply);
+  // Extract ALL refresh_token values from cookie header (handles duplicates)
+  const cookieHeader = request.headers.cookie ?? '';
+  const allRefreshTokens = cookieHeader
+    .split(';')
+    .map((s) => s.trim())
+    .filter((s) => s.startsWith('refresh_token='))
+    .map((s) => s.slice('refresh_token='.length));
+
+  return authService.refresh(allRefreshTokens.length > 0 ? allRefreshTokens : [request.cookies.refresh_token].filter(Boolean) as string[], reply);
 }
 
 export async function logoutHandler(request: FastifyRequest, reply: FastifyReply) {
@@ -64,4 +72,8 @@ export async function resetPasswordHandler(request: FastifyRequest, reply: Fasti
 
 export async function getMeHandler(request: FastifyRequest, reply: FastifyReply) {
   return authService.getMe(request.user.sub, reply);
+}
+
+export async function getSessionHandler(request: FastifyRequest, reply: FastifyReply) {
+  return authService.getSession(request.cookies.access_token, reply);
 }

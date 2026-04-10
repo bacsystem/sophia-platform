@@ -59,7 +59,7 @@ export function UsageOverview() {
   if (loading) {
     return (
       <section className="glass rounded-2xl p-6">
-        <div className="flex items-center gap-2 text-white/50">
+        <div className="flex items-center gap-2 text-[var(--text-secondary)]">
           <Loader2 className="w-4 h-4 animate-spin" />
           <span className="text-sm">Cargando uso...</span>
         </div>
@@ -70,7 +70,7 @@ export function UsageOverview() {
   if (error) {
     return (
       <section className="glass rounded-2xl p-6">
-        <div className="flex items-center gap-2 text-red-400">
+        <div className="flex items-center gap-2 text-[var(--color-error)]">
           <BarChart3 className="w-4 h-4" />
           <span className="text-sm">{error}</span>
         </div>
@@ -85,30 +85,30 @@ export function UsageOverview() {
       label: 'Tokens entrada',
       value: formatNumber(totals.tokensInput),
       icon: ArrowUpRight,
-      color: 'text-blue-400',
-      bg: 'bg-blue-500/10',
+      color: 'text-[var(--accent-500)]',
+      bg: 'bg-[rgba(var(--accent-rgb)/0.10)]',
     },
     {
       label: 'Tokens salida',
       value: formatNumber(totals.tokensOutput),
       icon: Cpu,
-      color: 'text-indigo-400',
-      bg: 'bg-indigo-500/10',
+      color: 'text-[var(--accent-400)]',
+      bg: 'bg-[rgba(var(--accent-rgb)/0.06)]',
     },
     {
       label: 'Costo estimado',
       value: `$${totals.estimatedCostUsd.toFixed(2)}`,
       icon: DollarSign,
-      color: 'text-green-400',
-      bg: 'bg-green-500/10',
+      color: 'text-[var(--color-success)]',
+      bg: 'bg-[var(--color-success-subtle)]',
     },
   ];
 
   return (
     <section className="glass rounded-2xl p-6 space-y-4">
       <div className="flex items-center gap-3">
-        <BarChart3 className="w-5 h-5 text-violet-400" />
-        <h2 className="text-lg font-semibold text-white">Uso de Tokens</h2>
+        <BarChart3 className="w-5 h-5 text-[var(--accent-400)]" />
+        <h2 className="text-lg font-semibold text-[var(--text-primary)]">Uso de Tokens</h2>
       </div>
 
       {/* Summary cards */}
@@ -120,7 +120,7 @@ export function UsageOverview() {
           >
             <stat.icon className={`w-5 h-5 ${stat.color}`} />
             <div>
-              <p className="text-xs text-white/40">{stat.label}</p>
+              <p className="text-xs text-[var(--text-tertiary)]">{stat.label}</p>
               <p className={`text-lg font-semibold ${stat.color}`}>{stat.value}</p>
             </div>
           </div>
@@ -132,7 +132,7 @@ export function UsageOverview() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-white/40 text-xs">
+              <tr className="text-[var(--text-tertiary)] text-xs">
                 <th className="text-left py-2 font-medium">Proyecto</th>
                 <th className="text-right py-2 font-medium">Entrada</th>
                 <th className="text-right py-2 font-medium">Salida</th>
@@ -140,14 +140,14 @@ export function UsageOverview() {
                 <th className="text-right py-2 font-medium">Última ejecución</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-[var(--muted-border)]">
               {byProject.map((p) => (
-                <tr key={p.projectId} className="text-white/70 hover:bg-white/5 transition-colors">
-                  <td className="py-2 text-white">{p.projectName}</td>
+                <tr key={p.projectId} className="text-[var(--text-secondary)] hover:bg-[var(--row-hover)] transition-colors">
+                  <td className="py-2 text-[var(--text-primary)]">{p.projectName}</td>
                   <td className="py-2 text-right">{formatNumber(p.tokensInput)}</td>
                   <td className="py-2 text-right">{formatNumber(p.tokensOutput)}</td>
-                  <td className="py-2 text-right text-green-400">${p.estimatedCostUsd.toFixed(2)}</td>
-                  <td className="py-2 text-right text-white/40 text-xs">
+                  <td className="py-2 text-right text-[var(--color-success)]">${p.estimatedCostUsd.toFixed(2)}</td>
+                  <td className="py-2 text-right text-[var(--text-tertiary)] text-xs">
                     {p.lastExecutionAt
                       ? new Date(p.lastExecutionAt).toLocaleDateString('es')
                       : '—'}
@@ -160,12 +160,12 @@ export function UsageOverview() {
       )}
 
       {byProject.length === 0 && (
-        <p className="text-sm text-white/30 text-center py-4">
+        <p className="text-sm text-[var(--text-tertiary)] text-center py-4">
           Sin datos de uso — ejecuta un proyecto para ver las estadísticas
         </p>
       )}
 
-      <p className="text-xs text-white/30 italic">
+      <p className="text-xs text-[var(--text-disabled)] italic">
         Los precios son estimados basados en tarifas públicas de Anthropic y pueden variar.
       </p>
     </section>

@@ -1,16 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import dynamic from 'next/dynamic';
-import { AlertTriangle, Pencil } from 'lucide-react';
+import { AlertTriangle, Pencil, FileText, Database, Plug } from 'lucide-react';
 import { SpecEditor } from './spec-editor';
-import '@uiw/react-md-editor/markdown-editor.css';
-
-// MDEditor.Markdown — read-only markdown renderer (client-only)
-const MarkdownPreview = dynamic(
-  () => import('@uiw/react-md-editor').then((mod) => mod.default.Markdown),
-  { ssr: false },
-);
+import { PremiumMarkdown } from '@/components/ui/premium-markdown';
 
 export interface SpecFiles {
   spec: string;
@@ -20,10 +13,10 @@ export interface SpecFiles {
 
 type DocTab = 'spec' | 'dataModel' | 'apiDesign';
 
-const TABS: { value: DocTab; label: string }[] = [
-  { value: 'spec', label: 'spec.md' },
-  { value: 'dataModel', label: 'data-model.md' },
-  { value: 'apiDesign', label: 'api-design.md' },
+const TABS: { value: DocTab; label: string; Icon: React.ComponentType<{ className?: string }> }[] = [
+  { value: 'spec', label: 'spec.md', Icon: FileText },
+  { value: 'dataModel', label: 'data-model.md', Icon: Database },
+  { value: 'apiDesign', label: 'api-design.md', Icon: Plug },
 ];
 
 interface SpecViewerProps {
@@ -77,19 +70,20 @@ export function SpecViewer({ files, valid, onSave }: SpecViewerProps) {
       )}
 
       {/* Sub-tab bar + edit toggle */}
-      <div className="flex items-center justify-between border-b border-white/10">
+      <div className="flex items-center justify-between border-b border-[var(--muted-border)]">
         <div className="flex">
           {TABS.map((tab) => (
             <button
               key={tab.value}
               type="button"
               onClick={() => setActiveTab(tab.value)}
-              className={`px-4 py-2 text-xs font-mono transition-colors ${
+              className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-mono transition-colors ${
                 activeTab === tab.value
-                  ? 'text-white border-b-2 border-violet-400 -mb-px'
-                  : 'text-white/40 hover:text-white/70'
+                  ? 'text-[var(--text-primary)] border-b-2 border-[var(--accent-400)] -mb-px bg-[rgba(var(--accent-rgb)/0.06)]'
+                  : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-header)]'
               }`}
             >
+              <tab.Icon className="w-3.5 h-3.5" />
               {tab.label}
             </button>
           ))}
@@ -101,7 +95,7 @@ export function SpecViewer({ files, valid, onSave }: SpecViewerProps) {
               setEditedFiles({ ...files });
               setEditMode(true);
             }}
-            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs rounded-md border border-white/10 text-white/50 hover:text-white hover:border-white/30 transition-colors mb-px"
+            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs rounded-md border border-[var(--muted-border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--text-disabled)] transition-colors mb-px"
             aria-label="Editar documento"
           >
             <Pencil className="w-3 h-3" />
@@ -120,17 +114,13 @@ export function SpecViewer({ files, valid, onSave }: SpecViewerProps) {
           isSaving={isSaving}
         />
       ) : (
-        <div
-          className="rounded-xl bg-black/20 border border-white/10 p-4 max-h-[600px] overflow-y-auto min-h-[200px]"
-          data-color-mode="dark"
-        >
+        <div className="rounded-xl bg-[var(--surface-console)] border border-[var(--muted-border)] max-h-[700px] overflow-y-auto min-h-[200px]">
           {activeContent ? (
-            <MarkdownPreview
-              source={activeContent}
-              style={{ background: 'transparent', color: 'rgba(255,255,255,0.8)' }}
-            />
+            <div className="p-6 md:p-8">
+              <PremiumMarkdown source={activeContent} />
+            </div>
           ) : (
-            <p className="text-white/30 text-sm text-center py-8">Sin contenido en este documento</p>
+            <p className="text-[var(--text-tertiary)] text-sm text-center py-12">Sin contenido en este documento</p>
           )}
         </div>
       )}

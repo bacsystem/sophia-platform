@@ -11,13 +11,18 @@ interface DashboardEmptyProps {
 /** @description Empty state for the dashboard when project has not started generating */
 export function DashboardEmpty({ projectId: _projectId }: DashboardEmptyProps) {
   return (
-    <div className="flex flex-col items-center justify-center flex-1 gap-4 text-center py-16">
-      <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
-        <Cpu className="w-8 h-8 text-white/30" />
+    <div className="flex flex-col items-center justify-center flex-1 gap-5 text-center py-16">
+      <div className="relative">
+        <div className="w-20 h-20 rounded-2xl bg-[var(--surface-header)] border border-[var(--muted-border)] flex items-center justify-center">
+          <Cpu className="w-9 h-9 text-[rgba(var(--accent-rgb)/0.30)]" />
+        </div>
+        <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-[rgba(var(--accent-rgb)/0.20)] border border-[rgba(var(--accent-rgb)/0.30)] animate-pulse" />
       </div>
       <div>
-        <h2 className="text-sm font-medium text-white/60">Dashboard de Agentes</h2>
-        <p className="text-xs text-white/30 mt-1 max-w-sm">
+        <h2 className="text-sm font-bold tracking-wider text-[var(--text-secondary)] uppercase" style={{ fontFamily: "var(--font-display, 'Syne', sans-serif)" }}>
+          Dashboard de Agentes
+        </h2>
+        <p className="text-xs text-[var(--text-disabled)] mt-2 max-w-sm leading-relaxed" style={{ fontFamily: "var(--font-mono, 'Space Mono', monospace)" }}>
           Inicia la generación del proyecto para ver el progreso de los agentes en tiempo real.
           El canvas se activará cuando el primer agente comience a trabajar.
         </p>

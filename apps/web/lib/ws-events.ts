@@ -16,6 +16,8 @@ export interface AgentEvent {
   layer?: number;
   progress?: number;
   message?: string;
+  tokensUsed?: number;
+  filesCount?: number;
   timestamp: string;
 }
 

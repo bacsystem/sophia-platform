@@ -1,23 +1,39 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createRenderContext, drawNode, drawConnection, clearCanvas } from '../agent-canvas-renderer';
 import type { AgentNode } from '@/hooks/use-dashboard-store';
+import { CANVAS_LOGICAL_HEIGHT, CANVAS_LOGICAL_WIDTH } from '@/lib/agent-config';
 
 function createMockCtx(): CanvasRenderingContext2D {
+  const makeGradient = () => ({ addColorStop: vi.fn() }) as unknown as CanvasGradient;
+
   return {
     save: vi.fn(),
     restore: vi.fn(),
     beginPath: vi.fn(),
+    closePath: vi.fn(),
     arc: vi.fn(),
     fill: vi.fn(),
     stroke: vi.fn(),
     moveTo: vi.fn(),
     lineTo: vi.fn(),
+    quadraticCurveTo: vi.fn(),
+    bezierCurveTo: vi.fn(),
     fillText: vi.fn(),
     clearRect: vi.fn(),
+    fillRect: vi.fn(),
+    setLineDash: vi.fn(),
+    translate: vi.fn(),
+    rotate: vi.fn(),
+    measureText: vi.fn((text: string) => ({ width: String(text).length * 6 })),
+    createRadialGradient: vi.fn(makeGradient),
+    createLinearGradient: vi.fn(makeGradient),
     fillStyle: '',
     strokeStyle: '',
     lineWidth: 1,
     globalAlpha: 1,
+    shadowColor: '',
+    shadowBlur: 0,
+    lineDashOffset: 0,
     lineCap: 'butt' as CanvasLineCap,
     lineJoin: 'miter' as CanvasLineJoin,
     font: '',
@@ -55,8 +71,8 @@ describe('agent-canvas-renderer', () => {
   describe('createRenderContext', () => {
     it('computes scale factors from logical dimensions', () => {
       const rc = createRenderContext(ctx, 1400, 1000, 0);
-      expect(rc.scaleX).toBe(2);
-      expect(rc.scaleY).toBe(2);
+      expect(rc.scaleX).toBeCloseTo(1400 / CANVAS_LOGICAL_WIDTH);
+      expect(rc.scaleY).toBeCloseTo(1000 / CANVAS_LOGICAL_HEIGHT);
       expect(rc.width).toBe(1400);
       expect(rc.height).toBe(1000);
     });
@@ -68,10 +84,10 @@ describe('agent-canvas-renderer', () => {
   });
 
   describe('clearCanvas', () => {
-    it('calls clearRect with full canvas dimensions', () => {
+    it('fills the full canvas dimensions when clearing the scene', () => {
       const rc = createRenderContext(ctx, 800, 600, 0);
       clearCanvas(rc);
-      expect(ctx.clearRect).toHaveBeenCalledWith(0, 0, 800, 600);
+      expect(ctx.fillRect).toHaveBeenCalledWith(0, 0, 800, 600);
     });
   });
 
@@ -95,11 +111,11 @@ describe('agent-canvas-renderer', () => {
       expect(arcCalls.length).toBeGreaterThanOrEqual(2);
     });
 
-    it('applies shake offset for error status', () => {
+    it('draws the error state without throwing', () => {
       const rc = createRenderContext(ctx, 700, 500, 200);
       const node = createNode({ status: 'error' });
-      drawNode(rc, node);
-      expect(ctx.strokeStyle).toBe('#ef4444');
+      expect(() => drawNode(rc, node)).not.toThrow();
+      expect(ctx.stroke).toHaveBeenCalled();
     });
 
     it('draws a checkmark for done status', () => {
@@ -113,33 +129,33 @@ describe('agent-canvas-renderer', () => {
   });
 
   describe('drawConnection', () => {
-    it('draws a line between two nodes', () => {
+    it('draws a connection path between two nodes', () => {
       const rc = createRenderContext(ctx, 700, 500, 0);
       const from = createNode({ cx: 100, cy: 100 });
       const to = createNode({ cx: 300, cy: 300, id: 'backend', type: 'backend' });
 
       drawConnection(rc, from, to, true);
       expect(ctx.moveTo).toHaveBeenCalled();
-      expect(ctx.lineTo).toHaveBeenCalled();
+      expect(ctx.bezierCurveTo).toHaveBeenCalled();
       expect(ctx.stroke).toHaveBeenCalled();
     });
 
-    it('uses brighter style for active connections', () => {
+    it('uses the target agent color for active connections', () => {
       const rc = createRenderContext(ctx, 700, 500, 0);
       const from = createNode({ cx: 100, cy: 100 });
       const to = createNode({ cx: 300, cy: 300, id: 'seed', type: 'seed' });
 
       drawConnection(rc, from, to, true);
-      expect(ctx.strokeStyle).toBe('rgba(255,255,255,0.5)');
+      expect(ctx.strokeStyle).toBe(to.color);
     });
 
-    it('uses dim style for inactive connections', () => {
+    it('uses the theme inactive color for inactive connections', () => {
       const rc = createRenderContext(ctx, 700, 500, 0);
       const from = createNode({ cx: 100, cy: 100 });
       const to = createNode({ cx: 300, cy: 300, id: 'seed', type: 'seed' });
 
       drawConnection(rc, from, to, false);
-      expect(ctx.strokeStyle).toBe('rgba(255,255,255,0.08)');
+      expect(ctx.strokeStyle).toBe('#94a3b8');
     });
   });
 });

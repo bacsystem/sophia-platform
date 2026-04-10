@@ -24,7 +24,9 @@ export async function wsRoutes(app: FastifyInstance): Promise<void> {
         userId = await authenticateWsRequest(req);
         await verifyProjectOwnership(userId, projectId);
       } catch (err) {
-        socket.close(4401, err instanceof Error ? err.message : 'Unauthorized');
+        const reason = (err instanceof Error ? err.message : 'Unauthorized').slice(0, 123);
+        req.log.warn({ projectId, reason, hasCookies: !!req.cookies?.access_token }, 'WS auth failed');
+        socket.close(4401, reason);
         return;
       }
 

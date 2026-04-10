@@ -397,4 +397,54 @@ describe('Auth API', () => {
       expect(refreshRes.statusCode).toBe(401);
     });
   });
+
+  describe('GET /api/auth/session', () => {
+    it('should return expiresAt and user data with valid access token', async () => {
+      // Clear rate limits to avoid interference
+      const redis = getRedisClient();
+      const keys = await redis.keys('auth:*');
+      if (keys.length) await redis.del(...keys);
+
+      const email = `session-test-${Date.now()}@example.com`;
+      await app.inject({
+        method: 'POST',
+        url: '/api/auth/register',
+        payload: { name: 'Session User', email, password: 'password1' },
+      });
+
+      const loginRes = await app.inject({
+        method: 'POST',
+        url: '/api/auth/login',
+        payload: { email, password: 'password1', rememberMe: false },
+      });
+
+      const accessCookie = loginRes.cookies.find((c: { name: string }) => c.name === 'access_token');
+
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/auth/session',
+        cookies: { access_token: accessCookie!.value },
+      });
+
+      expect(res.statusCode).toBe(200);
+      const body = JSON.parse(res.body);
+      expect(body.data).toHaveProperty('expiresAt');
+      expect(body.data.user).toHaveProperty('id');
+      expect(body.data.user.email).toBe(email);
+      expect(body.data.user.name).toBe('Session User');
+
+      // expiresAt should be in the future
+      const expiresAt = new Date(body.data.expiresAt);
+      expect(expiresAt.getTime()).toBeGreaterThan(Date.now());
+    });
+
+    it('should return 401 without access token', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/auth/session',
+      });
+
+      expect(res.statusCode).toBe(401);
+    });
+  });
 });

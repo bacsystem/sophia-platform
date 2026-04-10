@@ -61,7 +61,7 @@ export function ProjectActions({ project }: ProjectActionsProps) {
             type="button"
             onClick={() => void callAction('pause')}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white border border-yellow-500/30 bg-yellow-500/10 hover:bg-yellow-500/20 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border border-[var(--color-warn-subtle)] bg-[var(--color-warn-subtle)] text-[var(--color-warn)] hover:opacity-80 transition-opacity disabled:opacity-50"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Pause className="w-4 h-4" />}
             Pausar
@@ -85,7 +85,7 @@ export function ProjectActions({ project }: ProjectActionsProps) {
             type="button"
             onClick={() => void callAction('retry')}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white border border-orange-500/30 bg-orange-500/10 hover:bg-orange-500/20 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border border-[var(--color-warn-subtle)] bg-[var(--color-warn-subtle)] text-[var(--color-warn)] hover:opacity-80 transition-opacity disabled:opacity-50"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
             Reintentar
@@ -93,15 +93,14 @@ export function ProjectActions({ project }: ProjectActionsProps) {
         )}
 
         {project.status === 'done' && (
-          <button
-            type="button"
-            disabled
-            title="Descarga disponible en M6"
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white/30 border border-white/10 cursor-not-allowed"
+          <a
+            href={`/projects/${project.id}/files`}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-green-400/80 border border-green-500/20 hover:border-green-500/40 hover:text-green-400 hover:bg-green-500/10 transition-colors"
+            aria-label="Ver archivos generados"
           >
             <Download className="w-4 h-4" />
-            Descargar ZIP
-          </button>
+            Ver archivos
+          </a>
         )}
 
         {/* Dashboard — visible when generation has started */}
@@ -120,7 +119,7 @@ export function ProjectActions({ project }: ProjectActionsProps) {
         {project.status === 'idle' && (
           <a
             href={`/projects/${project.id}/edit`}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white/60 border border-white/10 hover:border-white/20 hover:text-white/80 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-[var(--text-secondary)] border border-[var(--muted-border)] hover:border-[var(--text-disabled)] hover:text-[var(--text-primary)] transition-colors"
             aria-label="Editar proyecto"
           >
             <Pencil className="w-4 h-4" />

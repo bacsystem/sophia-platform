@@ -35,7 +35,7 @@ export function SpecEditor({ content, onChange, onSave, onCancel, isSaving = fal
           type="button"
           onClick={onCancel}
           disabled={isSaving}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border border-white/10 text-white/60 hover:text-white hover:border-white/30 transition-colors disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border border-[var(--muted-border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--text-disabled)] transition-colors disabled:opacity-50"
         >
           <X className="w-3.5 h-3.5" />
           Cancelar
@@ -44,7 +44,7 @@ export function SpecEditor({ content, onChange, onSave, onCancel, isSaving = fal
           type="button"
           onClick={handleSave}
           disabled={isSaving}
-          className="inline-flex items-center gap-1.5 px-4 py-1.5 text-sm rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-medium transition-colors disabled:opacity-50"
+          className="btn-primary inline-flex items-center gap-1.5 px-4 py-1.5 text-sm rounded-lg font-medium disabled:opacity-50"
         >
           {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
           Guardar versión

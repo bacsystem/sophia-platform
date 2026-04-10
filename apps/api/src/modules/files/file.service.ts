@@ -1,10 +1,16 @@
 import fs from 'node:fs/promises';
 import { createReadStream, existsSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import archiver from 'archiver';
 import prisma from '../../lib/prisma.js';
 
-const PROJECTS_BASE_DIR = process.env.PROJECTS_BASE_DIR ?? './projects';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const PROJECTS_BASE_DIR = path.resolve(
+  process.env.PROJECTS_BASE_DIR ?? path.join(__dirname, '..', '..', '..', '..', 'projects'),
+);
 
 /** @description Max file size displayed in viewer (1 MB) */
 const MAX_PREVIEW_BYTES = 1_048_576;

@@ -6,6 +6,29 @@ Versionado semántico a nivel de proyecto: `MAJOR.MINOR.PATCH`.
 
 ---
 
+## [v0.7.1] — 2026-04-10 ✅ System-wide fixes
+
+### Added
+- Sistema de theming global con soporte `light` / `dark` / `system`, color themes persistentes y 6 paletas dark configurables
+- Nueva ruta `/settings/profile` para centralizar Apariencia, Perfil y Cambio de contraseña
+- Hooks `use-color-theme`, `use-dark-palette` y `use-token-refresh` para persistencia visual y renovación proactiva de sesión
+- Provider de tema y utilidades UI reutilizables para superficies, botones e inputs consistentes en todo `apps/web`
+
+### Changed
+- `/settings` ahora prioriza API key y uso, dejando la configuración personal en una página dedicada
+- Se unificó la tipografía de la app con `Syne` + `Space Mono` mediante variables CSS y Tailwind tokens
+- Se actualizó `CLAUDE.md` y el tracker global para reflejar el cierre del hotfix `008-system-wide-fixes`
+
+### Fixed
+- Persistencia del tema de color y de la dark palette después de refresh restaurando atributos antes de la hidratación
+- Eliminación de colores hardcodeados en botones, cards, iconos, dashboards, auth, proyectos, files y spec viewer
+- Redirección de “Mi perfil” hacia `/settings/profile` y visibilidad correcta de opciones de apariencia según el modo activo
+- Verificación de API key con reintentos y mensajes diferenciados, errores SSE más claros en generación de specs y refresh proactivo de sesión
+- Se ignoró `apps/api/projects/` como salida runtime para evitar commits accidentales de código generado
+
+### Removed
+- N/A
+
 ## [v0.7.0] — 2026-06-07 ✅ M7 Settings
 
 ### Added

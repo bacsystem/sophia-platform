@@ -4,11 +4,13 @@
 
 import { useEffect, useRef, useCallback, useState } from 'react';
 import type { AgentEvent } from '@/lib/ws-events';
-import { LAYER_AGENTS } from '@/lib/agent-config';
+import { LAYER_AGENTS, AGENT_CONFIGS, type AgentType } from '@/lib/agent-config';
 import { useDashboardStore } from '@/hooks/use-dashboard-store';
 
 const WS_BASE = process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 const RECONNECT_DELAY_MS = 3000;
+const MAX_RECONNECT_ATTEMPTS = 5;
 
 interface UseWebSocketOptions {
   projectId: string;
@@ -28,13 +30,15 @@ export function useWebSocket({ projectId, enabled = true }: UseWebSocketOptions)
   const lastEventIdRef = useRef<string>('');
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
+  const reconnectAttemptsRef = useRef(0);
 
   const store = useDashboardStore;
 
   const handleEvent = useCallback((event: AgentEvent) => {
     lastEventIdRef.current = event.timestamp;
     const state = store.getState();
-    const agentType = event.agentType;
+    // Backend emits 'dba-agent', 'seed-agent', etc. Store uses 'dba', 'seed', etc.
+    const agentType = event.agentType?.replace(/-agent$/, '') ?? undefined;
 
     switch (event.type) {
       case 'agent:started': {
@@ -45,9 +49,10 @@ export function useWebSocket({ projectId, enabled = true }: UseWebSocketOptions)
             currentTask: event.message ?? null,
           });
           state.updateAgent('orchestrator', { status: 'working' });
-          const layerIdx = event.layer ?? LAYER_AGENTS.indexOf(agentType as typeof LAYER_AGENTS[number]);
+          const layerIdx = LAYER_AGENTS.indexOf(agentType as typeof LAYER_AGENTS[number]);
           if (layerIdx >= 0) {
-            state.setCurrentLayer(layerIdx + 1, agentType);
+            const label = AGENT_CONFIGS[agentType as AgentType]?.label ?? agentType;
+            state.setCurrentLayer(layerIdx + 1, label);
           }
           // Mark previous agents as queued→done is handled by completed events
           state.setActiveAgents(state.agents.filter((a) => a.status === 'working').length + 1);
@@ -111,13 +116,24 @@ export function useWebSocket({ projectId, enabled = true }: UseWebSocketOptions)
             progress: 100,
             completedAt: event.timestamp,
             currentTask: null,
+            tokensUsed: event.tokensUsed ?? 0,
+            filesCreated: event.filesCount ?? 0,
           });
           state.setActiveAgents(
             Math.max(0, state.agents.filter((a) => a.status === 'working').length - 1),
           );
-          if (event.layer !== undefined) {
-            state.updateAgent(agentType, { tokensUsed: event.progress ?? 0 });
+          // Accumulate global tokens
+          if (event.tokensUsed) {
+            state.setTokensUsed(state.tokensUsed + event.tokensUsed);
           }
+          // Update global file count
+          if (event.filesCount) {
+            state.setTotalFiles(state.totalFiles + event.filesCount);
+          }
+        }
+        // Update pipeline progress from backend
+        if (event.progress !== undefined) {
+          state.setProgress(event.progress);
         }
         state.addLog({
           id: `${event.timestamp}-completed`,
@@ -212,6 +228,7 @@ export function useWebSocket({ projectId, enabled = true }: UseWebSocketOptions)
       if (!mountedRef.current) return;
       store.getState().setConnected(true);
       setReconnecting(false);
+      reconnectAttemptsRef.current = 0;
     };
 
     ws.onmessage = (e) => {
@@ -224,10 +241,29 @@ export function useWebSocket({ projectId, enabled = true }: UseWebSocketOptions)
       }
     };
 
-    ws.onclose = () => {
+    ws.onclose = (e) => {
       if (!mountedRef.current) return;
       store.getState().setConnected(false);
-      // Auto-reconnect
+      // Normal closure — don't reconnect
+      if (e.code === 1000) return;
+      // Auth error — try refreshing the token once, then reconnect
+      if (e.code === 4401) {
+        if (reconnectAttemptsRef.current >= 1) return; // already tried once after refresh
+        reconnectAttemptsRef.current += 1;
+        fetch(`${API_URL}/api/auth/refresh`, { method: 'POST', credentials: 'include' })
+          .then((res) => {
+            if (res.ok && mountedRef.current) {
+              reconnectTimerRef.current = setTimeout(() => {
+                if (mountedRef.current) connect();
+              }, 500);
+            }
+          })
+          .catch(() => { /* give up */ });
+        return;
+      }
+      // Cap reconnect attempts to avoid infinite loop
+      if (reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) return;
+      reconnectAttemptsRef.current += 1;
       setReconnecting(true);
       reconnectTimerRef.current = setTimeout(() => {
         if (mountedRef.current) connect();

@@ -9,12 +9,14 @@ import {
 import {
   startSpecGeneration,
   subscribeToSpecJob,
+  recoverSpecJob,
   getSpec,
   getSpecVersions,
   getSpecVersion,
   updateSpec,
 } from './spec.service.js';
 import { initSseStream, sendSseEvent, endSseStream } from './spec.stream.js';
+import prisma from '../../lib/prisma.js';
 
 /** Starts spec generation for a project and returns a jobId (202). */
 export async function generateSpecHandler(
@@ -61,9 +63,42 @@ export async function specStreamHandler(
   );
 
   if (unsubscribe === null) {
-    // Job not found — send error event and close
-    sendSseEvent(reply, { type: 'error', file: '', message: 'Job no encontrado', retryable: false });
-    endSseStream(reply);
+    try {
+      const project = await prisma.project.findFirst({
+        where: { id: params.data.id, userId: request.user.sub, deletedAt: null },
+        select: { id: true },
+      });
+
+      if (!project) {
+        sendSseEvent(reply, {
+          type: 'error',
+          file: '',
+          message: 'Proyecto no encontrado o acceso denegado',
+          retryable: false,
+        });
+        return;
+      }
+
+      const recovery = await recoverSpecJob(params.data.id);
+      if (recovery) {
+        sendSseEvent(reply, {
+          type: 'done',
+          version: recovery.version,
+          files: ['spec.md', 'data-model.md', 'api-design.md'],
+        });
+      } else {
+        sendSseEvent(reply, { type: 'error', file: '', message: 'Job no encontrado', retryable: false });
+      }
+    } catch (err) {
+      sendSseEvent(reply, {
+        type: 'error',
+        file: '',
+        message: err instanceof Error ? err.message : String(err),
+        retryable: false,
+      });
+    } finally {
+      endSseStream(reply);
+    }
     return;
   }
 

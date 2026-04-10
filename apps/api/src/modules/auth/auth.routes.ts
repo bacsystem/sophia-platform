@@ -8,6 +8,7 @@ import {
   forgotPasswordHandler,
   resetPasswordHandler,
   getMeHandler,
+  getSessionHandler,
 } from './auth.controller.js';
 
 export async function authRoutes(app: FastifyInstance) {
@@ -21,4 +22,5 @@ export async function authRoutes(app: FastifyInstance) {
   // Protected routes
   app.post('/logout', { preHandler: [authenticate] }, logoutHandler);
   app.get('/me', { preHandler: [authenticate] }, getMeHandler);
+  app.get('/session', { preHandler: [authenticate] }, getSessionHandler);
 }

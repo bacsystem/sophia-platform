@@ -43,8 +43,8 @@ export function DownloadButton({ projectId, projectStatus, totalSizeBytes }: Dow
       title={tooltip}
       className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
         canDownload
-          ? 'bg-violet-500/20 text-violet-300 hover:bg-violet-500/30'
-          : 'bg-white/5 text-white/25 cursor-not-allowed'
+          ? 'bg-[rgba(var(--accent-rgb)/0.20)] text-[var(--accent-300)] hover:bg-[rgba(var(--accent-rgb)/0.30)]'
+          : 'bg-[var(--surface-header)] text-[var(--text-disabled)] cursor-not-allowed'
       }`}
     >
       {canDownload ? (

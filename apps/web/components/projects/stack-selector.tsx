@@ -54,22 +54,22 @@ export function StackSelector({ value, onChange, error }: StackSelectorProps) {
               onClick={() => onChange(option.value)}
               className={`relative p-4 rounded-xl border text-left transition-all duration-200 bg-gradient-to-br ${option.color} ${
                 isSelected
-                  ? 'border-violet-500/60 shadow-[0_0_0_2px_rgba(139,92,246,0.3)]'
-                  : 'border-white/10 hover:border-white/20'
+                    ? 'border-[rgba(var(--accent-rgb)/0.55)] shadow-[0_0_0_2px_rgba(var(--accent-rgb)/0.20)]'
+                    : 'border-[var(--muted-border)] hover:border-[rgba(var(--accent-rgb)/0.30)]'
               }`}
               aria-pressed={isSelected}
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <p className="text-sm font-semibold text-white">{option.label}</p>
-                  <p className="text-xs text-white/50 mt-1">{option.description}</p>
+                  <p className="text-sm font-semibold text-[var(--text-primary)]">{option.label}</p>
+                  <p className="text-xs text-[var(--text-secondary)] mt-1">{option.description}</p>
                 </div>
-                <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-bold bg-white/10 text-white/70">
+                <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-bold bg-[var(--surface-header)] text-[var(--text-secondary)]">
                   {option.badge}
                 </span>
               </div>
               {isSelected && (
-                <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-violet-400" />
+                <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[var(--accent-500)]" />
               )}
             </button>
           );

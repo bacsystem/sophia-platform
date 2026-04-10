@@ -41,10 +41,13 @@ export default async function DashboardPage({ params }: { params: Promise<{ id: 
   const startedAt = project.status !== 'idle' ? project.updatedAt : null;
 
   return (
-    <DashboardLayout
-      projectId={project.id}
-      projectName={project.name}
-      startedAt={startedAt}
-    />
+    <div className="h-full overflow-hidden">
+      <DashboardLayout
+        projectId={project.id}
+        projectName={project.name}
+        startedAt={startedAt}
+        initialStatus={project.status}
+      />
+    </div>
   );
 }

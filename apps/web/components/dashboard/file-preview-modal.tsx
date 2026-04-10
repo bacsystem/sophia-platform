@@ -93,24 +93,24 @@ export function FilePreviewModal({ file, projectId, onClose }: FilePreviewModalP
       aria-modal="true"
       aria-label={`Vista previa: ${file.path}`}
     >
-      <div className="bg-gray-900 border border-white/10 rounded-xl shadow-2xl w-[90vw] max-w-4xl max-h-[80vh] flex flex-col">
+      <div className="bg-[var(--surface-console)] border border-[var(--muted-border)] rounded-xl shadow-2xl w-[90vw] max-w-4xl max-h-[80vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--muted-border)]">
           <div>
-            <h3 className="text-sm font-medium text-white">{file.name}</h3>
-            <p className="text-xs text-white/40">{file.path}</p>
+            <h3 className="text-sm font-medium text-[var(--text-primary)]">{file.name}</h3>
+            <p className="text-xs text-[var(--text-tertiary)]">{file.path}</p>
           </div>
           <div className="flex gap-2">
             <button
               onClick={handleCopy}
-              className="text-white/40 hover:text-white/70 transition-colors p-1"
+              className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors p-1"
               aria-label="Copiar contenido"
             >
-              {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+              {copied ? <Check className="w-4 h-4 text-[var(--color-success)]" /> : <Copy className="w-4 h-4" />}
             </button>
             <button
               onClick={onClose}
-              className="text-white/40 hover:text-white/70 transition-colors p-1"
+              className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors p-1"
               aria-label="Cerrar vista previa"
             >
               <X className="w-4 h-4" />
@@ -122,7 +122,7 @@ export function FilePreviewModal({ file, projectId, onClose }: FilePreviewModalP
         <div className="flex-1 overflow-auto">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="w-6 h-6 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+              <div className="w-6 h-6 border-2 border-[var(--muted-border)] border-t-[var(--text-secondary)] rounded-full animate-spin" />
             </div>
           ) : (
             <div

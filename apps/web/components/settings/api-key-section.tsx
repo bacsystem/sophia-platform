@@ -130,7 +130,7 @@ export function ApiKeySection() {
   if (loading) {
     return (
       <section className="glass rounded-2xl p-6">
-        <div className="flex items-center gap-2 text-white/50">
+        <div className="flex items-center gap-2 text-[var(--text-secondary)]">
           <Loader2 className="w-4 h-4 animate-spin" />
           <span className="text-sm">Cargando...</span>
         </div>
@@ -141,8 +141,8 @@ export function ApiKeySection() {
   return (
     <section className="glass rounded-2xl p-6 space-y-4">
       <div className="flex items-center gap-3">
-        <Key className="w-5 h-5 text-violet-400" />
-        <h2 className="text-lg font-semibold text-white">API Key de Anthropic</h2>
+        <Key className="w-5 h-5 text-[var(--accent-400)]" />
+        <h2 className="text-lg font-semibold text-[var(--text-primary)]">API Key de Anthropic</h2>
       </div>
 
       {serverError && (
@@ -154,9 +154,9 @@ export function ApiKeySection() {
 
       {status?.configured ? (
         <div className="space-y-3">
-          <div className="flex items-center justify-between bg-white/5 rounded-xl px-4 py-3">
+          <div className="flex items-center justify-between bg-[var(--surface-header)] rounded-xl px-4 py-3">
             <div>
-              <p className="text-white text-sm font-medium font-mono">
+              <p className="text-[var(--text-primary)] text-sm font-medium font-mono">
                 sk-ant-...{status.last4}
               </p>
               {status.verifiedAt && (
@@ -170,7 +170,7 @@ export function ApiKeySection() {
               <button
                 onClick={handleVerify}
                 disabled={verifying}
-                className="px-3 py-1.5 text-xs font-medium text-violet-300 bg-violet-500/10 rounded-lg hover:bg-violet-500/20 transition-colors disabled:opacity-50"
+                className="px-3 py-1.5 text-xs font-medium text-[var(--accent-300)] bg-[rgba(var(--accent-rgb)/0.10)] rounded-lg hover:bg-[rgba(var(--accent-rgb)/0.20)] transition-colors disabled:opacity-50"
                 aria-label="Verificar API key"
               >
                 {verifying ? (
@@ -194,7 +194,7 @@ export function ApiKeySection() {
             </div>
           </div>
 
-          <p className="text-xs text-white/30">
+          <p className="text-xs text-[var(--text-disabled)]">
             Puedes reemplazar tu API key guardando una nueva.
           </p>
 
@@ -216,7 +216,7 @@ export function ApiKeySection() {
                 </button>
                 <button
                   onClick={() => setShowDeleteConfirm(false)}
-                  className="px-3 py-1.5 text-xs font-medium text-white/60 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
+                  className="px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] bg-[var(--surface-header)] rounded-lg hover:bg-[var(--row-hover)] transition-colors"
                 >
                   Cancelar
                 </button>
@@ -233,7 +233,7 @@ export function ApiKeySection() {
             href="https://console.anthropic.com/settings/keys"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-violet-400 hover:text-violet-300 underline mt-1 inline-block"
+            className="text-xs text-[var(--accent-400)] hover:text-[var(--accent-300)] underline mt-1 inline-block"
           >
             Obtener una API key en console.anthropic.com
           </a>
@@ -242,7 +242,7 @@ export function ApiKeySection() {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
         <div>
-          <label htmlFor="apiKey" className="block text-sm text-white/60 mb-1.5">
+          <label htmlFor="apiKey" className="block text-sm text-[var(--text-secondary)] mb-1.5">
             {status?.configured ? 'Reemplazar API Key' : 'API Key'}
           </label>
           <div className="relative">
@@ -250,13 +250,13 @@ export function ApiKeySection() {
               id="apiKey"
               type={showKey ? 'text' : 'password'}
               placeholder="sk-ant-api03-..."
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/20 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/30 pr-10"
+              className="w-full bg-[var(--surface-header)] border border-[var(--muted-border)] rounded-xl px-4 py-2.5 text-[var(--text-primary)] text-sm placeholder:text-[var(--text-disabled)] focus:outline-none focus:border-[rgba(var(--accent-rgb)/0.50)] focus:ring-1 focus:ring-[rgba(var(--accent-rgb)/0.30)] pr-10"
               {...register('apiKey')}
             />
             <button
               type="button"
               onClick={() => setShowKey((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
               aria-label={showKey ? 'Ocultar API key' : 'Mostrar API key'}
               aria-pressed={showKey}
             >
@@ -271,14 +271,14 @@ export function ApiKeySection() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="px-4 py-2 text-sm font-medium text-white bg-violet-600 rounded-xl hover:bg-violet-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="btn-primary px-4 py-2 text-sm font-medium rounded-xl flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
           {status?.configured ? 'Actualizar API Key' : 'Guardar API Key'}
         </button>
       </form>
 
-      <p className="text-xs text-white/30">
+      <p className="text-xs text-[var(--text-disabled)]">
         Tu API key se encripta con AES-256-GCM y nunca se muestra completa.
       </p>
     </section>

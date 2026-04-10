@@ -1,11 +1,6 @@
 import type { FastifyRequest } from 'fastify';
-import jwt from 'jsonwebtoken';
 import prisma from '../lib/prisma.js';
-
-interface JwtPayload {
-  userId: string;
-  email: string;
-}
+import { verifyAccessToken } from '../lib/jwt.js';
 
 /**
  * @description Authenticates a WebSocket handshake request using the access_token cookie.
@@ -14,19 +9,21 @@ interface JwtPayload {
 export async function authenticateWsRequest(req: FastifyRequest): Promise<string> {
   const token = req.cookies?.access_token;
   if (!token) throw new Error('Missing access_token cookie');
+  if (!process.env.JWT_ACCESS_SECRET) throw new Error('JWT_ACCESS_SECRET is not set');
 
-  const secret = process.env.JWT_ACCESS_SECRET;
-  if (!secret) throw new Error('JWT_ACCESS_SECRET not configured');
-
-  let payload: JwtPayload;
+  let userId: string;
   try {
-    payload = jwt.verify(token, secret) as JwtPayload;
-  } catch {
+    const payload = verifyAccessToken(token);
+    userId = payload.sub;
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('JWT_ACCESS_SECRET')) {
+      throw error;
+    }
     throw new Error('Invalid or expired access token');
   }
 
   const user = await prisma.user.findUnique({
-    where: { id: payload.userId },
+    where: { id: userId },
     select: { id: true },
   });
   if (!user) throw new Error('User not found');

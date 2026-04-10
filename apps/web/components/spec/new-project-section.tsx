@@ -17,7 +17,7 @@ export function NewProjectSection() {
   return (
     <div className="space-y-6">
       <TemplateGallery onSelect={handleTemplateSelect} />
-      <div className="border-t border-white/10" />
+      <div className="border-t border-[var(--muted-border)]" />
       <ProjectForm key={templateKey} templateValues={templateValues} />
     </div>
   );

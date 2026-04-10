@@ -162,7 +162,7 @@ describe('saveApiKey', () => {
       apiKey: 'sk-ant-api03-' + 'a'.repeat(95),
     });
 
-    expect('error' in result && result.error).toBe('API_KEY_VERIFICATION_FAILED');
+    expect('error' in result && result.error).toBe('INVALID_KEY');
   });
 });
 

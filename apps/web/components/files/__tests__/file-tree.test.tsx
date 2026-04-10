@@ -166,6 +166,6 @@ describe('FileTree', () => {
     );
 
     const selectedButton = screen.getByText('index.ts').closest('button');
-    expect(selectedButton?.className).toContain('bg-violet-500/20');
+    expect(selectedButton?.className).toContain('bg-[rgba(var(--accent-rgb)/0.20)]');
   });
 });

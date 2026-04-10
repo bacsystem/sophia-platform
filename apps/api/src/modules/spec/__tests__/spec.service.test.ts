@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterAll } from 'vitest';
 
 // Mock all external dependencies before importing the service
 vi.mock('../../../lib/prisma.js', () => ({
@@ -52,6 +52,20 @@ const mockSpec = prisma.projectSpec as unknown as {
   create: ReturnType<typeof vi.fn>;
 };
 const mockCheckRateLimit = checkRateLimit as ReturnType<typeof vi.fn>;
+const ORIGINAL_ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+
+beforeEach(() => {
+  process.env.ANTHROPIC_API_KEY = 'test-anthropic-key';
+});
+
+afterAll(() => {
+  if (ORIGINAL_ANTHROPIC_API_KEY === undefined) {
+    delete process.env.ANTHROPIC_API_KEY;
+    return;
+  }
+
+  process.env.ANTHROPIC_API_KEY = ORIGINAL_ANTHROPIC_API_KEY;
+});
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -129,6 +143,16 @@ describe('startSpecGeneration', () => {
 
     await expect(startSpecGeneration('proj-123', 'user-456')).rejects.toMatchObject({
       code: 'DESCRIPTION_TOO_SHORT',
+    });
+  });
+
+  it('throws SERVICE_UNAVAILABLE when ANTHROPIC_API_KEY is missing', async () => {
+    mockProject.findFirst.mockResolvedValueOnce(MOCK_PROJECT);
+    delete process.env.ANTHROPIC_API_KEY;
+
+    await expect(startSpecGeneration('proj-123', 'user-456')).rejects.toMatchObject({
+      code: 'SERVICE_UNAVAILABLE',
+      status: 503,
     });
   });
 
