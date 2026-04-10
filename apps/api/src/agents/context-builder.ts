@@ -78,9 +78,9 @@ export async function buildTaskPrompt(opts: ContextOptions): Promise<string> {
     ? `\n\n## Project Memory (decisiones y patrones acumulados)\n${projectMemory}`
     : '';
 
-  // 2. List all previously generated files (layers < currentLayer)
+  // 2. List all previously generated files (layers ≤ currentLayer for mid-layer recovery)
   const priorFiles = await prisma.generatedFile.findMany({
-    where: { projectId, layer: { lt: currentLayer } },
+    where: { projectId, layer: { lte: currentLayer } },
     orderBy: [{ layer: 'asc' }, { path: 'asc' }],
     take: MAX_CONTEXT_FILES,
     select: { path: true, sizeBytes: true },
@@ -108,7 +108,7 @@ export async function buildTaskPrompt(opts: ContextOptions): Promise<string> {
     }
 
     // If there are more files than we fetched, note it
-    const total = await prisma.generatedFile.count({ where: { projectId, layer: { lt: currentLayer } } });
+    const total = await prisma.generatedFile.count({ where: { projectId, layer: { lte: currentLayer } } });
     if (total > MAX_CONTEXT_FILES) {
       parts.push(`\n\n(${total - MAX_CONTEXT_FILES} archivos adicionales omitidos)`);
     }
