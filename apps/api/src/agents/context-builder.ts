@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import prisma from '../lib/prisma.js';
+import { extractCriteria } from './criteria-extractor.js';
 
 const TOKEN_BUDGET_CHARS = 160_000; // ~40K tokens at 4 chars/token
 const LARGE_FILE_CHARS = 10 * 1_024; // 10KB threshold for summarization
@@ -109,9 +110,15 @@ export async function buildTaskPrompt(opts: ContextOptions): Promise<string> {
     ? `\n\n## Project Memory (decisiones y patrones acumulados)\n${projectMemory}`
     : '';
 
-  // 1.6. For integration agent (L7), inject test-mapping.json if present
+  // 1.6. For integration agent (L7), inject criteriaMap + test-mapping.json if present
+  let criteriaMapSection = '';
   let testMappingSection = '';
   if (currentLayer === 7) {
+    const criteriaMap = extractCriteria(specContent);
+    if (Object.keys(criteriaMap).length > 0) {
+      criteriaMapSection = `\n\n## Criteria Map (extraído del spec)\n\`\`\`json\n${JSON.stringify(criteriaMap, null, 2)}\n\`\`\``;
+    }
+
     try {
       const raw = await fs.readFile(path.join(projectDir, 'test-mapping.json'), 'utf8');
       testMappingSection = `\n\n## test-mapping.json (generado por QA agent)\n\`\`\`json\n${raw}\n\`\`\``;
@@ -170,6 +177,6 @@ export async function buildTaskPrompt(opts: ContextOptions): Promise<string> {
   }
 
   return taskTemplate
-    .replace('{{SPEC}}', specContent + memorySection + testMappingSection)
+    .replace('{{SPEC}}', specContent + memorySection + criteriaMapSection + testMappingSection)
     .replace('{{FILES_LIST}}', filesContext || '(sin archivos previos)');
 }

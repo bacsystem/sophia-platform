@@ -4,6 +4,18 @@
 import type { CriteriaMap } from './criteria-extractor.js';
 import type { TestMapping } from './orchestrator.js';
 
+function getCriterionStatus(mapping: TestMapping['mappings'][number] | undefined): string {
+  if (!mapping?.testFile) {
+    return '❌ MISSING';
+  }
+
+  if (!mapping.testName || !mapping.type) {
+    return '⚠️ PARTIAL';
+  }
+
+  return '✅ COVERED';
+}
+
 /**
  * Generates a markdown certification report with requirement→test traceability.
  *
@@ -34,9 +46,9 @@ export function generateCertificationReport(
   for (const [huId, hu] of Object.entries(criteriaMap)) {
     for (const criterion of hu.criteria) {
       const mapping = mappingIndex.get(criterion.id);
-      const testName = mapping?.testName ?? '';
-      const testFile = mapping?.testFile ?? '';
-      const status = mapping?.testFile != null ? '✅ COVERED' : '❌ MISSING';
+      const testName = mapping?.testName ?? '—';
+      const testFile = mapping?.testFile ?? '—';
+      const status = getCriterionStatus(mapping);
       rows.push(
         `| ${huId} — ${hu.name} | ${criterion.id}: ${criterion.text} | ${testName} | ${testFile} | ${status} |`,
       );

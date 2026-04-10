@@ -6,7 +6,40 @@ Versionado semántico a nivel de proyecto: `MAJOR.MINOR.PATCH`.
 
 ---
 
-## [v0.7.1] — 2026-04-10 ✅ System-wide fixes
+## [v0.9.0] — 2026-04-10 ✅ M9 Agent Improvements
+
+### Added
+- **Shared Skills (Phase 1)**: `loadSharedSkills()` carga 9 skills comunes (error-handling, logging, etc.) y `composeSystemPrompt()` las inyecta en todos los agentes, eliminando duplicación de prompts
+- **Memory Persistence (Phase 2)**: `PersistentMemoryAgent` persiste cada turno Claude→Tool en `agent_logs` PostgreSQL; `resumeFromMemory()` reconstruye contexto tras crash; `project_memory.md` acumula decisiones de capas anteriores en filesystem
+- **Token Budget (Phase 2 cont.)**: `buildContextWithBudget()` prioriza archivos referenciados en la tarea sobre archivos generales; resume archivos grandes (>10KB) con head+tail para respetar el límite de 40K tokens de contexto
+- **Graceful Shutdown (Phase 2.5)**: `shutdown-state.ts` module con `isShuttingDown()` + `setShuttingDown()`; SIGTERM/SIGINT handlers en BullMQ worker que pausan la queue y esperan el turno activo antes de salir
+- **Per-call AbortController Timeout (Phase 2.5)**: cada llamada a Anthropic usa `AbortController` con timeout configurable vía `CLAUDE_CALL_TIMEOUT_MS`; `batchSignal` aborta el agente completo ante timeout
+- **Memory Monitoring (Phase 2.5)**: `MemoryMonitor` emite evento `agent:warning` y trunca `project_memory.md` cuando el proceso supera `MAX_MEMORY_MB` (default: 1536MB)
+- **Parallel Agent Execution (Phase 3)**: `dependency-graph.ts` define grafo AGENT_GRAPH con 9 nodos; orquestador ejecuta L4‖L4.5 y L5‖L6 en paralelo con `Promise.all`, reduciendo tiempo de pipeline estimado en ~22%
+- **Batch AbortController (Phase 3)**: `batchSignal` aborta todos los agentes del batch si uno falla; `pauseWatcher` detecta señal Redis de pausa durante ejecución paralela
+- **WebSocket parallel events (Phase 3)**: nuevos eventos `pipeline:batch:start`, `pipeline:batch:complete`, `pipeline:batch:failed`; `agent:paused` emitido correctamente en contexto paralelo
+- **HU Certification Pipeline (Phase 4)**:
+  - `criteria-extractor.ts`: parsea criterios de aceptación `### HU-XX` + `- [ ]` del spec, genera IDs secuenciales (`HU-XX.CA-01`)
+  - `quality-gate.ts`: `verifyCriteriaCoverage()` compara CriteriaMap vs TestMapping, retorna `{ passed, coveragePercent, covered, total, missing }`; threshold configurable vía `CRITERIA_COVERAGE_THRESHOLD` (default: 80%)
+  - `certification-report.ts`: `generateCertificationReport()` genera markdown con matriz HU → criterio → test; estados ✅ COVERED / ❌ MISSING
+  - `skills/qa-agent/task.md`: instrucciones para generar `test-mapping.json` (formato validado con Zod)
+  - `skills/integration-agent/task.md`: Fase 7 — instructions para generar `docs/certification.md` con matriz completa
+  - `tool-definitions.ts`: `RESERVED_OUTPUT_SCHEMAS` documenta el contrato JSON de `test-mapping.json`
+  - `context-builder.ts`: inyecta `test-mapping.json` en el contexto de L7 (integration agent) vía `currentLayer === 7`
+- **Thread Safety (Phase 4.5)**: tests de concurrencia verifican que el singleton Anthropic SDK es thread-safe para parallel execution; ADR documentado en `docs/adr/singleton-anthropic-client.md`
+- **Performance Benchmarks (Phase 5)**: `performance.test.ts` — 6 tests que validan SLA targets: criteria extraction <200ms, certification report <200ms, string composition <10ms, JSON parse <10ms, async dispatch <50ms
+
+### Changed
+- `orchestrator.ts`: reemplaza bucle secuencial por ejecución por batches usando `getNextLayers()`; `ContextOptions` usa `completedLayers: Set<number>` en lugar de `currentLayer: number`
+- `context-builder.ts`: `ContextOptions` acepta `currentLayer?: number`; inyecta `test-mapping.json` para L7
+- `base-agent.ts`: `AgentRunConfig` agrega `batchSignal?: AbortSignal`; `callWithBackoff` usa per-attempt AbortController
+
+### Fixed
+- Eliminada contaminación de `vi.resetModules()` entre tests del orquestador separando en archivos independientes
+
+---
+
+
 
 ### Added
 - Sistema de theming global con soporte `light` / `dark` / `system`, color themes persistentes y 6 paletas dark configurables

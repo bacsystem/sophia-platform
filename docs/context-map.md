@@ -141,12 +141,37 @@ NO leas: lógica de agentes ni dashboard (solo los tipos de eventos)
 ```
 Lee:
   skills/<agente>-agent/system.md + task.md  → prompt del agente
-  apps/api/src/agents/base-agent.ts          → Tool Use loop con backoff
-  apps/api/src/agents/orchestrator.ts        → pipeline secuencial, pause/retry
+  apps/api/src/agents/base-agent.ts          → Tool Use loop con backoff + AbortController timeout
+  apps/api/src/agents/orchestrator.ts        → pipeline paralela (AGENT_GRAPH), pause/retry, quality gate
+  apps/api/src/agents/dependency-graph.ts    → AGENT_GRAPH, getNextLayers()
+  apps/api/src/agents/context-builder.ts     → buildTaskPrompt (token budget + test-mapping injection para L7)
   apps/api/src/agents/dba-agent.ts           → ejemplo (re-export de base-agent)
   specs/004-m4-agent-runner/spec.md
 
 NOTA: `skills/spec-agent/` existe pero NO es un agente del pipeline — es el agente de generación de specs de M3 (usa system.md + spec.md + data-model.md + api-design.md). Los 9 agentes del pipeline son: dba, seed, backend, frontend, qa, security, docs, deploy, integration
+```
+
+## M9 — Agent Improvements (HU-29→47)
+
+```
+Lee:
+  docs/superpowers/plans/2026-04-10-m9-agent-improvements.md   → plan completo
+  apps/api/src/agents/                                          → todos los módulos nuevos
+    criteria-extractor.ts   → extractCriteria(spec) → CriteriaMap
+    quality-gate.ts         → verifyCriteriaCoverage(criteriaMap, testMapping, threshold?)
+    certification-report.ts → generateCertificationReport(criteriaMap, testMapping)
+    dependency-graph.ts     → AGENT_GRAPH, getNextLayers(completedLayers)
+    tool-definitions.ts     → RESERVED_OUTPUT_SCHEMAS (test-mapping.json)
+  apps/api/src/lib/
+    anthropic.ts            → getAnthropicClient() singleton (thread-safe, ver ADR)
+    shutdown-state.ts       → isShuttingDown(), setShuttingDown()
+  docs/adr/singleton-anthropic-client.md   → decisión de arquitectura del cliente Anthropic
+
+Dependencias cross-module:
+  skills/qa-agent/task.md         → instrucciones para generar test-mapping.json
+  skills/integration-agent/task.md → Fase 7 genera docs/certification.md
+
+NO leas: módulos de M1–M7 (no hay dependencias directas, solo context-builder usa prisma)
 ```
 
 ## Deploy / Docker

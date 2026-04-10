@@ -157,6 +157,44 @@ describe('context-builder — parallel-safe injection (T30)', () => {
   });
 });
 
+describe('context-builder — certification context injection (T42)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockFindMany.mockResolvedValue([]);
+    mockCount.mockResolvedValue(0);
+  });
+
+  it('injects criteriaMap and test-mapping.json for integration-agent (L7)', async () => {
+    const fsMod = await import('node:fs/promises');
+    (fsMod.default.readFile as ReturnType<typeof vi.fn>).mockImplementation((p: unknown) => {
+      const filePath = String(p);
+      if (filePath.includes('spec.md')) {
+        return Promise.resolve('### HU-14 — Create project\n\n- [ ] User can create a project');
+      }
+      if (filePath.includes('test-mapping.json')) {
+        return Promise.resolve('{"mappings":[{"criteriaId":"HU-14.CA-01","testFile":"src/__tests__/project.test.ts","testName":"should create project","type":"unit"}]}');
+      }
+      if (filePath.includes('project_memory.md')) {
+        return Promise.reject(new Error('ENOENT'));
+      }
+      return Promise.resolve('file content here');
+    });
+
+    const { buildTaskPrompt } = await import('../../agents/context-builder.js');
+    const result = await buildTaskPrompt({
+      projectId: 'p1',
+      projectDir: '/proj',
+      completedLayers: new Set([1, 1.5, 2, 3, 4, 4.5, 5, 6]),
+      taskTemplate: 'Spec: {{SPEC}}\nFiles: {{FILES_LIST}}',
+      currentLayer: 7,
+    });
+
+    expect(result).toContain('Criteria Map');
+    expect(result).toContain('HU-14.CA-01');
+    expect(result).toContain('test-mapping.json');
+  });
+});
+
 describe('context-builder — token budget (T20)', () => {
   beforeEach(() => {
     vi.clearAllMocks();

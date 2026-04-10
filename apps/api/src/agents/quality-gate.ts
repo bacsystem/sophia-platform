@@ -5,7 +5,16 @@
 import type { CriteriaMap } from './criteria-extractor.js';
 import type { TestMapping } from './orchestrator.js';
 
-const DEFAULT_THRESHOLD = parseInt(process.env.CRITERIA_COVERAGE_THRESHOLD ?? '80', 10);
+const DEFAULT_THRESHOLD = 80;
+
+/** Returns the configured criteria coverage threshold from the environment. */
+export function getCriteriaCoverageThreshold(): number {
+  const parsed = Number.parseInt(
+    process.env.CRITERIA_COVERAGE_THRESHOLD ?? `${DEFAULT_THRESHOLD}`,
+    10,
+  );
+  return Number.isNaN(parsed) ? DEFAULT_THRESHOLD : parsed;
+}
 
 /** Result of running the quality gate. */
 export interface CoverageResult {
@@ -32,7 +41,7 @@ export interface CoverageResult {
 export function verifyCriteriaCoverage(
   criteriaMap: CriteriaMap,
   testMapping: TestMapping,
-  threshold = DEFAULT_THRESHOLD,
+  threshold = getCriteriaCoverageThreshold(),
 ): CoverageResult {
   const allIds = Object.values(criteriaMap).flatMap((hu) =>
     hu.criteria.map((c) => c.id),

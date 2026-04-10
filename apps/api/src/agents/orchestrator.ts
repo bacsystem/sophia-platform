@@ -3,15 +3,18 @@ import path from 'node:path';
 import { z } from 'zod';
 import prisma from '../lib/prisma.js';
 import { getRedisClient } from '../lib/redis.js';
-import { runAgent } from './base-agent.js';
+import { runAgent, type AgentRunResult } from './base-agent.js';
 import { buildTaskPrompt } from './context-builder.js';
-import { emitEvent, buildEvent } from '../websocket/ws.emitter.js';
+import { extractCriteria } from './criteria-extractor.js';
 import { getNextLayers, AGENT_GRAPH } from './dependency-graph.js';
 import type { LayerNode } from './dependency-graph.js';
+import { getCriteriaCoverageThreshold, verifyCriteriaCoverage } from './quality-gate.js';
+import { emitEvent, buildEvent } from '../websocket/ws.emitter.js';
 
 import { fileURLToPath } from 'node:url';
 
 const PAUSE_POLL_MS = 2000;
+const MAX_QA_RERUNS = 2;
 
 /** Zod schema for the test-mapping.json produced by the QA agent. */
 const TestMappingSchema = z.object({
@@ -38,6 +41,117 @@ async function readTestMapping(projectDir: string): Promise<TestMapping | null> 
   } catch {
     return null;
   }
+}
+
+/** Reads spec.md and extracts HU acceptance criteria for the quality gate. */
+async function readCriteriaMap(projectDir: string) {
+  try {
+    const specContent = await fs.readFile(path.join(projectDir, 'spec.md'), 'utf8');
+    return extractCriteria(specContent);
+  } catch {
+    return {};
+  }
+}
+
+/** Merges multi-attempt QA runs into a single aggregate result. */
+function mergeAgentResults(base: AgentRunResult, next: AgentRunResult): AgentRunResult {
+  return {
+    success: base.success && next.success,
+    summary: next.summary || base.summary,
+    tokensInput: base.tokensInput + next.tokensInput,
+    tokensOutput: base.tokensOutput + next.tokensOutput,
+    filesCreated: [...new Set([...base.filesCreated, ...next.filesCreated])],
+  };
+}
+
+/** Builds the retry instructions sent back to the QA agent after a failed quality gate. */
+function buildQaRetryPrompt(
+  baseTaskPrompt: string,
+  missingCriteria: string[],
+  coveragePercent: number,
+  threshold: number,
+  attempt: number,
+): string {
+  const missingList = missingCriteria.length > 0
+    ? missingCriteria.map((criterionId) => `- ${criterionId}`).join('\n')
+    : '- (sin criterios identificados)';
+
+  return `${baseTaskPrompt}\n\n## Quality Gate Retry ${attempt}/${MAX_QA_RERUNS}\nLa cobertura actual es ${coveragePercent}% y el mínimo requerido es ${threshold}%.\n\nCriterios aún no cubiertos:\n${missingList}\n\nDebes agregar o ajustar tests para estos criterios y reescribir \`test-mapping.json\` antes de llamar \`taskComplete\`.`;
+}
+
+/**
+ * Re-runs the QA layer when coverage is below threshold, up to MAX_QA_RERUNS.
+ * Emits a quality:gate event on every evaluation.
+ */
+async function enforceQaQualityGate(params: {
+  agentId: string;
+  projectId: string;
+  projectDir: string;
+  systemPrompt: string;
+  taskPrompt: string;
+  batchSignal?: AbortSignal;
+  initialResult: AgentRunResult;
+}): Promise<AgentRunResult> {
+  const { agentId, projectId, projectDir, systemPrompt, taskPrompt, batchSignal, initialResult } = params;
+
+  let aggregateResult = initialResult;
+
+  for (let rerunCount = 0; rerunCount <= MAX_QA_RERUNS; rerunCount++) {
+    const criteriaMap = await readCriteriaMap(projectDir);
+    const testMapping = (await readTestMapping(projectDir)) ?? { mappings: [] };
+    const threshold = getCriteriaCoverageThreshold();
+    const coverage = verifyCriteriaCoverage(criteriaMap, testMapping, threshold);
+
+    emitEvent(buildEvent('quality:gate', projectId, {
+      agentType: 'qa-agent',
+      layer: 4,
+      message: `Criteria coverage ${coverage.coveragePercent}% (${coverage.covered}/${coverage.total})`,
+      coveragePercent: coverage.coveragePercent,
+      covered: coverage.covered,
+      total: coverage.total,
+      missing: coverage.missing,
+      passed: coverage.passed,
+      rerunCount,
+      threshold,
+    }));
+
+    if (coverage.passed) {
+      return aggregateResult;
+    }
+
+    if (rerunCount === MAX_QA_RERUNS) {
+      throw new Error(
+        `Quality gate failed after ${MAX_QA_RERUNS} re-runs: ${coverage.coveragePercent}% coverage (threshold ${threshold}%). Missing criteria: ${coverage.missing.join(', ') || 'unknown'}`,
+      );
+    }
+
+    const retryPrompt = buildQaRetryPrompt(
+      taskPrompt,
+      coverage.missing,
+      coverage.coveragePercent,
+      threshold,
+      rerunCount + 1,
+    );
+
+    const retryResult = await runAgent({
+      agentId,
+      projectId,
+      agentType: 'qa-agent',
+      layer: 4,
+      systemPrompt,
+      taskPrompt: retryPrompt,
+      projectDir,
+      batchSignal,
+    });
+
+    aggregateResult = mergeAgentResults(aggregateResult, retryResult);
+
+    if (!retryResult.success) {
+      return aggregateResult;
+    }
+  }
+
+  return aggregateResult;
 }
 
 const __filename = fileURLToPath(import.meta.url);
@@ -298,7 +412,10 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
 
       // Update progress after each batch
       const pipelineProgress = Math.round((completedLayerNums.size / totalLayers) * 100);
-      const lastLayer = batch[batch.length - 1];
+      const lastLayer = batch.at(-1);
+      if (!lastLayer) {
+        continue;
+      }
       await prisma.project.update({
         where: { id: projectId },
         data: { progress: pipelineProgress, currentLayer: lastLayer.layer },
@@ -376,7 +493,7 @@ async function runLayer(layerDef: LayerNode, ctx: RunLayerContext): Promise<void
   });
 
   // Run the agent
-  const result = await runAgent({
+  let result = await runAgent({
     agentId: agent.id,
     projectId,
     agentType: layerDef.type,
@@ -386,6 +503,18 @@ async function runLayer(layerDef: LayerNode, ctx: RunLayerContext): Promise<void
     projectDir,
     batchSignal,
   });
+
+  if (layerDef.layer === 4 && result.success) {
+    result = await enforceQaQualityGate({
+      agentId: agent.id,
+      projectId,
+      projectDir,
+      systemPrompt,
+      taskPrompt,
+      batchSignal,
+      initialResult: result,
+    });
+  }
 
   // Track generated files in DB
   if (result.filesCreated.length > 0) {
@@ -419,11 +548,6 @@ async function runLayer(layerDef: LayerNode, ctx: RunLayerContext): Promise<void
 
   // Append layer completion to project memory (non-fatal)
   appendProjectMemory(projectDir, layerDef.layer, layerDef.type, result.summary).catch(() => { /* non-fatal */ });
-
-  // After QA layer (L4), read and validate test-mapping.json (non-fatal if missing)
-  if (layerDef.layer === 4) {
-    await readTestMapping(projectDir);
-  }
 
   emitEvent(buildEvent('agent:completed', projectId, {
     agentType: layerDef.type,

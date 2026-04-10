@@ -7,6 +7,7 @@ export type AgentEventType =
   | 'agent:completed'
   | 'agent:failed'
   | 'agent:warning'
+  | 'quality:gate'
   | 'project:paused'
   | 'project:done'
   | 'project:error';
@@ -22,6 +23,13 @@ export interface AgentEvent {
   lastFile?: string | null;
   tokensUsed?: number;
   filesCount?: number;
+  coveragePercent?: number;
+  covered?: number;
+  total?: number;
+  missing?: string[];
+  passed?: boolean;
+  rerunCount?: number;
+  threshold?: number;
   timestamp: string;
 }
 

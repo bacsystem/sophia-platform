@@ -45,6 +45,16 @@ const PARTIAL_MAPPING: TestMapping = {
   ],
 };
 
+const MIXED_MAPPING: TestMapping = {
+  mappings: [
+    { criteriaId: 'HU-14.CA-01', testFile: 'src/__tests__/project.test.ts', testName: null, type: null },
+    { criteriaId: 'HU-14.CA-02', testFile: 'src/__tests__/project.test.ts', testName: 'should set description', type: 'unit' },
+    { criteriaId: 'HU-14.CA-03', testFile: null, testName: null, type: null },
+    { criteriaId: 'HU-15.CA-01', testFile: 'src/__tests__/list.test.ts', testName: 'should paginate', type: 'integration' },
+    { criteriaId: 'HU-15.CA-02', testFile: null, testName: null, type: null },
+  ],
+};
+
 describe('generateCertificationReport', () => {
   it('includes a markdown title and coverage summary for 100% coverage', () => {
     const report = generateCertificationReport(CRITERIA_MAP, FULL_MAPPING);
@@ -67,6 +77,11 @@ describe('generateCertificationReport', () => {
   it('marks null-mapped criteria as ❌ MISSING', () => {
     const report = generateCertificationReport(CRITERIA_MAP, PARTIAL_MAPPING);
     expect(report).toContain('❌ MISSING');
+  });
+
+  it('marks incomplete mappings as ⚠️ PARTIAL', () => {
+    const report = generateCertificationReport(CRITERIA_MAP, MIXED_MAPPING);
+    expect(report).toContain('⚠️ PARTIAL');
   });
 
   it('shows correct partial coverage summary (2/5 = 40%)', () => {

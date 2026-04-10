@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { RESERVED_OUTPUT_SCHEMAS } from './tool-definitions.js';
 
 const MAX_FILE_SIZE = 100 * 1024; // 100 KB
 const MAX_FILES_CREATE = 100;
@@ -53,6 +54,61 @@ async function listFilesRecursive(dir: string, baseDir: string): Promise<string[
   return results;
 }
 
+/** Validates the reserved `test-mapping.json` schema before writing it to disk. */
+function validateTestMappingContent(content: string): void {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    throw new Error('Invalid test-mapping.json: content must be valid JSON');
+  }
+
+  if (!parsed || typeof parsed !== 'object' || !Array.isArray((parsed as { mappings?: unknown }).mappings)) {
+    throw new Error('Invalid test-mapping.json: missing mappings array');
+  }
+
+  const { mappings } = parsed as { mappings: unknown[] };
+  for (const [index, entry] of mappings.entries()) {
+    if (!entry || typeof entry !== 'object') {
+      throw new Error(`Invalid test-mapping.json: mappings[${index}] must be an object`);
+    }
+
+    const mapping = entry as {
+      criteriaId?: unknown;
+      testFile?: unknown;
+      testName?: unknown;
+      type?: unknown;
+    };
+
+    if (typeof mapping.criteriaId !== 'string') {
+      throw new Error(`Invalid test-mapping.json: mappings[${index}].criteriaId must be a string`);
+    }
+
+    if (!(typeof mapping.testFile === 'string' || mapping.testFile === null)) {
+      throw new Error(`Invalid test-mapping.json: mappings[${index}].testFile must be string|null`);
+    }
+
+    if (!(typeof mapping.testName === 'string' || mapping.testName === null)) {
+      throw new Error(`Invalid test-mapping.json: mappings[${index}].testName must be string|null`);
+    }
+
+    if (!(mapping.type === 'unit' || mapping.type === 'integration' || mapping.type === null)) {
+      throw new Error(`Invalid test-mapping.json: mappings[${index}].type must be unit|integration|null`);
+    }
+  }
+}
+
+/** Validates any reserved output file that has a fixed schema contract. */
+function validateReservedOutput(relPath: string, content: string): void {
+  if (!Object.hasOwn(RESERVED_OUTPUT_SCHEMAS, relPath)) {
+    return;
+  }
+
+  if (relPath === 'test-mapping.json') {
+    validateTestMappingContent(content);
+  }
+}
+
 /**
  * @description Executes a Tool Use tool call from Claude.
  * Returns the tool result to send back in the next API call.
@@ -77,6 +133,8 @@ export async function executeTool(
       if (existing.length >= MAX_FILES_CREATE) {
         throw new Error(`Too many files: max ${MAX_FILES_CREATE} per agent run`);
       }
+
+      validateReservedOutput(relPath, content);
 
       const absPath = safePath(projectDir, relPath);
       await fs.mkdir(path.dirname(absPath), { recursive: true });

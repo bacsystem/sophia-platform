@@ -101,6 +101,43 @@ describe('executeTool — unknown tool', () => {
   });
 });
 
+describe('executeTool — reserved output schema validation (T40)', () => {
+  it('accepts a valid test-mapping.json payload', async () => {
+    const result = await executeTool(
+      'createFile',
+      {
+        path: 'test-mapping.json',
+        content: JSON.stringify({
+          mappings: [
+            {
+              criteriaId: 'HU-14.CA-01',
+              testFile: 'src/__tests__/project.test.ts',
+              testName: 'should create project',
+              type: 'unit',
+            },
+          ],
+        }),
+      },
+      tmpDir,
+    );
+
+    expect(result.result.text).toContain('test-mapping.json');
+  });
+
+  it('rejects an invalid test-mapping.json payload', async () => {
+    await expect(
+      executeTool(
+        'createFile',
+        {
+          path: 'test-mapping.json',
+          content: JSON.stringify({ mappings: [{ criteriaId: 'HU-14.CA-01' }] }),
+        },
+        tmpDir,
+      ),
+    ).rejects.toThrow('Invalid test-mapping.json');
+  });
+});
+
 describe('executeTool — createFile checkpoint (T18)', () => {
   it('calls onFileCheckpoint immediately after file is written', async () => {
     const checkpoint = vi.fn().mockResolvedValue(undefined);
