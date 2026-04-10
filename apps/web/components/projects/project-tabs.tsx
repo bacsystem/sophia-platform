@@ -4,11 +4,13 @@ import { useState } from 'react';
 import Link from 'next/link';
 import type { Project } from '@sophia/shared';
 import { ProjectSpecViewer } from './project-spec-viewer';
+import { ExecutionPlan } from './execution-plan';
 
-type Tab = 'dashboard' | 'files' | 'logs' | 'spec';
+type Tab = 'dashboard' | 'plan' | 'files' | 'logs' | 'spec';
 
 const TABS: { value: Tab; label: string }[] = [
   { value: 'dashboard', label: 'Dashboard' },
+  { value: 'plan', label: 'Plan' },
   { value: 'files', label: 'Archivos' },
   { value: 'logs', label: 'Logs' },
   { value: 'spec', label: 'Spec' },
@@ -54,6 +56,7 @@ export function ProjectTabs({ project }: ProjectTabsProps) {
             </Link>
           </div>
         )}
+        {active === 'plan' && <ExecutionPlan projectId={project.id} />}
         {active === 'files' && (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <Link

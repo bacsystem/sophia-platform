@@ -7,6 +7,7 @@ export type AgentEventType =
   | 'agent:completed'
   | 'agent:failed'
   | 'agent:warning'
+  | 'plan:generated'
   | 'quality:gate'
   | 'project:paused'
   | 'project:done'

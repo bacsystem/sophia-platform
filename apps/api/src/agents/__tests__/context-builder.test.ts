@@ -336,3 +336,103 @@ describe('context-builder — spec artifacts injection (M10-T004/T006)', () => {
     expect(ambIdx).toBeLessThan(brainIdx);
   });
 });
+
+describe('context-builder — execution-plan injection (M10-T010)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockFindMany.mockResolvedValue([]);
+    mockCount.mockResolvedValue(0);
+  });
+
+  it('injects execution-plan.md for layers >= 1', async () => {
+    const fsMod = await import('node:fs/promises');
+    (fsMod.default.readFile as ReturnType<typeof vi.fn>).mockImplementation((p: unknown) => {
+      const filePath = String(p);
+      if (filePath.includes('spec.md')) return Promise.resolve('# Spec');
+      if (filePath.endsWith('plan/execution-plan.md')) return Promise.resolve('## DBA Agent\nFoco: schema.prisma');
+      if (filePath.includes('project_memory.md')) return Promise.reject(new Error('ENOENT'));
+      return Promise.reject(new Error('ENOENT'));
+    });
+
+    const { buildTaskPrompt } = await import('../../agents/context-builder.js');
+    const result = await buildTaskPrompt({
+      projectId: 'p1',
+      projectDir: '/proj',
+      completedLayers: new Set([0]),
+      taskTemplate: 'Spec: {{SPEC}}\nFiles: {{FILES_LIST}}',
+      currentLayer: 1,
+    });
+
+    expect(result).toContain('Execution Plan');
+    expect(result).toContain('DBA Agent');
+    expect(result).toContain('Foco: schema.prisma');
+  });
+
+  it('does not inject execution-plan.md for layer 0 (planner itself)', async () => {
+    const fsMod = await import('node:fs/promises');
+    (fsMod.default.readFile as ReturnType<typeof vi.fn>).mockImplementation((p: unknown) => {
+      if (String(p).includes('spec.md')) return Promise.resolve('# Spec');
+      return Promise.reject(new Error('ENOENT'));
+    });
+
+    const { buildTaskPrompt } = await import('../../agents/context-builder.js');
+    const result = await buildTaskPrompt({
+      projectId: 'p1',
+      projectDir: '/proj',
+      completedLayers: new Set([]),
+      taskTemplate: 'Spec: {{SPEC}}\nFiles: {{FILES_LIST}}',
+      currentLayer: 0,
+    });
+
+    expect(result).not.toContain('Execution Plan');
+  });
+
+  it('handles missing execution-plan.md gracefully', async () => {
+    const fsMod = await import('node:fs/promises');
+    (fsMod.default.readFile as ReturnType<typeof vi.fn>).mockImplementation((p: unknown) => {
+      if (String(p).includes('spec.md')) return Promise.resolve('# Spec');
+      return Promise.reject(new Error('ENOENT'));
+    });
+
+    const { buildTaskPrompt } = await import('../../agents/context-builder.js');
+    const result = await buildTaskPrompt({
+      projectId: 'p1',
+      projectDir: '/proj',
+      completedLayers: new Set([0]),
+      taskTemplate: 'Spec: {{SPEC}}\nFiles: {{FILES_LIST}}',
+      currentLayer: 2,
+    });
+
+    expect(result).not.toContain('Execution Plan');
+  });
+
+  it('injects execution-plan after brainstorm and before memory', async () => {
+    const fsMod = await import('node:fs/promises');
+    (fsMod.default.readFile as ReturnType<typeof vi.fn>).mockImplementation((p: unknown) => {
+      const filePath = String(p);
+      if (filePath.includes('spec.md')) return Promise.resolve('# Spec');
+      if (filePath.endsWith('spec/brainstorm.md')) return Promise.resolve('BRAINSTORM_HERE');
+      if (filePath.endsWith('plan/execution-plan.md')) return Promise.resolve('PLAN_HERE');
+      if (filePath.includes('project_memory.md')) return Promise.resolve('MEMORY_HERE');
+      return Promise.reject(new Error('ENOENT'));
+    });
+
+    const { buildTaskPrompt } = await import('../../agents/context-builder.js');
+    const result = await buildTaskPrompt({
+      projectId: 'p1',
+      projectDir: '/proj',
+      completedLayers: new Set([0]),
+      taskTemplate: 'Spec: {{SPEC}}\nFiles: {{FILES_LIST}}',
+      currentLayer: 1,
+    });
+
+    const brainstormIdx = result.indexOf('BRAINSTORM_HERE');
+    const planIdx = result.indexOf('PLAN_HERE');
+    const memoryIdx = result.indexOf('MEMORY_HERE');
+    expect(brainstormIdx).toBeGreaterThan(-1);
+    expect(planIdx).toBeGreaterThan(-1);
+    expect(memoryIdx).toBeGreaterThan(-1);
+    expect(planIdx).toBeGreaterThan(brainstormIdx);
+    expect(memoryIdx).toBeGreaterThan(planIdx);
+  });
+});

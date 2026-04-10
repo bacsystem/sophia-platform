@@ -102,6 +102,9 @@ interface DashboardStore {
   totalFiles: number;
   activeAgents: number;
 
+  // Execution plan
+  executionPlan: string | null;
+
   // UI state
   connected: boolean;
   scrollPaused: boolean;
@@ -121,6 +124,7 @@ interface DashboardStore {
   setTokensUsed: (tokens: number) => void;
   setTotalFiles: (count: number) => void;
   setActiveAgents: (count: number) => void;
+  setExecutionPlan: (plan: string) => void;
   applySnapshot: (snapshot: DashboardSnapshot) => void;
   reset: () => void;
 }
@@ -161,6 +165,7 @@ export const useDashboardStore = create<DashboardStore>((set) => ({
   tokensUsed: 0,
   totalFiles: 0,
   activeAgents: 0,
+  executionPlan: null as string | null,
 
   // UI
   connected: false,
@@ -181,6 +186,7 @@ export const useDashboardStore = create<DashboardStore>((set) => ({
   setTokensUsed: (tokensUsed) => set({ tokensUsed }),
   setTotalFiles: (totalFiles) => set({ totalFiles }),
   setActiveAgents: (count) => set({ activeAgents: count }),
+  setExecutionPlan: (plan: string) => set({ executionPlan: plan }),
 
   applySnapshot: (snapshot) =>
     set((state) => {

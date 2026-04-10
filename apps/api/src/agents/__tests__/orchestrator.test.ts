@@ -288,3 +288,32 @@ describe('orchestrator — appendProjectMemory', () => {
     expect(writtenContent).toContain('## Layer 2: seed-agent');
   });
 });
+
+describe('orchestrator — plan:generated event (M10-T011/T013)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (prisma.agent.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (prisma.agent.upsert as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 'agent-1' });
+    (prisma.project.update as ReturnType<typeof vi.fn>).mockResolvedValue({});
+    (runAgent as ReturnType<typeof vi.fn>).mockResolvedValue({
+      success: true,
+      summary: 'Done',
+      tokensInput: 10,
+      tokensOutput: 5,
+      filesCreated: [],
+    });
+  });
+
+  it('emits plan:generated event after planner-agent (layer 0) completes', async () => {
+    const { buildEvent } = await import('../../websocket/ws.emitter.js');
+    const { runPipeline } = await import('../../agents/orchestrator.js');
+    await runPipeline('proj-plan-evt', 'user-1');
+
+    const buildEventMock = buildEvent as ReturnType<typeof vi.fn>;
+    const planCalls = buildEventMock.mock.calls.filter(
+      (c: unknown[]) => c[0] === 'plan:generated',
+    );
+    expect(planCalls).toHaveLength(1);
+    expect(planCalls[0][1]).toBe('proj-plan-evt');
+  });
+});

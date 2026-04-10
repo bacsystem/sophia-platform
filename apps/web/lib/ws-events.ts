@@ -5,6 +5,7 @@ export type AgentEventType =
   | 'agent:progress'
   | 'agent:completed'
   | 'agent:failed'
+  | 'plan:generated'
   | 'project:paused'
   | 'project:done'
   | 'project:error';

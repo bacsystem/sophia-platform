@@ -292,7 +292,7 @@ async function materializeSpec(projectId: string, projectDir: string): Promise<v
 
 /**
  * @description Main pipeline orchestrator.
- * Runs all 9 agent layers sequentially for a project.
+ * Runs all 10 agent layers (planner + 9 generation agents) for a project.
  * On retry, skips layers whose agents are already completed in the DB.
  */
 export async function runPipeline(projectId: string, _userId: string): Promise<void> {
@@ -555,4 +555,15 @@ async function runLayer(layerDef: LayerNode, ctx: RunLayerContext): Promise<void
     tokensUsed: result.tokensInput + result.tokensOutput,
     filesCount: result.filesCreated.length,
   }));
+
+  // Emit plan:generated after planner-agent (Layer 0) completes
+  if (layerDef.layer === 0) {
+    let planContent = '';
+    try {
+      planContent = await fs.readFile(path.join(projectDir, 'plan', 'execution-plan.md'), 'utf8');
+    } catch { /* non-fatal — plan may not have been written */ }
+    emitEvent(buildEvent('plan:generated', projectId, {
+      message: planContent || 'Execution plan generated',
+    }));
+  }
 }

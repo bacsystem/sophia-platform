@@ -198,6 +198,20 @@ export function useWebSocket({ projectId, enabled = true }: UseWebSocketOptions)
         break;
       }
 
+      case 'plan:generated': {
+        if (event.message) {
+          state.setExecutionPlan(event.message);
+        }
+        state.addLog({
+          id: `${event.timestamp}-plan`,
+          agentType: 'planner',
+          level: 'ok',
+          message: 'Execution plan generated',
+          timestamp: event.timestamp,
+        });
+        break;
+      }
+
       case 'project:error': {
         state.setStatus('error');
         state.updateAgent('orchestrator', { status: 'error' });
