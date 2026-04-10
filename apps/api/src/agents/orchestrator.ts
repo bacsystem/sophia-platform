@@ -32,6 +32,26 @@ const PROJECTS_BASE_DIR = path.resolve(
 );
 
 /**
+ * @description Composes a complete agent system prompt by prepending shared skill files
+ * before the agent-specific system.md content.
+ * Order: conventions → anti-patterns → output-format → agent system.md
+ */
+export function composeSystemPrompt(sharedSkills: string[], agentSystemMd: string): string {
+  if (sharedSkills.length === 0) return agentSystemMd;
+  return [...sharedSkills, agentSystemMd].join('\n\n---\n\n');
+}
+
+/**
+ * @description Loads all shared skill files from skills/_shared/ directory.
+ * Must be called once per pipeline run (not per layer).
+ * Order: conventions.md → anti-patterns.md → output-format.md
+ */
+export async function loadSharedSkills(): Promise<string[]> {
+  const sharedFiles = ['conventions.md', 'anti-patterns.md', 'output-format.md'];
+  return Promise.all(sharedFiles.map((f) => readSkillFile(`_shared/${f}`)));
+}
+
+/**
  * @description Resolves the absolute project directory for a projectId.
  */
 export function getProjectDir(projectId: string): string {
@@ -130,6 +150,9 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
   // Materialize spec files from DB into the project directory so agents can read them
   await materializeSpec(projectId, projectDir);
 
+  // Load shared skills once for the entire pipeline (not per layer)
+  const sharedSkills = await loadSharedSkills();
+
   // Determine start layer (supports retry from failed layer)
   const startLayer = await getStartLayer(projectId);
 
@@ -192,8 +215,9 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
         },
       });
 
-      // Read skill prompts
-      const systemPrompt = await readSkillFile(layerDef.systemFile);
+      // Read skill prompts and compose with shared skills
+      const agentSystemMd = await readSkillFile(layerDef.systemFile);
+      const systemPrompt = composeSystemPrompt(sharedSkills, agentSystemMd);
       const taskTemplate = await readSkillFile(layerDef.taskFile);
 
       // Build task prompt with context from prior layers

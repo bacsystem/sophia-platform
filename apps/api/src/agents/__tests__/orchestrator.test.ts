@@ -178,3 +178,53 @@ describe('orchestrator — getProjectDir', () => {
     expect(getProjectDir('abc-123')).toContain('abc-123');
   });
 });
+
+describe('orchestrator — composeSystemPrompt', () => {
+  it('composes shared skills before agent system.md in correct order', async () => {
+    const { composeSystemPrompt } = await import('../../agents/orchestrator.js');
+    const sharedSkills = ['# Shared Skill: Conventions\n...', '# Shared Skill: Anti-Patterns\n...', '# Shared Skill: Output Format\n...'];
+    const agentSystem = '# DBA Agent\nYou are a DBA.';
+    const result = composeSystemPrompt(sharedSkills, agentSystem);
+
+    // Conventions comes first
+    expect(result.indexOf('# Shared Skill: Conventions')).toBeLessThan(result.indexOf('# Shared Skill: Anti-Patterns'));
+    // Anti-patterns before output-format
+    expect(result.indexOf('# Shared Skill: Anti-Patterns')).toBeLessThan(result.indexOf('# Shared Skill: Output Format'));
+    // Output-format before agent system.md
+    expect(result.indexOf('# Shared Skill: Output Format')).toBeLessThan(result.indexOf('# DBA Agent'));
+  });
+
+  it('preserves all agent-specific content after composition', async () => {
+    const { composeSystemPrompt } = await import('../../agents/orchestrator.js');
+    const sharedSkills = ['shared content'];
+    const agentSystem = 'agent-specific: rate-limiting, auth-middleware, unique-logic';
+    const result = composeSystemPrompt(sharedSkills, agentSystem);
+
+    expect(result).toContain('agent-specific: rate-limiting, auth-middleware, unique-logic');
+    expect(result).toContain('shared content');
+  });
+
+  it('works with empty sharedSkills array (graceful fallback)', async () => {
+    const { composeSystemPrompt } = await import('../../agents/orchestrator.js');
+    const agentSystem = 'just the agent';
+    const result = composeSystemPrompt([], agentSystem);
+    expect(result).toBe('just the agent');
+  });
+
+  it('loadSharedSkills reads exactly 3 files in conventions → anti-patterns → output-format order', async () => {
+    const { loadSharedSkills } = await import('../../agents/orchestrator.js');
+    const results = await loadSharedSkills();
+
+    // Returns 3 strings
+    expect(results).toHaveLength(3);
+
+    // All from the fs mock
+    const fsMod = await import('node:fs/promises');
+    const readFileMock = fsMod.default.readFile as ReturnType<typeof vi.fn>;
+    const paths = readFileMock.mock.calls.map((c: unknown[]) => String(c[0]));
+    expect(paths.some((p) => p.includes('conventions.md'))).toBe(true);
+    expect(paths.some((p) => p.includes('anti-patterns.md'))).toBe(true);
+    expect(paths.some((p) => p.includes('output-format.md'))).toBe(true);
+  });
+});
+
