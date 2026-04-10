@@ -14,6 +14,8 @@ const MAX_TURNS = 50; // safety limit
 const MAX_RETRIES = 3; // exponential backoff retries for rate limit errors
 const BACKOFF_BASE_MS = 1000; // 1s, 2s, 4s
 const CLAUDE_CALL_TIMEOUT_MS = parseInt(process.env.CLAUDE_CALL_TIMEOUT_MS ?? '120000', 10);
+const AGENT_MEMORY_WARN_MB = parseInt(process.env.AGENT_MEMORY_WARN_MB ?? '200', 10);
+const AGENT_MEMORY_TRUNCATE_MB = parseInt(process.env.AGENT_MEMORY_TRUNCATE_MB ?? '500', 10);
 
 export interface AgentRunConfig {
   agentId: string;
@@ -48,6 +50,7 @@ export async function runAgent(config: AgentRunConfig): Promise<AgentRunResult> 
   let summary = '';
   const deadline = Date.now() + TOOL_USE_TIMEOUT_MS;
   let turns = 0;
+  const baseHeap = process.memoryUsage().heapUsed;
 
   emit(projectId, 'agent:started', agentType, layer, `Layer ${layer} agent started`);
 
@@ -83,6 +86,16 @@ export async function runAgent(config: AgentRunConfig): Promise<AgentRunResult> 
 
     totalInput += response.usage.input_tokens;
     totalOutput += response.usage.output_tokens;
+
+    // Memory monitoring: check heap growth after each Claude response
+    const heapDeltaMB = (process.memoryUsage().heapUsed - baseHeap) / (1024 * 1024);
+    if (heapDeltaMB > AGENT_MEMORY_TRUNCATE_MB) {
+      const truncateCount = Math.max(1, Math.floor(messages.length * 0.3));
+      messages.splice(0, truncateCount);
+      emit(projectId, 'agent:warning', agentType, layer, `Memory truncation: removed ${truncateCount} messages (heap +${heapDeltaMB.toFixed(0)}MB)`);
+    } else if (heapDeltaMB > AGENT_MEMORY_WARN_MB) {
+      emit(projectId, 'agent:warning', agentType, layer, `Memory warning: heap delta ${heapDeltaMB.toFixed(0)}MB`);
+    }
 
     // Persist assistant message (fire-and-forget — non-fatal)
     void persistMessage(agentId, projectId, turns, 'assistant', response.content, response.usage.output_tokens);
