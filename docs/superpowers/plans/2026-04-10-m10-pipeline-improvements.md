@@ -91,10 +91,10 @@ Phase 6 (Pipeline Resilience) ← Phase 4 needed for resume verification
 - Output format: `### Ambigüedad N` + `Término`, `Interpretación elegida`, `Alternativas descartadas`, `Justificación`
 - If no ambiguities: generate file with "No se detectaron ambigüedades"
 
-- [ ] Read current `skills/spec-agent/system.md` (~50 lines)
-- [ ] Rewrite with 3-phase structure: Fase 0 (ambiguity) → Fase 1 (brainstorm) → Fase 2 (spec generation)
-- [ ] Add ambiguity detection instructions with output format and examples
-- [ ] Commit: `feat(M10-T001): rewrite spec-agent system.md with ambiguity detection`
+- [X] Read current `skills/spec-agent/system.md` (~50 lines)
+- [X] Rewrite with 3-phase structure: Fase 0 (ambiguity) → Fase 1 (brainstorm) → Fase 2 (spec generation)
+- [X] Add ambiguity detection instructions with output format and examples
+- [X] Commit: `feat(M10-T001): rewrite spec-agent system.md with ambiguity detection`
 
 ### Task 2: Add brainstorming phase to spec-agent
 
@@ -106,10 +106,10 @@ Phase 6 (Pipeline Resilience) ← Phase 4 needed for resume verification
 - Output: `### Decisión N: [tema]` + table `| Enfoque | Pros | Cons | Seleccionado |`
 - Minimum 2 alternatives per major decision, max 5 decisions
 
-- [ ] Add Fase 1 brainstorming section with pros/cons table format
-- [ ] Add constraints: max 5 decisions, min 2 approaches each, max 3000 tokens total
-- [ ] Verify full system.md is coherent and under 6000 tokens
-- [ ] Commit: `feat(M10-T002): add brainstorming phase to spec-agent`
+- [X] Add Fase 1 brainstorming section with pros/cons table format
+- [X] Add constraints: max 5 decisions, min 2 approaches each, max 3000 tokens total
+- [X] Verify full system.md is coherent and under 6000 tokens
+- [X] Commit: `feat(M10-T002): add brainstorming phase to spec-agent`
 
 ### Task 3: Create spec-agent task.md
 
@@ -118,9 +118,9 @@ Phase 6 (Pipeline Resilience) ← Phase 4 needed for resume verification
 
 **Note:** Currently spec-agent has NO task.md. The task prompt is built entirely by context-builder.
 
-- [ ] Create `skills/spec-agent/task.md` with template markers: `{{SPEC}}`, `{{FILES_LIST}}`
-- [ ] Include sections for ambiguities.md, brainstorm.md, spec.md, data-model.md, api-design.md output
-- [ ] Commit: `feat(M10-T003): create spec-agent task.md template`
+- [X] Create `skills/spec-agent/task.md` with template markers: `{{SPEC}}`, `{{FILES_LIST}}`
+- [X] Include sections for ambiguities.md, brainstorm.md, spec.md, data-model.md, api-design.md output
+- [X] Commit: `feat(M10-T003): create spec-agent task.md template`
 
 ### Task 4: Update context-builder to inject ambiguities.md and brainstorm.md
 
@@ -131,39 +131,39 @@ Phase 6 (Pipeline Resilience) ← Phase 4 needed for resume verification
 - Inject `ambiguities.md` after spec.md for all layers ≥ 1
 - Inject `brainstorm.md` after ambiguities.md for all layers ≥ 1
 
-- [ ] Write failing test: `buildTaskPrompt()` with ambiguities.md present → verify injected in output
-- [ ] Write failing test: `buildTaskPrompt()` with brainstorm.md present → verify injected in output
-- [ ] Implement reading `spec/ambiguities.md` and `spec/brainstorm.md` from projectDir
-- [ ] Inject after spec content, before project memory, with header `## Ambiguities` / `## Brainstorm`
-- [ ] Run tests — verify GREEN
-- [ ] Commit: `feat(M10-T004): inject ambiguities.md and brainstorm.md into agent context`
+- [X] Write failing test: `buildTaskPrompt()` with ambiguities.md present → verify injected in output
+- [X] Write failing test: `buildTaskPrompt()` with brainstorm.md present → verify injected in output
+- [X] Implement reading `spec/ambiguities.md` and `spec/brainstorm.md` from projectDir
+- [X] Inject after spec content, before project memory, with header `## Ambiguities` / `## Brainstorm`
+- [X] Run tests — verify GREEN
+- [X] Commit: `feat(M10-T004): inject ambiguities.md and brainstorm.md into agent context`
 
 ### Task 5: Update orchestrator for spec-agent new artifacts
 
 **Files:**
 - Modify: `apps/api/src/agents/orchestrator.ts` (~520 lines)
 
-- [ ] Ensure `runLayer()` persists `ambiguities.md` and `brainstorm.md` as `GeneratedFile` records
-- [ ] Add WebSocket events for new artifacts: `agent:artifact` with type `ambiguities` / `brainstorm`
-- [ ] Commit: `feat(M10-T005): orchestrator support for spec-agent artifacts`
+- [X] Ensure `runLayer()` persists `ambiguities.md` and `brainstorm.md` as `GeneratedFile` records
+- [X] Add WebSocket events for new artifacts: `agent:artifact` with type `ambiguities` / `brainstorm`
+- [X] Commit: `feat(M10-T005): orchestrator support for spec-agent artifacts`
 
 ### Task 6: Tests for spec-agent intelligence
 
 **Files:**
 - Create/Modify: `apps/api/src/agents/__tests__/context-builder.test.ts`
 
-- [ ] Test: ambiguities.md missing → no error, context built without it
-- [ ] Test: both files present → injected in correct order (ambiguities before brainstorm)
-- [ ] Test: files empty → headers still present with empty content
-- [ ] Run `pnpm --filter @sophia/api test`
-- [ ] Commit: `test(M10-T006): context-builder tests for ambiguities and brainstorm injection`
+- [X] Test: ambiguities.md missing → no error, context built without it
+- [X] Test: both files present → injected in correct order (ambiguities before brainstorm)
+- [X] Test: files empty → headers still present with empty content
+- [X] Run `pnpm --filter @sophia/api test`
+- [X] Commit: `test(M10-T006): context-builder tests for ambiguities and brainstorm injection`
 
 **Phase 1 Checkpoint:**
-- [ ] Run `pnpm --filter @sophia/api lint` — zero violations
-- [ ] Run `pnpm --filter @sophia/api build` — zero errors
-- [ ] Run `pnpm --filter @sophia/api test` — all tests pass
-- [ ] Verify: spec-agent system.md has Fase 0, 1, 2 sections
-- [ ] Verify: context-builder injects new artifacts for layers ≥ 1
+- [X] Run `pnpm --filter @sophia/api lint` — zero violations
+- [X] Run `pnpm --filter @sophia/api build` — zero errors
+- [X] Run `pnpm --filter @sophia/api test` — all tests pass
+- [X] Verify: spec-agent system.md has Fase 0, 1, 2 sections
+- [X] Verify: context-builder injects new artifacts for layers ≥ 1
 
 ---
 
@@ -181,9 +181,9 @@ Phase 6 (Pipeline Resilience) ← Phase 4 needed for resume verification
 - system.md: role as "strategic planner", output in Spanish, structured plan format
 - task.md: template with `{{SPEC}}` marker, output structure per agent
 
-- [ ] Create `skills/planner-agent/system.md` with planning instructions
-- [ ] Create `skills/planner-agent/task.md` with `execution-plan.md` template: per-agent sections with Focus, Expected Files, Risks, Critical Dependencies
-- [ ] Commit: `feat(M10-T007): create planner-agent skills`
+- [X] Create `skills/planner-agent/system.md` with planning instructions
+- [X] Create `skills/planner-agent/task.md` with `execution-plan.md` template: per-agent sections with Focus, Expected Files, Risks, Critical Dependencies
+- [X] Commit: `feat(M10-T007): create planner-agent skills`
 
 ### Task 8: Add Layer 0 to dependency graph
 
@@ -194,11 +194,11 @@ Phase 6 (Pipeline Resilience) ← Phase 4 needed for resume verification
 - New node: `{ layer: 0, type: 'planner-agent', dependsOn: [] }`
 - Layer 1 (DBA) now depends on Layer 0
 
-- [ ] Write failing test: `getNextLayers(new Set())` returns only planner (layer 0)
-- [ ] Write failing test: `getNextLayers(new Set([0]))` returns DBA (layer 1)
-- [ ] Add planner node to AGENT_GRAPH, update DBA dependsOn to `[0]`
-- [ ] Run tests — verify GREEN
-- [ ] Commit: `feat(M10-T008): add planner-agent as Layer 0 in dependency graph`
+- [X] Write failing test: `getNextLayers(new Set())` returns only planner (layer 0)
+- [X] Write failing test: `getNextLayers(new Set([0]))` returns DBA (layer 1)
+- [X] Add planner node to AGENT_GRAPH, update DBA dependsOn to `[0]`
+- [X] Run tests — verify GREEN
+- [X] Commit: `feat(M10-T008): add planner-agent as Layer 0 in dependency graph`
 
 ### Task 9: Update orchestrator to run planner
 
@@ -209,9 +209,9 @@ Phase 6 (Pipeline Resilience) ← Phase 4 needed for resume verification
 - Load planner skills and execute as first layer
 - Planner output saved to `projects/{id}/plan/execution-plan.md`
 
-- [ ] Update `runPipeline()` to handle layer 0 naturally through dependency graph (no special case needed)
-- [ ] Ensure `runLayer()` loads `planner-agent/system.md` and `planner-agent/task.md`
-- [ ] Commit: `feat(M10-T009): orchestrator runs planner-agent as Layer 0`
+- [X] Update `runPipeline()` to handle layer 0 naturally through dependency graph (no special case needed)
+- [X] Ensure `runLayer()` loads `planner-agent/system.md` and `planner-agent/task.md`
+- [X] Commit: `feat(M10-T009): orchestrator runs planner-agent as Layer 0`
 
 ### Task 10: Inject execution-plan.md into downstream agents
 
@@ -221,11 +221,11 @@ Phase 6 (Pipeline Resilience) ← Phase 4 needed for resume verification
 **Acceptance criteria (from HU-50):**
 - `buildTaskPrompt()` injects `plan/execution-plan.md` for all layers ≥ 1
 
-- [ ] Write failing test: `buildTaskPrompt()` with execution-plan.md present → injected after brainstorm
-- [ ] Implement reading `plan/execution-plan.md` from projectDir
-- [ ] Inject with header `## Execution Plan` after brainstorm section
-- [ ] Run tests — verify GREEN
-- [ ] Commit: `feat(M10-T010): inject execution-plan.md into agent context`
+- [X] Write failing test: `buildTaskPrompt()` with execution-plan.md present → injected after brainstorm
+- [X] Implement reading `plan/execution-plan.md` from projectDir
+- [X] Inject with header `## Execution Plan` after brainstorm section
+- [X] Run tests — verify GREEN
+- [X] Commit: `feat(M10-T010): inject execution-plan.md into agent context`
 
 ### Task 11: WebSocket event for plan generation
 
@@ -235,9 +235,9 @@ Phase 6 (Pipeline Resilience) ← Phase 4 needed for resume verification
 **Acceptance criteria (from HU-51):**
 - New event type `plan:generated` with plan content
 
-- [ ] Add `'plan:generated'` to `AgentEventType` union
-- [ ] Emit event after planner completes with `{ projectId, planContent }`
-- [ ] Commit: `feat(M10-T011): WebSocket plan:generated event`
+- [X] Add `'plan:generated'` to `AgentEventType` union
+- [X] Emit event after planner completes with `{ projectId, planContent }`
+- [X] Commit: `feat(M10-T011): WebSocket plan:generated event`
 
 ### Task 12: Frontend — execution plan component
 
@@ -250,10 +250,10 @@ Phase 6 (Pipeline Resilience) ← Phase 4 needed for resume verification
 - Each agent section marked complete when agent finishes
 - Plan persists on page reload
 
-- [ ] Create `execution-plan.tsx` component with collapsible agent sections
-- [ ] Wire `plan:generated` WebSocket event to update store
-- [ ] Mark agent sections as completed when `agent:completed` events arrive
-- [ ] Commit: `feat(M10-T012): execution plan dashboard component`
+- [X] Create `execution-plan.tsx` component with collapsible agent sections
+- [X] Wire `plan:generated` WebSocket event to update store
+- [X] Mark agent sections as completed when `agent:completed` events arrive
+- [X] Commit: `feat(M10-T012): execution plan dashboard component`
 
 ### Task 13: Tests for plan generation flow
 
@@ -261,19 +261,19 @@ Phase 6 (Pipeline Resilience) ← Phase 4 needed for resume verification
 - Modify: `apps/api/src/agents/__tests__/dependency-graph.test.ts`
 - Modify: `apps/api/src/agents/__tests__/orchestrator.test.ts`
 
-- [ ] Test: full graph resolution with layer 0 → correct execution order
-- [ ] Test: planner output persisted as GeneratedFile
-- [ ] Test: execution-plan.md injected in layer 1+ context
-- [ ] Run `pnpm --filter @sophia/api test`
-- [ ] Commit: `test(M10-T013): plan generation integration tests`
+- [X] Test: full graph resolution with layer 0 → correct execution order
+- [X] Test: planner output persisted as GeneratedFile
+- [X] Test: execution-plan.md injected in layer 1+ context
+- [X] Run `pnpm --filter @sophia/api test`
+- [X] Commit: `test(M10-T013): plan generation integration tests`
 
 **Phase 2 Checkpoint:**
-- [ ] Run `pnpm --filter @sophia/api lint` — zero violations
-- [ ] Run `pnpm --filter @sophia/api build` — zero errors
-- [ ] Run `pnpm --filter @sophia/api test` — all tests pass
-- [ ] Run `pnpm --filter @sophia/web lint` — zero violations
-- [ ] Run `pnpm --filter @sophia/web build` — zero errors
-- [ ] Verify: `getNextLayers(new Set())` returns `[{ layer: 0, type: 'planner-agent' }]`
+- [X] Run `pnpm --filter @sophia/api lint` — zero violations
+- [X] Run `pnpm --filter @sophia/api build` — zero errors
+- [X] Run `pnpm --filter @sophia/api test` — all tests pass
+- [X] Run `pnpm --filter @sophia/web lint` — zero violations
+- [X] Run `pnpm --filter @sophia/web build` — zero errors
+- [X] Verify: `getNextLayers(new Set())` returns `[{ layer: 0, type: 'planner-agent' }]`
 - [ ] Verify: execution-plan.md injected into all downstream agents
 
 ---

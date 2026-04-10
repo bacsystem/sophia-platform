@@ -19,7 +19,8 @@ Resumen de progreso por módulo. Actualizar al completar cada fase o sprint.
 | 4 | M7 Settings | HU-26→28 | 26 | 26 | 100% | ✅ Complete |
 | Hotfix | 008 System-wide fixes | — | 25 | 25 | 100% | ✅ Complete |
 | 5–6 | M9 Agent Improvements | HU-29→47 | 70 | 70 | 100% | ✅ Complete |
-| **—** | **TOTAL** | **28+19** | **330** | **330** | **100%** | |
+| 7–8 | M10 Pipeline Improvements | HU-48→59 | 41 | 13 | 31% | 🔨 In progress |
+| **—** | **TOTAL** | **28+19+12** | **371** | **343** | **92%** | |
 
 ### Leyenda de estados
 
