@@ -197,3 +197,71 @@ describe('orchestrator — graph-driven parallel execution (T29/T34)', () => {
     expect(calledLayers).toHaveLength(4);
   });
 });
+
+describe('orchestrator — parallel execution timing (T35)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockBuildEvent.mockImplementation(
+      (type: string, _pid: string, data: Record<string, unknown>) => ({ type, ...data }),
+    );
+    mockAgentFindMany.mockResolvedValue([]);
+    mockAgentUpsert.mockResolvedValue({ id: 'agent-1' });
+    mockProjectUpdate.mockResolvedValue({});
+  });
+
+  it('L4 and L4.5 start times overlap (parallel execution) (T35)', async () => {
+    // Start from L4/L4.5 batch to isolate timing
+    mockAgentFindMany.mockResolvedValue([
+      { layer: 1 }, { layer: 1.5 }, { layer: 2 }, { layer: 3 },
+    ]);
+
+    const startTimes: Record<number, number> = {};
+    const endTimes: Record<number, number> = {};
+
+    mockRunAgent.mockImplementation(async (opts: { layer: number }) => {
+      startTimes[opts.layer] = Date.now();
+      // 20ms delay simulates async work — long enough for overlap detection
+      await new Promise<void>((resolve) => setTimeout(resolve, 20));
+      endTimes[opts.layer] = Date.now();
+      return { success: true, summary: '', tokensInput: 0, tokensOutput: 0, filesCreated: [] };
+    });
+
+    const { runPipeline } = await import('../../agents/orchestrator.js');
+    await runPipeline('proj-timing-t35', 'user-1');
+
+    // L4 and L4.5 must be started before either finishes (overlap)
+    expect(startTimes[4]).toBeDefined();
+    expect(startTimes[4.5]).toBeDefined();
+
+    // L4.5 starts before L4 ends (parallel — not sequential)
+    expect(startTimes[4.5]).toBeLessThan(endTimes[4]);
+    // L4 starts before L4.5 ends
+    expect(startTimes[4]).toBeLessThan(endTimes[4.5]);
+  });
+
+  it('L5 and L6 start times overlap (parallel execution) (T35)', async () => {
+    // Start from L5/L6 batch
+    mockAgentFindMany.mockResolvedValue([
+      { layer: 1 }, { layer: 1.5 }, { layer: 2 }, { layer: 3 }, { layer: 4 }, { layer: 4.5 },
+    ]);
+
+    const startTimes: Record<number, number> = {};
+    const endTimes: Record<number, number> = {};
+
+    mockRunAgent.mockImplementation(async (opts: { layer: number }) => {
+      startTimes[opts.layer] = Date.now();
+      await new Promise<void>((resolve) => setTimeout(resolve, 20));
+      endTimes[opts.layer] = Date.now();
+      return { success: true, summary: '', tokensInput: 0, tokensOutput: 0, filesCreated: [] };
+    });
+
+    const { runPipeline } = await import('../../agents/orchestrator.js');
+    await runPipeline('proj-timing-l56', 'user-1');
+
+    // L5 and L6 must overlap (parallel execution)
+    expect(startTimes[5]).toBeDefined();
+    expect(startTimes[6]).toBeDefined();
+    expect(startTimes[6]).toBeLessThan(endTimes[5]);
+    expect(startTimes[5]).toBeLessThan(endTimes[6]);
+  });
+});
