@@ -144,8 +144,11 @@ export function AppearanceSection() {
           {TYPOGRAPHY_TOKENS.map(({ colorVar, label, size }) => (
             <div key={colorVar} className="flex items-center justify-between">
               <span
-                className={`${size} text-[var(${colorVar})]`}
-                style={{ fontFamily: "var(--font-mono, 'Space Mono', monospace)" }}
+                className={size}
+                style={{
+                  color: `var(${colorVar})`,
+                  fontFamily: "var(--font-mono, 'Space Mono', monospace)",
+                }}
               >
                 {label}
               </span>

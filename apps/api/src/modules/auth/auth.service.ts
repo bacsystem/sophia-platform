@@ -160,19 +160,21 @@ export async function refresh(refreshTokens: string[], reply: FastifyReply) {
   }
 
   // Try each refresh token (handles duplicate cookies where first may be revoked)
-  let storedToken: Awaited<ReturnType<typeof prisma.refreshToken.findFirst<{ include: { user: true } }>>> = null;
-  for (const token of refreshTokens) {
-    const hashedToken = hashToken(token);
-    storedToken = await prisma.refreshToken.findFirst({
-      where: {
-        token: hashedToken,
-        revokedAt: null,
-        expiresAt: { gt: new Date() },
-      },
-      include: { user: true },
-    });
-    if (storedToken) break;
-  }
+  const storedToken = await (async () => {
+    for (const token of refreshTokens) {
+      const hashedToken = hashToken(token);
+      const candidate = await prisma.refreshToken.findFirst({
+        where: {
+          token: hashedToken,
+          revokedAt: null,
+          expiresAt: { gt: new Date() },
+        },
+        include: { user: true },
+      });
+      if (candidate) return candidate;
+    }
+    return null;
+  })();
 
   if (!storedToken) {
     reply.status(401).send({
