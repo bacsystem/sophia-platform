@@ -75,6 +75,7 @@ model Project {
   agents         Agent[]
   agentLogs      AgentLog[]
   generatedFiles GeneratedFile[]
+  agentMessages  AgentMessage[]
 
   @@index([userId], name: "idx_projects_user_id")
   @@index([status], name: "idx_projects_status")
@@ -148,6 +149,7 @@ model Agent {
   project        Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
   logs           AgentLog[]
   generatedFiles GeneratedFile[]
+  messages       AgentMessage[]
 
   @@unique([projectId, type], name: "uq_agents_project_type")
   @@index([projectId], name: "idx_agents_project_id")
@@ -190,4 +192,22 @@ model GeneratedFile {
   @@index([projectId, layer], name: "idx_generated_files_project_layer")
   @@unique([projectId, path], name: "uq_generated_files_project_path")
   @@map("generated_files")
+}
+
+model AgentMessage {
+  id        String   @id @default(uuid())
+  agentId   String   @map("agent_id")
+  projectId String   @map("project_id")
+  turn      Int      @map("turn_number")
+  role      String   // "user" | "assistant"
+  content   Json     // JSONB — MessageParam content
+  tokens    Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  agent   Agent   @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([agentId, turn])
+  @@index([projectId])
+  @@map("agent_messages")
 }
