@@ -72,12 +72,18 @@ function buildQaRetryPrompt(
   coveragePercent: number,
   threshold: number,
   attempt: number,
+  diagnosticContext?: { filesInvolved: string[] },
 ): string {
   const missingList = missingCriteria.length > 0
     ? missingCriteria.map((criterionId) => `- ${criterionId}`).join('\n')
     : '- (sin criterios identificados)';
 
-  return `${baseTaskPrompt}\n\n## Quality Gate Retry ${attempt}/${MAX_QA_RERUNS}\nLa cobertura actual es ${coveragePercent}% y el mínimo requerido es ${threshold}%.\n\nCriterios aún no cubiertos:\n${missingList}\n\nDebes agregar o ajustar tests para estos criterios y reescribir \`test-mapping.json\` antes de llamar \`taskComplete\`.`;
+  let diagnosticSection = '';
+  if (diagnosticContext && diagnosticContext.filesInvolved.length > 0) {
+    diagnosticSection = `\n\n### Archivos involucrados en el intento anterior\n${diagnosticContext.filesInvolved.map((f) => `- \`${f}\``).join('\n')}\n\nAnaliza estos archivos para identificar por qué los criterios no fueron cubiertos.`;
+  }
+
+  return `${baseTaskPrompt}\n\n## Quality Gate Retry ${attempt}/${MAX_QA_RERUNS}\nLa cobertura actual es ${coveragePercent}% y el mínimo requerido es ${threshold}%.\n\nCriterios aún no cubiertos:\n${missingList}${diagnosticSection}\n\nDebes agregar o ajustar tests para estos criterios y reescribir \`test-mapping.json\` antes de llamar \`taskComplete\`.`;
 }
 
 /**
@@ -92,8 +98,9 @@ async function enforceQaQualityGate(params: {
   taskPrompt: string;
   batchSignal?: AbortSignal;
   initialResult: AgentRunResult;
+  investigationSkill?: string;
 }): Promise<AgentRunResult> {
-  const { agentId, projectId, projectDir, systemPrompt, taskPrompt, batchSignal, initialResult } = params;
+  const { agentId, projectId, projectDir, systemPrompt, taskPrompt, batchSignal, initialResult, investigationSkill } = params;
 
   let aggregateResult = initialResult;
 
@@ -121,25 +128,34 @@ async function enforceQaQualityGate(params: {
     }
 
     if (rerunCount === MAX_QA_RERUNS) {
+      // T028: Generate investigation report on max retries exhausted
+      await generateInvestigationReport(projectDir, projectId, coverage.missing, coverage.coveragePercent, threshold);
       throw new Error(
         `Quality gate failed after ${MAX_QA_RERUNS} re-runs: ${coverage.coveragePercent}% coverage (threshold ${threshold}%). Missing criteria: ${coverage.missing.join(', ') || 'unknown'}`,
       );
     }
 
+    // T026: Build diagnostic retry prompt with specific failure context
     const retryPrompt = buildQaRetryPrompt(
       taskPrompt,
       coverage.missing,
       coverage.coveragePercent,
       threshold,
       rerunCount + 1,
+      { filesInvolved: aggregateResult.filesCreated },
     );
+
+    // Inject investigation skill into retry system prompt when available
+    const retrySystemPrompt = investigationSkill
+      ? `${systemPrompt}\n\n---\n\n${investigationSkill}`
+      : systemPrompt;
 
     const retryResult = await runAgent({
       agentId,
       projectId,
       agentType: 'qa-agent',
       layer: 4,
-      systemPrompt,
+      systemPrompt: retrySystemPrompt,
       taskPrompt: retryPrompt,
       projectDir,
       batchSignal,
@@ -153,6 +169,41 @@ async function enforceQaQualityGate(params: {
   }
 
   return aggregateResult;
+}
+
+/**
+ * T028: Generates investigation-report.md when QA retries are exhausted.
+ * Persists to project dir and emits WebSocket event.
+ */
+async function generateInvestigationReport(
+  projectDir: string,
+  projectId: string,
+  missingCriteria: string[],
+  coveragePercent: number,
+  threshold: number,
+): Promise<void> {
+  const criteriaList = missingCriteria.length > 0
+    ? missingCriteria.map((c) => `### ${c}\n- **Hipótesis:** Criterio no cubierto después de ${MAX_QA_RERUNS} reintentos\n- **Recomendación:** Revisar implementación manualmente`).join('\n\n')
+    : '### (sin criterios identificados)';
+
+  const report = `# Investigation Report\n\n## Criterios no cubiertos\n${criteriaList}\n\n## Resumen\n- Cobertura alcanzada: ${coveragePercent}%\n- Umbral requerido: ${threshold}%\n- Reintentos ejecutados: ${MAX_QA_RERUNS}\n- Bloqueadores identificados: ${missingCriteria.join(', ') || 'ninguno identificado'}\n`;
+
+  const reportDir = path.join(projectDir, 'qa');
+  const reportPath = path.join(reportDir, 'investigation-report.md');
+
+  try {
+    await fs.mkdir(reportDir, { recursive: true });
+    await fs.writeFile(reportPath, report, 'utf8');
+  } catch { /* non-fatal */ }
+
+  emitEvent(buildEvent('qa:investigation-report', projectId, {
+    agentType: 'qa-agent',
+    layer: 4,
+    message: `Investigation report generated: qa/investigation-report.md`,
+    reportPath: 'qa/investigation-report.md',
+    missingCriteria,
+    coveragePercent,
+  }));
 }
 
 const __filename = fileURLToPath(import.meta.url);
@@ -192,6 +243,13 @@ export const TDD_LAYERS = new Set([2, 3]);
  */
 export async function loadTddSkill(): Promise<string> {
   return readSkillFile('_shared/test-driven-development.md');
+}
+
+/**
+ * @description Loads the investigating-test-failures skill for QA retries.
+ */
+export async function loadInvestigationSkill(): Promise<string> {
+  return readSkillFile('_shared/investigating-test-failures.md');
 }
 
 const MAX_MEMORY_CHARS = 20_000; // ≈ 5000 tokens at 4 chars/token
@@ -319,6 +377,7 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
   // Load shared skills once for the entire pipeline (not per layer)
   const sharedSkills = await loadSharedSkills();
   const tddSkill = await loadTddSkill();
+  const investigationSkill = await loadInvestigationSkill();
 
   // Build set of already-completed layers for retry support
   const completedAgents = await prisma.agent.findMany({
@@ -391,6 +450,7 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
               projectDir,
               sharedSkills,
               tddSkill,
+              investigationSkill,
               completedLayers: new Set(completedLayerNums),
               batchSignal: batchController.signal,
             });
@@ -462,6 +522,8 @@ interface RunLayerContext {
   sharedSkills: string[];
   /** TDD shared skill content — injected for layers in TDD_LAYERS */
   tddSkill: string;
+  /** Investigation skill content — injected for QA retry prompts */
+  investigationSkill: string;
   /** Layers completed before this batch started — passed to context-builder for parallel-safe injection */
   completedLayers: Set<number>;
   /** Abort signal from the batch AbortController — fired when a sibling parallel agent fails */
@@ -473,7 +535,7 @@ interface RunLayerContext {
  * execute runAgent, track files, append memory, emit progress.
  */
 async function runLayer(layerDef: LayerNode, ctx: RunLayerContext): Promise<void> {
-  const { projectId, projectDir, sharedSkills, tddSkill, completedLayers, batchSignal } = ctx;
+  const { projectId, projectDir, sharedSkills, tddSkill, investigationSkill, completedLayers, batchSignal } = ctx;
 
   // Get or create agent record
   const agent = await prisma.agent.upsert({
@@ -530,6 +592,7 @@ async function runLayer(layerDef: LayerNode, ctx: RunLayerContext): Promise<void
       taskPrompt,
       batchSignal,
       initialResult: result,
+      investigationSkill,
     });
   }
 

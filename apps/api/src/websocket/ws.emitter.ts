@@ -10,6 +10,7 @@ export type AgentEventType =
   | 'plan:generated'
   | 'quality:gate'
   | 'checkpoint:result'
+  | 'qa:investigation-report'
   | 'project:paused'
   | 'project:done'
   | 'project:error';
@@ -35,6 +36,8 @@ export interface AgentEvent {
   status?: string;
   details?: unknown[];
   reason?: string;
+  reportPath?: string;
+  missingCriteria?: string[];
   timestamp: string;
 }
 
