@@ -6,6 +6,39 @@ Versionado semántico a nivel de proyecto: `MAJOR.MINOR.PATCH`.
 
 ---
 
+## [v0.10.0] — 2026-04-11 ✅ M10 Pipeline Improvements
+
+### Added
+- **Spec-Agent Intelligence (Phase 1)**: `brainstorming` skill loaded for spec-agent; `ambiguity-handler` skill detects ambiguous requirements and generates `ambiguities.md`; new `brainstorm.md` and `ambiguities.md` output artifacts
+- **Planner-Agent Layer 0 (Phase 2)**: New planner-agent executes as Layer 0 before all other agents; generates `execution-plan.md` with phased layer execution strategy; generates `test-contracts.md` with test patterns for each layer; `plan:generated` WebSocket event emitted after Layer 0 completes
+- **TDD Skill Injection (Phase 3)**: `loadTddSkill()` loads TDD-specific skill content; `TDD_LAYERS = Set([2, 3])` — TDD enforced for backend-agent (L2) and frontend-agent (L3); `composeSystemPrompt()` accepts `extraSkills` parameter for layer-specific skill injection
+- **Verification Checkpoints (Phase 4)**: `batch-verifier.ts` — `verifyBatchOutput()` validates generated files after each layer; `VerificationCheckpoint` Prisma model persists checkpoint results; `checkpoint:result` WebSocket event with severity levels (CRITICAL/MEDIUM/LOW); CRITICAL failures pause pipeline with `agent:paused` event; `CheckpointIndicators` frontend component shows layer verification status
+- **QA Diagnostic Retry (Phase 5)**: `loadInvestigationSkill()` injects failure investigation instructions into QA agent; `MAX_QA_RERUNS = 2` — QA agent retries up to 2 times on failure with diagnostic context; `qa:rerun` WebSocket event tracks retry attempts; previous failure summary passed as context on retry
+- **Pipeline Resilience (Phase 6)**:
+  - `PipelineState` Prisma model — tracks pipeline execution state (running/completed/failed/interrupted)
+  - `createPipelineState()`, `updateLayerCompleted()`, `completePipelineState()` — atomic state transitions in orchestrator
+  - `pipeline-recovery.ts` — `detectInterruptedPipelines()` finds stale running pipelines (>5min), `verifyBeforeResume()` checks integrity, `emitInterruptedEvents()` notifies frontend
+  - Worker startup detection — auto-detects interrupted pipelines on `startWorker()`
+  - `POST /projects/:id/resume` endpoint — resumes interrupted pipeline with integrity verification
+  - `pipeline:interrupted` / `pipeline:resumed` WebSocket events
+  - `PipelineRecovery` frontend component — interrupted banner with resume button
+
+### Changed
+- `orchestrator.ts`: Pipeline state persisted at start, updated per batch, completed/failed at end
+- `agent-worker.ts`: Startup interrupted pipeline detection with event emission
+- `ws.emitter.ts`: Added `pipeline:interrupted`, `pipeline:resumed` event types + `lastCompletedLayer`, `interruptedAt`, `resumeFromLayer` fields
+- `use-dashboard-store.ts`: Added `interruptedInfo` state for recovery UI
+- `use-websocket.ts`: Handles `pipeline:interrupted` and `pipeline:resumed` events
+
+### Tests
+- 305 total tests (51 new) across 32 test files
+- `pipeline-recovery.test.ts`: 9 tests for detection, verification, event emission
+- `orchestrator.test.ts`: 4 new pipeline state persistence tests
+- `batch-verifier.test.ts`: verification checkpoint tests
+- `orchestrator-quality-gate.test.ts`, `orchestrator-parallel.test.ts`, `orchestrator-test-mapping.test.ts`: updated mocks for PipelineState
+
+---
+
 ## [v0.9.0] — 2026-04-10 ✅ M9 Agent Improvements
 
 ### Added

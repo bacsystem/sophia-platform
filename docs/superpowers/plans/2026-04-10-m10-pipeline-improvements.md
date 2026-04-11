@@ -685,24 +685,24 @@ Phase 6 (Pipeline Resilience) ← Phase 4 needed for resume verification
 
 ### Task 39: Full integration test
 
-- [ ] Run complete pipeline with new layer 0 → verify all 10 agents execute in order
-- [ ] Verify: ambiguities.md + brainstorm.md + execution-plan.md + test-contracts.md generated
-- [ ] Verify: checkpoints pass for each layer
-- [ ] Verify: TDD skill injected only for layers 2 and 3
+- [X] Run complete pipeline with new layer 0 → verify all 10 agents execute in order
+- [X] Verify: ambiguities.md + brainstorm.md + execution-plan.md + test-contracts.md generated
+- [X] Verify: checkpoints pass for each layer
+- [X] Verify: TDD skill injected only for layers 2 and 3
 
 ### Task 40: Update documentation
 
-- [ ] Update `CLAUDE.md` — add M10 to Estado Actual table
-- [ ] Update `docs/task-tracker.md` with M10 count
-- [ ] Update `CHANGELOG.md` with v0.10.0 entry
-- [ ] Update `docs/context-map.md` with M10 file references
-- [ ] Bump `package.json` version to v0.10.0
+- [X] Update `CLAUDE.md` — add M10 to Estado Actual table
+- [X] Update `docs/task-tracker.md` with M10 count
+- [X] Update `CHANGELOG.md` with v0.10.0 entry
+- [X] Update `docs/context-map.md` with M10 file references
+- [X] Bump `package.json` version to v0.10.0
 
 ### Task 41: Final quality gate
 
-- [ ] Run `pnpm --filter @sophia/api lint` — zero violations
-- [ ] Run `pnpm --filter @sophia/api build` — zero errors
-- [ ] Run `pnpm --filter @sophia/api test` — all tests pass
-- [ ] Run `pnpm --filter @sophia/web lint` — zero violations
-- [ ] Run `pnpm --filter @sophia/web build` — zero errors
-- [ ] Commit: `docs(M10): update documentation and bump v0.10.0`
+- [X] Run `pnpm --filter @sophia/api lint` — zero violations
+- [X] Run `pnpm --filter @sophia/api build` — zero errors
+- [X] Run `pnpm --filter @sophia/api test` — all tests pass
+- [X] Run `pnpm --filter @sophia/web lint` — zero violations
+- [X] Run `pnpm --filter @sophia/web build` — zero errors
+- [X] Commit: `docs(M10): update documentation and bump v0.10.0`
