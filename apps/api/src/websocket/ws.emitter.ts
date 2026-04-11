@@ -9,6 +9,7 @@ export type AgentEventType =
   | 'agent:warning'
   | 'plan:generated'
   | 'quality:gate'
+  | 'checkpoint:result'
   | 'project:paused'
   | 'project:done'
   | 'project:error';
@@ -31,6 +32,9 @@ export interface AgentEvent {
   passed?: boolean;
   rerunCount?: number;
   threshold?: number;
+  status?: string;
+  details?: unknown[];
+  reason?: string;
   timestamp: string;
 }
 

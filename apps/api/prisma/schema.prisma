@@ -76,6 +76,7 @@ model Project {
   agentLogs      AgentLog[]
   generatedFiles GeneratedFile[]
   agentMessages  AgentMessage[]
+  verificationCheckpoints VerificationCheckpoint[]
 
   @@index([userId], name: "idx_projects_user_id")
   @@index([status], name: "idx_projects_status")
@@ -210,4 +211,20 @@ model AgentMessage {
   @@index([agentId, turn])
   @@index([projectId])
   @@map("agent_messages")
+}
+
+model VerificationCheckpoint {
+  id        String   @id @default(uuid())
+  projectId String   @map("project_id")
+  layer     Float
+  agentType String   @map("agent_type") @db.VarChar(30)
+  status    String   @db.VarChar(10) // 'pass' | 'warn' | 'fail'
+  details   Json     @default("[]")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([projectId, layer])
+  @@map("verification_checkpoints")
 }

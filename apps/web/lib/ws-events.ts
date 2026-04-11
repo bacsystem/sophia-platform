@@ -6,6 +6,7 @@ export type AgentEventType =
   | 'agent:completed'
   | 'agent:failed'
   | 'plan:generated'
+  | 'checkpoint:result'
   | 'project:paused'
   | 'project:done'
   | 'project:error';
@@ -54,4 +55,18 @@ export type ProjectErrorEvent = AgentEvent & {
 export type ProjectPausedEvent = AgentEvent & {
   type: 'project:paused';
   agentType: string;
+};
+
+export interface CheckpointDetail {
+  severity: 'CRITICAL' | 'MEDIUM' | 'LOW';
+  message: string;
+  file?: string;
+}
+
+export type CheckpointResultEvent = AgentEvent & {
+  type: 'checkpoint:result';
+  agentType: string;
+  layer: number;
+  status: 'pass' | 'warn' | 'fail';
+  details: CheckpointDetail[];
 };

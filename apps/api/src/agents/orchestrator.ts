@@ -9,6 +9,7 @@ import { extractCriteria } from './criteria-extractor.js';
 import { getNextLayers, AGENT_GRAPH } from './dependency-graph.js';
 import type { LayerNode } from './dependency-graph.js';
 import { getCriteriaCoverageThreshold, verifyCriteriaCoverage } from './quality-gate.js';
+import { verifyBatchOutput } from './batch-verifier.js';
 import { emitEvent, buildEvent } from '../websocket/ws.emitter.js';
 
 import { fileURLToPath } from 'node:url';
@@ -560,6 +561,47 @@ async function runLayer(layerDef: LayerNode, ctx: RunLayerContext): Promise<void
         }).catch(() => { /* non-fatal */ });
       }),
     );
+  }
+
+  // Verify layer output (post-agent checkpoint)
+  let planContent: string | undefined;
+  try {
+    planContent = await fs.readFile(path.join(projectDir, 'plan', 'execution-plan.md'), 'utf8');
+  } catch { /* plan may not exist */ }
+
+  const verification = await verifyBatchOutput(layerDef, projectDir, planContent);
+
+  // Persist checkpoint in DB (non-fatal)
+  try {
+    await prisma.verificationCheckpoint.create({
+      data: {
+        projectId,
+        layer: layerDef.layer,
+        agentType: layerDef.type,
+        status: verification.status,
+        details: verification.details as unknown as import('@prisma/client').Prisma.InputJsonValue,
+      },
+    });
+  } catch { /* non-fatal — model may not exist yet */ }
+
+  emitEvent(buildEvent('checkpoint:result', projectId, {
+    layer: layerDef.layer,
+    agentType: layerDef.type,
+    status: verification.status,
+    details: verification.details,
+  }));
+
+  if (verification.status === 'fail') {
+    await prisma.project.update({
+      where: { id: projectId },
+      data: { status: 'paused', errorMessage: `Verification failed for ${layerDef.type}: ${verification.details.map((d) => d.message).join('; ')}` },
+    });
+    emitEvent(buildEvent('project:paused', projectId, {
+      reason: 'verification_failure',
+      layer: layerDef.layer,
+      details: verification.details,
+    }));
+    throw new Error(`Verification CRITICAL failure for ${layerDef.type}`);
   }
 
   // Append layer completion to project memory (non-fatal)

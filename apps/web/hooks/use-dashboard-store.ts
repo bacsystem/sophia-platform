@@ -5,6 +5,7 @@
 import { create } from 'zustand';
 import type { ProjectStatus, AgentName } from '@sophia/shared';
 import { AGENT_CONFIGS, type AgentType } from '@/lib/agent-config';
+import type { CheckpointDetail } from '@/lib/ws-events';
 
 export type AgentNodeStatus = 'idle' | 'queued' | 'working' | 'done' | 'error' | 'paused';
 
@@ -80,6 +81,13 @@ function buildInitialAgents(): AgentNode[] {
   });
 }
 
+export interface CheckpointResult {
+  layer: number;
+  agentType: string;
+  status: 'pass' | 'warn' | 'fail';
+  details: CheckpointDetail[];
+}
+
 interface DashboardStore {
   // Agents
   agents: AgentNode[];
@@ -105,6 +113,9 @@ interface DashboardStore {
   // Execution plan
   executionPlan: string | null;
 
+  // Verification checkpoints
+  checkpoints: Map<number, CheckpointResult>;
+
   // UI state
   connected: boolean;
   scrollPaused: boolean;
@@ -125,6 +136,7 @@ interface DashboardStore {
   setTotalFiles: (count: number) => void;
   setActiveAgents: (count: number) => void;
   setExecutionPlan: (plan: string) => void;
+  setCheckpoint: (checkpoint: CheckpointResult) => void;
   applySnapshot: (snapshot: DashboardSnapshot) => void;
   reset: () => void;
 }
@@ -166,6 +178,7 @@ export const useDashboardStore = create<DashboardStore>((set) => ({
   totalFiles: 0,
   activeAgents: 0,
   executionPlan: null as string | null,
+  checkpoints: new Map<number, CheckpointResult>(),
 
   // UI
   connected: false,
@@ -187,6 +200,12 @@ export const useDashboardStore = create<DashboardStore>((set) => ({
   setTotalFiles: (totalFiles) => set({ totalFiles }),
   setActiveAgents: (count) => set({ activeAgents: count }),
   setExecutionPlan: (plan: string) => set({ executionPlan: plan }),
+  setCheckpoint: (checkpoint: CheckpointResult) =>
+    set((state) => {
+      const next = new Map(state.checkpoints);
+      next.set(checkpoint.layer, checkpoint);
+      return { checkpoints: next };
+    }),
 
   applySnapshot: (snapshot) =>
     set((state) => {

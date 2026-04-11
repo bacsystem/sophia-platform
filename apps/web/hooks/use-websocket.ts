@@ -212,6 +212,25 @@ export function useWebSocket({ projectId, enabled = true }: UseWebSocketOptions)
         break;
       }
 
+      case 'checkpoint:result': {
+        const payload = event as unknown as Record<string, unknown>;
+        state.setCheckpoint({
+          layer: (payload.layer as number) ?? 0,
+          agentType: (payload.agentType as string) ?? '',
+          status: (payload.status as 'pass' | 'warn' | 'fail') ?? 'pass',
+          details: (payload.details as Array<{ severity: 'CRITICAL' | 'MEDIUM' | 'LOW'; message: string; file?: string }>) ?? [],
+        });
+        const level = payload.status === 'fail' ? 'error' : payload.status === 'warn' ? 'warn' : 'ok';
+        state.addLog({
+          id: `${event.timestamp}-checkpoint-${payload.layer}`,
+          agentType: (payload.agentType as string) ?? 'system',
+          level,
+          message: `Checkpoint ${payload.agentType}: ${payload.status}`,
+          timestamp: event.timestamp,
+        });
+        break;
+      }
+
       case 'project:error': {
         state.setStatus('error');
         state.updateAgent('orchestrator', { status: 'error' });

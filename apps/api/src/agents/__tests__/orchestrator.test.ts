@@ -22,6 +22,9 @@ vi.mock('../../lib/prisma.js', () => ({
     agentLog: {
       create: vi.fn().mockResolvedValue({}),
     },
+    verificationCheckpoint: {
+      create: vi.fn().mockResolvedValue({}),
+    },
   },
 }));
 
@@ -45,6 +48,12 @@ vi.mock('../../agents/context-builder.js', () => ({
 vi.mock('../../websocket/ws.emitter.js', () => ({
   emitEvent: vi.fn(),
   buildEvent: vi.fn().mockReturnValue({}),
+}));
+
+// Mock batch-verifier
+const mockVerifyBatchOutput = vi.fn().mockResolvedValue({ status: 'pass', details: [] });
+vi.mock('../../agents/batch-verifier.js', () => ({
+  verifyBatchOutput: (...args: unknown[]) => mockVerifyBatchOutput(...args),
 }));
 
 // Mock redis (dynamic import in orchestrator)
@@ -124,6 +133,7 @@ describe('orchestrator — runPipeline', () => {
         projectSpec: { findFirst: vi.fn().mockResolvedValue(null) },
         generatedFile: { upsert: vi.fn().mockResolvedValue({}), findFirst: vi.fn().mockResolvedValue(null) },
         agentLog: { create: vi.fn().mockResolvedValue({}) },
+        verificationCheckpoint: { create: vi.fn().mockResolvedValue({}) },
       },
     }));
     vi.mock('../../agents/base-agent.js', () => ({
@@ -295,6 +305,8 @@ describe('orchestrator — plan:generated event (M10-T011/T013)', () => {
     (prisma.agent.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
     (prisma.agent.upsert as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 'agent-1' });
     (prisma.project.update as ReturnType<typeof vi.fn>).mockResolvedValue({});
+    (prisma.verificationCheckpoint.create as ReturnType<typeof vi.fn>).mockResolvedValue({});
+    mockVerifyBatchOutput.mockResolvedValue({ status: 'pass', details: [] });
     (runAgent as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
       summary: 'Done',
@@ -363,5 +375,107 @@ describe('orchestrator — TDD skill injection (M10-T015/T018)', () => {
     expect(TDD_LAYERS.has(1)).toBe(false);
     expect(TDD_LAYERS.has(4)).toBe(false);
     expect(TDD_LAYERS.has(7)).toBe(false);
+  });
+});
+
+describe('orchestrator — verification checkpoints (M10-T020/T024)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (prisma.agent.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (prisma.agent.upsert as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 'agent-1' });
+    (prisma.project.update as ReturnType<typeof vi.fn>).mockResolvedValue({});
+    (prisma.verificationCheckpoint.create as ReturnType<typeof vi.fn>).mockResolvedValue({});
+    (runAgent as ReturnType<typeof vi.fn>).mockResolvedValue({
+      success: true,
+      summary: 'Done',
+      tokensInput: 10,
+      tokensOutput: 5,
+      filesCreated: [],
+    });
+    // Default: pass verification
+    mockVerifyBatchOutput.mockResolvedValue({ status: 'pass', details: [] });
+  });
+
+  it('calls verifyBatchOutput after each layer completes', async () => {
+    const { runPipeline } = await import('../../agents/orchestrator.js');
+    await runPipeline('proj-verify', 'user-1');
+
+    // Should be called once per layer (10 layers)
+    expect(mockVerifyBatchOutput).toHaveBeenCalledTimes(10);
+  });
+
+  it('emits checkpoint:result event after verification', async () => {
+    const { buildEvent } = await import('../../websocket/ws.emitter.js');
+    const { runPipeline } = await import('../../agents/orchestrator.js');
+    await runPipeline('proj-ckpt-evt', 'user-1');
+
+    const buildEventMock = buildEvent as ReturnType<typeof vi.fn>;
+    const checkpointCalls = buildEventMock.mock.calls.filter(
+      (c: unknown[]) => c[0] === 'checkpoint:result',
+    );
+    // One checkpoint event per layer
+    expect(checkpointCalls.length).toBe(10);
+    expect(checkpointCalls[0][1]).toBe('proj-ckpt-evt');
+  });
+
+  it('persists verification checkpoint to database', async () => {
+    const { runPipeline } = await import('../../agents/orchestrator.js');
+    await runPipeline('proj-ckpt-db', 'user-1');
+
+    expect(prisma.verificationCheckpoint.create).toHaveBeenCalled();
+    const calls = (prisma.verificationCheckpoint.create as ReturnType<typeof vi.fn>).mock.calls;
+    // 10 layers = 10 checkpoint records
+    expect(calls).toHaveLength(10);
+    expect(calls[0][0].data).toEqual(
+      expect.objectContaining({
+        projectId: 'proj-ckpt-db',
+        status: 'pass',
+      }),
+    );
+  });
+
+  it('pauses pipeline on CRITICAL verification failure', async () => {
+    // First layer passes, second fails critically
+    mockVerifyBatchOutput
+      .mockResolvedValueOnce({ status: 'pass', details: [] })
+      .mockResolvedValueOnce({
+        status: 'fail',
+        details: [{ severity: 'CRITICAL', message: 'prisma/schema.prisma not found', file: 'prisma/schema.prisma' }],
+      });
+
+    const { runPipeline } = await import('../../agents/orchestrator.js');
+    await expect(runPipeline('proj-fail', 'user-1')).rejects.toThrow('Verification CRITICAL failure');
+
+    // Project should be set to paused
+    const updateCalls = (prisma.project.update as ReturnType<typeof vi.fn>).mock.calls;
+    const pausedCall = updateCalls.find(
+      (c: unknown[]) => (c[0] as { data: { status: string } }).data.status === 'paused',
+    );
+    expect(pausedCall).toBeDefined();
+
+    // Emit project:paused event
+    const { buildEvent } = await import('../../websocket/ws.emitter.js');
+    const buildEventMock = buildEvent as ReturnType<typeof vi.fn>;
+    const pausedEvents = buildEventMock.mock.calls.filter(
+      (c: unknown[]) => c[0] === 'project:paused',
+    );
+    expect(pausedEvents).toHaveLength(1);
+  });
+
+  it('continues pipeline on MEDIUM/LOW warnings', async () => {
+    mockVerifyBatchOutput.mockResolvedValue({
+      status: 'warn',
+      details: [{ severity: 'MEDIUM', message: 'File empty', file: 'seed.ts' }],
+    });
+
+    const { runPipeline } = await import('../../agents/orchestrator.js');
+    await runPipeline('proj-warn', 'user-1');
+
+    // Pipeline should complete all layers despite warnings
+    expect(runAgent).toHaveBeenCalledTimes(10);
+    // Project should end as done, not paused
+    const updateCalls = (prisma.project.update as ReturnType<typeof vi.fn>).mock.calls;
+    expect(updateCalls.some((c: unknown[]) => (c[0] as { data: { status: string } }).data.status === 'done')).toBe(true);
+    expect(updateCalls.some((c: unknown[]) => (c[0] as { data: { status: string } }).data.status === 'paused')).toBe(false);
   });
 });
