@@ -7,7 +7,12 @@ export type AgentEventType =
   | 'agent:completed'
   | 'agent:failed'
   | 'agent:warning'
+  | 'plan:generated'
   | 'quality:gate'
+  | 'checkpoint:result'
+  | 'qa:investigation-report'
+  | 'pipeline:interrupted'
+  | 'pipeline:resumed'
   | 'project:paused'
   | 'project:done'
   | 'project:error';
@@ -30,6 +35,14 @@ export interface AgentEvent {
   passed?: boolean;
   rerunCount?: number;
   threshold?: number;
+  status?: string;
+  details?: unknown[];
+  reason?: string;
+  reportPath?: string;
+  missingCriteria?: string[];
+  lastCompletedLayer?: number;
+  interruptedAt?: string;
+  resumeFromLayer?: number;
   timestamp: string;
 }
 

@@ -22,6 +22,13 @@ vi.mock('../../lib/prisma.js', () => ({
     agentLog: {
       create: vi.fn().mockResolvedValue({}),
     },
+    verificationCheckpoint: {
+      create: vi.fn().mockResolvedValue({}),
+    },
+    pipelineState: {
+      create: vi.fn().mockResolvedValue({ id: 'ps-1' }),
+      update: vi.fn().mockResolvedValue({}),
+    },
   },
 }));
 
@@ -45,6 +52,12 @@ vi.mock('../../agents/context-builder.js', () => ({
 vi.mock('../../websocket/ws.emitter.js', () => ({
   emitEvent: vi.fn(),
   buildEvent: vi.fn().mockReturnValue({}),
+}));
+
+// Mock batch-verifier
+const mockVerifyBatchOutput = vi.fn().mockResolvedValue({ status: 'pass', details: [] });
+vi.mock('../../agents/batch-verifier.js', () => ({
+  verifyBatchOutput: (...args: unknown[]) => mockVerifyBatchOutput(...args),
 }));
 
 // Mock redis (dynamic import in orchestrator)
@@ -74,6 +87,8 @@ describe('orchestrator — runPipeline', () => {
     vi.clearAllMocks();
     // Default: not paused, no completed agents
     (prisma.agent.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (prisma.pipelineState.create as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 'ps-1' });
+    (prisma.pipelineState.update as ReturnType<typeof vi.fn>).mockResolvedValue({});
     (runAgent as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
       summary: 'Done',
@@ -96,12 +111,12 @@ describe('orchestrator — runPipeline', () => {
     expect(updateCalls.some((c: unknown[]) => (c[0] as { data: { status: string } }).data.status === 'done')).toBe(true);
   });
 
-  it('runs all 9 layers when no layers are completed', async () => {
+  it('runs all 10 layers (including planner) when no layers are completed', async () => {
     const { runPipeline } = await import('../../agents/orchestrator.js');
     await runPipeline('project-1', 'user-1');
 
-    // runAgent called 9 times (one per layer)
-    expect(runAgent).toHaveBeenCalledTimes(9);
+    // runAgent called 10 times (one per layer including planner at L0)
+    expect(runAgent).toHaveBeenCalledTimes(10);
   });
 
   it('skips completed layers on retry (T031)', async () => {
@@ -124,6 +139,11 @@ describe('orchestrator — runPipeline', () => {
         projectSpec: { findFirst: vi.fn().mockResolvedValue(null) },
         generatedFile: { upsert: vi.fn().mockResolvedValue({}), findFirst: vi.fn().mockResolvedValue(null) },
         agentLog: { create: vi.fn().mockResolvedValue({}) },
+        verificationCheckpoint: { create: vi.fn().mockResolvedValue({}) },
+        pipelineState: {
+          create: vi.fn().mockResolvedValue({ id: 'ps-1' }),
+          update: vi.fn().mockResolvedValue({}),
+        },
       },
     }));
     vi.mock('../../agents/base-agent.js', () => ({
@@ -158,8 +178,8 @@ describe('orchestrator — runPipeline', () => {
     const { runAgent: runAgent2 } = await import('../../agents/base-agent.js');
     await runPipeline2('project-2', 'user-1');
 
-    // Should only run 7 remaining layers (9 - 2 completed)
-    expect(runAgent2).toHaveBeenCalledTimes(7);
+    // Should only run 8 remaining layers (10 - 2 completed)
+    expect(runAgent2).toHaveBeenCalledTimes(8);
   });
 
   it('sets project to error status when a layer fails', async () => {
@@ -286,5 +306,261 @@ describe('orchestrator — appendProjectMemory', () => {
     const writtenContent = (writeFileMock.mock.calls.at(-1) as unknown[])[1] as string;
     expect(writtenContent).toContain('## Layer 1: dba-agent');
     expect(writtenContent).toContain('## Layer 2: seed-agent');
+  });
+});
+
+describe('orchestrator — plan:generated event (M10-T011/T013)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (prisma.agent.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (prisma.agent.upsert as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 'agent-1' });
+    (prisma.project.update as ReturnType<typeof vi.fn>).mockResolvedValue({});
+    (prisma.verificationCheckpoint.create as ReturnType<typeof vi.fn>).mockResolvedValue({});
+    (prisma.pipelineState.create as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 'ps-1' });
+    (prisma.pipelineState.update as ReturnType<typeof vi.fn>).mockResolvedValue({});
+    mockVerifyBatchOutput.mockResolvedValue({ status: 'pass', details: [] });
+    (runAgent as ReturnType<typeof vi.fn>).mockResolvedValue({
+      success: true,
+      summary: 'Done',
+      tokensInput: 10,
+      tokensOutput: 5,
+      filesCreated: [],
+    });
+  });
+
+  it('emits plan:generated event after planner-agent (layer 0) completes', async () => {
+    const { buildEvent } = await import('../../websocket/ws.emitter.js');
+    const { runPipeline } = await import('../../agents/orchestrator.js');
+    await runPipeline('proj-plan-evt', 'user-1');
+
+    const buildEventMock = buildEvent as ReturnType<typeof vi.fn>;
+    const planCalls = buildEventMock.mock.calls.filter(
+      (c: unknown[]) => c[0] === 'plan:generated',
+    );
+    expect(planCalls).toHaveLength(1);
+    expect(planCalls[0][1]).toBe('proj-plan-evt');
+  });
+});
+
+describe('orchestrator — TDD skill injection (M10-T015/T018)', () => {
+  it('composeSystemPrompt includes extraSkills for TDD layers', async () => {
+    const { composeSystemPrompt } = await import('../../agents/orchestrator.js');
+    const sharedSkills = ['# Conventions'];
+    const agentSystem = '# Backend Agent';
+    const tddSkill = '# TDD Methodology\nRED-GREEN-REFACTOR';
+
+    const result = composeSystemPrompt(sharedSkills, agentSystem, [tddSkill]);
+
+    expect(result).toContain('# TDD Methodology');
+    expect(result).toContain('RED-GREEN-REFACTOR');
+    // TDD skill should be between shared skills and agent system
+    expect(result.indexOf('# Conventions')).toBeLessThan(result.indexOf('# TDD Methodology'));
+    expect(result.indexOf('# TDD Methodology')).toBeLessThan(result.indexOf('# Backend Agent'));
+  });
+
+  it('composeSystemPrompt does NOT include TDD for non-TDD agents', async () => {
+    const { composeSystemPrompt } = await import('../../agents/orchestrator.js');
+    const sharedSkills = ['# Conventions'];
+    const agentSystem = '# DBA Agent';
+
+    const result = composeSystemPrompt(sharedSkills, agentSystem);
+
+    expect(result).not.toContain('TDD');
+    expect(result).toContain('# DBA Agent');
+  });
+
+  it('composeSystemPrompt with undefined extraSkills behaves like no extras', async () => {
+    const { composeSystemPrompt } = await import('../../agents/orchestrator.js');
+    const sharedSkills = ['# Conventions'];
+    const agentSystem = '# QA Agent';
+
+    const result = composeSystemPrompt(sharedSkills, agentSystem, undefined);
+
+    expect(result).not.toContain('TDD');
+  });
+
+  it('TDD_LAYERS contains only layers 2 and 3', async () => {
+    const { TDD_LAYERS } = await import('../../agents/orchestrator.js');
+    expect(TDD_LAYERS.has(2)).toBe(true);
+    expect(TDD_LAYERS.has(3)).toBe(true);
+    expect(TDD_LAYERS.has(0)).toBe(false);
+    expect(TDD_LAYERS.has(1)).toBe(false);
+    expect(TDD_LAYERS.has(4)).toBe(false);
+    expect(TDD_LAYERS.has(7)).toBe(false);
+  });
+});
+
+describe('orchestrator — verification checkpoints (M10-T020/T024)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (prisma.agent.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (prisma.agent.upsert as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 'agent-1' });
+    (prisma.project.update as ReturnType<typeof vi.fn>).mockResolvedValue({});
+    (prisma.verificationCheckpoint.create as ReturnType<typeof vi.fn>).mockResolvedValue({});
+    (prisma.pipelineState.create as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 'ps-1' });
+    (prisma.pipelineState.update as ReturnType<typeof vi.fn>).mockResolvedValue({});
+    (runAgent as ReturnType<typeof vi.fn>).mockResolvedValue({
+      success: true,
+      summary: 'Done',
+      tokensInput: 10,
+      tokensOutput: 5,
+      filesCreated: [],
+    });
+    // Default: pass verification
+    mockVerifyBatchOutput.mockResolvedValue({ status: 'pass', details: [] });
+  });
+
+  it('calls verifyBatchOutput after each layer completes', async () => {
+    const { runPipeline } = await import('../../agents/orchestrator.js');
+    await runPipeline('proj-verify', 'user-1');
+
+    // Should be called once per layer (10 layers)
+    expect(mockVerifyBatchOutput).toHaveBeenCalledTimes(10);
+  });
+
+  it('emits checkpoint:result event after verification', async () => {
+    const { buildEvent } = await import('../../websocket/ws.emitter.js');
+    const { runPipeline } = await import('../../agents/orchestrator.js');
+    await runPipeline('proj-ckpt-evt', 'user-1');
+
+    const buildEventMock = buildEvent as ReturnType<typeof vi.fn>;
+    const checkpointCalls = buildEventMock.mock.calls.filter(
+      (c: unknown[]) => c[0] === 'checkpoint:result',
+    );
+    // One checkpoint event per layer
+    expect(checkpointCalls.length).toBe(10);
+    expect(checkpointCalls[0][1]).toBe('proj-ckpt-evt');
+  });
+
+  it('persists verification checkpoint to database', async () => {
+    const { runPipeline } = await import('../../agents/orchestrator.js');
+    await runPipeline('proj-ckpt-db', 'user-1');
+
+    expect(prisma.verificationCheckpoint.create).toHaveBeenCalled();
+    const calls = (prisma.verificationCheckpoint.create as ReturnType<typeof vi.fn>).mock.calls;
+    // 10 layers = 10 checkpoint records
+    expect(calls).toHaveLength(10);
+    expect(calls[0][0].data).toEqual(
+      expect.objectContaining({
+        projectId: 'proj-ckpt-db',
+        status: 'pass',
+      }),
+    );
+  });
+
+  it('pauses pipeline on CRITICAL verification failure', async () => {
+    // First layer passes, second fails critically
+    mockVerifyBatchOutput
+      .mockResolvedValueOnce({ status: 'pass', details: [] })
+      .mockResolvedValueOnce({
+        status: 'fail',
+        details: [{ severity: 'CRITICAL', message: 'prisma/schema.prisma not found', file: 'prisma/schema.prisma' }],
+      });
+
+    const { runPipeline } = await import('../../agents/orchestrator.js');
+    await expect(runPipeline('proj-fail', 'user-1')).rejects.toThrow('Verification CRITICAL failure');
+
+    // Project should be set to paused
+    const updateCalls = (prisma.project.update as ReturnType<typeof vi.fn>).mock.calls;
+    const pausedCall = updateCalls.find(
+      (c: unknown[]) => (c[0] as { data: { status: string } }).data.status === 'paused',
+    );
+    expect(pausedCall).toBeDefined();
+
+    // Emit project:paused event
+    const { buildEvent } = await import('../../websocket/ws.emitter.js');
+    const buildEventMock = buildEvent as ReturnType<typeof vi.fn>;
+    const pausedEvents = buildEventMock.mock.calls.filter(
+      (c: unknown[]) => c[0] === 'project:paused',
+    );
+    expect(pausedEvents).toHaveLength(1);
+  });
+
+  it('continues pipeline on MEDIUM/LOW warnings', async () => {
+    mockVerifyBatchOutput.mockResolvedValue({
+      status: 'warn',
+      details: [{ severity: 'MEDIUM', message: 'File empty', file: 'seed.ts' }],
+    });
+
+    const { runPipeline } = await import('../../agents/orchestrator.js');
+    await runPipeline('proj-warn', 'user-1');
+
+    // Pipeline should complete all layers despite warnings
+    expect(runAgent).toHaveBeenCalledTimes(10);
+    // Project should end as done, not paused
+    const updateCalls = (prisma.project.update as ReturnType<typeof vi.fn>).mock.calls;
+    expect(updateCalls.some((c: unknown[]) => (c[0] as { data: { status: string } }).data.status === 'done')).toBe(true);
+    expect(updateCalls.some((c: unknown[]) => (c[0] as { data: { status: string } }).data.status === 'paused')).toBe(false);
+  });
+});
+
+describe('orchestrator — pipeline state persistence (M10-T031/T038)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (prisma.agent.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (prisma.agent.upsert as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 'agent-1' });
+    (prisma.project.update as ReturnType<typeof vi.fn>).mockResolvedValue({});
+    (prisma.verificationCheckpoint.create as ReturnType<typeof vi.fn>).mockResolvedValue({});
+    (prisma.pipelineState.create as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 'ps-1' });
+    (prisma.pipelineState.update as ReturnType<typeof vi.fn>).mockResolvedValue({});
+    mockVerifyBatchOutput.mockResolvedValue({ status: 'pass', details: [] });
+    (runAgent as ReturnType<typeof vi.fn>).mockResolvedValue({
+      success: true,
+      summary: 'Done',
+      tokensInput: 10,
+      tokensOutput: 5,
+      filesCreated: [],
+    });
+  });
+
+  it('creates pipeline state at pipeline start', async () => {
+    const { runPipeline } = await import('../../agents/orchestrator.js');
+    await runPipeline('proj-ps-create', 'user-1');
+
+    expect(prisma.pipelineState.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        projectId: 'proj-ps-create',
+        status: 'running',
+      }),
+    });
+  });
+
+  it('updates pipeline state after each batch', async () => {
+    const { runPipeline } = await import('../../agents/orchestrator.js');
+    await runPipeline('proj-ps-update', 'user-1');
+
+    // PipelineState.update should be called multiple times (batch updates + final completion)
+    const updateCalls = (prisma.pipelineState.update as ReturnType<typeof vi.fn>).mock.calls;
+    expect(updateCalls.length).toBeGreaterThanOrEqual(1);
+    // Find a batch update call (one that has completedLayers in data)
+    const batchCall = updateCalls.find(
+      (c: unknown[]) => (c[0] as { data: { completedLayers?: unknown } }).data.completedLayers !== undefined,
+    );
+    expect(batchCall).toBeDefined();
+    expect((batchCall![0] as { where: { id: string } }).where.id).toBe('ps-1');
+  });
+
+  it('marks pipeline state as completed on success', async () => {
+    const { runPipeline } = await import('../../agents/orchestrator.js');
+    await runPipeline('proj-ps-done', 'user-1');
+
+    const updateCalls = (prisma.pipelineState.update as ReturnType<typeof vi.fn>).mock.calls;
+    const completedCall = updateCalls.find(
+      (c: unknown[]) => (c[0] as { data: { status: string } }).data.status === 'completed',
+    );
+    expect(completedCall).toBeDefined();
+  });
+
+  it('marks pipeline state as failed on error', async () => {
+    (runAgent as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('Agent crash'));
+
+    const { runPipeline } = await import('../../agents/orchestrator.js');
+    await expect(runPipeline('proj-ps-fail', 'user-1')).rejects.toThrow('Agent crash');
+
+    const updateCalls = (prisma.pipelineState.update as ReturnType<typeof vi.fn>).mock.calls;
+    const failedCall = updateCalls.find(
+      (c: unknown[]) => (c[0] as { data: { status: string } }).data.status === 'failed',
+    );
+    expect(failedCall).toBeDefined();
   });
 });

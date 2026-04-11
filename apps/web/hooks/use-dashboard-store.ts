@@ -5,6 +5,7 @@
 import { create } from 'zustand';
 import type { ProjectStatus, AgentName } from '@sophia/shared';
 import { AGENT_CONFIGS, type AgentType } from '@/lib/agent-config';
+import type { CheckpointDetail } from '@/lib/ws-events';
 
 export type AgentNodeStatus = 'idle' | 'queued' | 'working' | 'done' | 'error' | 'paused';
 
@@ -80,6 +81,13 @@ function buildInitialAgents(): AgentNode[] {
   });
 }
 
+export interface CheckpointResult {
+  layer: number;
+  agentType: string;
+  status: 'pass' | 'warn' | 'fail';
+  details: CheckpointDetail[];
+}
+
 interface DashboardStore {
   // Agents
   agents: AgentNode[];
@@ -102,6 +110,15 @@ interface DashboardStore {
   totalFiles: number;
   activeAgents: number;
 
+  // Execution plan
+  executionPlan: string | null;
+
+  // Verification checkpoints
+  checkpoints: Map<number, CheckpointResult>;
+
+  // Pipeline interruption state
+  interruptedInfo: { lastCompletedLayer: number; interruptedAt: string } | null;
+
   // UI state
   connected: boolean;
   scrollPaused: boolean;
@@ -121,6 +138,9 @@ interface DashboardStore {
   setTokensUsed: (tokens: number) => void;
   setTotalFiles: (count: number) => void;
   setActiveAgents: (count: number) => void;
+  setExecutionPlan: (plan: string) => void;
+  setCheckpoint: (checkpoint: CheckpointResult) => void;
+  setInterruptedInfo: (info: { lastCompletedLayer: number; interruptedAt: string } | null) => void;
   applySnapshot: (snapshot: DashboardSnapshot) => void;
   reset: () => void;
 }
@@ -161,6 +181,9 @@ export const useDashboardStore = create<DashboardStore>((set) => ({
   tokensUsed: 0,
   totalFiles: 0,
   activeAgents: 0,
+  executionPlan: null as string | null,
+  checkpoints: new Map<number, CheckpointResult>(),
+  interruptedInfo: null as { lastCompletedLayer: number; interruptedAt: string } | null,
 
   // UI
   connected: false,
@@ -181,6 +204,14 @@ export const useDashboardStore = create<DashboardStore>((set) => ({
   setTokensUsed: (tokensUsed) => set({ tokensUsed }),
   setTotalFiles: (totalFiles) => set({ totalFiles }),
   setActiveAgents: (count) => set({ activeAgents: count }),
+  setExecutionPlan: (plan: string) => set({ executionPlan: plan }),
+  setCheckpoint: (checkpoint: CheckpointResult) =>
+    set((state) => {
+      const next = new Map(state.checkpoints);
+      next.set(checkpoint.layer, checkpoint);
+      return { checkpoints: next };
+    }),
+  setInterruptedInfo: (info) => set({ interruptedInfo: info }),
 
   applySnapshot: (snapshot) =>
     set((state) => {
@@ -217,6 +248,7 @@ export const useDashboardStore = create<DashboardStore>((set) => ({
       tokensUsed: 0,
       totalFiles: 0,
       activeAgents: 0,
+      interruptedInfo: null,
       connected: false,
       scrollPaused: false,
       unreadCount: 0,

@@ -16,8 +16,9 @@
 | M7 Settings | `007-m7-settings` | 26/26 | v0.7.0 | ✅ Completo |
 | 008 System Fixes | `008-system-wide-fixes` | 25/25 | v0.8.0 | ✅ Completo |
 | M9 Improvements | `009-m9-improvements` | 70/70 | v0.9.0 | ✅ Completo |
+| M10 Pipeline | `010-m10-pipeline-improvements` | 41/41 | v0.10.0 | ✅ Completo |
 
-**Tests:** 160/160 passing ✅ | **API build:** ✅ | **Web build:** ✅ (11 páginas)
+**Tests:** 305/305 passing ✅ | **API build:** ✅ | **Web build:** ✅ (14 páginas)
 **Próximo módulo:** Definir con el usuario antes de iniciar.
 
 ---
@@ -364,6 +365,7 @@ pnpm --filter @sophia/web build   # → zero errors
 
 ## 🔄 RECENT CHANGES
 
+- **v0.10.0 (M10):** spec-agent intelligence (brainstorming, ambiguity detection), planner-agent Layer 0 (execution plan + test contracts), TDD skill injection (layers 2-3), verification checkpoints (batch-verifier per layer, CRITICAL pause), QA diagnostic retry (investigation skill, MAX_QA_RERUNS=2), pipeline resilience (PipelineState model, crash recovery, resume endpoint, frontend recovery UI)
 - **v0.9.0 (M9):** paralelismo QA‖Security + Docs‖Deploy, shared skills, memory persistence, quality gate, lifecycle resilience (SIGTERM, per-call timeout 2min, memory monitoring), criteria extractor, certification report, singleton Anthropic client thread-safe
 - **v0.8.0 (008):** session persistence, API key resilience, SSE errors, `dev:clean`, visual refresh
 - **v0.7.0 (M7):** settings — API key AES-256-GCM, token usage, profile

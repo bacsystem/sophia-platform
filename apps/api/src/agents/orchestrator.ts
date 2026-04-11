@@ -9,6 +9,7 @@ import { extractCriteria } from './criteria-extractor.js';
 import { getNextLayers, AGENT_GRAPH } from './dependency-graph.js';
 import type { LayerNode } from './dependency-graph.js';
 import { getCriteriaCoverageThreshold, verifyCriteriaCoverage } from './quality-gate.js';
+import { verifyBatchOutput } from './batch-verifier.js';
 import { emitEvent, buildEvent } from '../websocket/ws.emitter.js';
 
 import { fileURLToPath } from 'node:url';
@@ -71,12 +72,18 @@ function buildQaRetryPrompt(
   coveragePercent: number,
   threshold: number,
   attempt: number,
+  diagnosticContext?: { filesInvolved: string[] },
 ): string {
   const missingList = missingCriteria.length > 0
     ? missingCriteria.map((criterionId) => `- ${criterionId}`).join('\n')
     : '- (sin criterios identificados)';
 
-  return `${baseTaskPrompt}\n\n## Quality Gate Retry ${attempt}/${MAX_QA_RERUNS}\nLa cobertura actual es ${coveragePercent}% y el mínimo requerido es ${threshold}%.\n\nCriterios aún no cubiertos:\n${missingList}\n\nDebes agregar o ajustar tests para estos criterios y reescribir \`test-mapping.json\` antes de llamar \`taskComplete\`.`;
+  let diagnosticSection = '';
+  if (diagnosticContext && diagnosticContext.filesInvolved.length > 0) {
+    diagnosticSection = `\n\n### Archivos involucrados en el intento anterior\n${diagnosticContext.filesInvolved.map((f) => `- \`${f}\``).join('\n')}\n\nAnaliza estos archivos para identificar por qué los criterios no fueron cubiertos.`;
+  }
+
+  return `${baseTaskPrompt}\n\n## Quality Gate Retry ${attempt}/${MAX_QA_RERUNS}\nLa cobertura actual es ${coveragePercent}% y el mínimo requerido es ${threshold}%.\n\nCriterios aún no cubiertos:\n${missingList}${diagnosticSection}\n\nDebes agregar o ajustar tests para estos criterios y reescribir \`test-mapping.json\` antes de llamar \`taskComplete\`.`;
 }
 
 /**
@@ -91,8 +98,9 @@ async function enforceQaQualityGate(params: {
   taskPrompt: string;
   batchSignal?: AbortSignal;
   initialResult: AgentRunResult;
+  investigationSkill?: string;
 }): Promise<AgentRunResult> {
-  const { agentId, projectId, projectDir, systemPrompt, taskPrompt, batchSignal, initialResult } = params;
+  const { agentId, projectId, projectDir, systemPrompt, taskPrompt, batchSignal, initialResult, investigationSkill } = params;
 
   let aggregateResult = initialResult;
 
@@ -120,25 +128,34 @@ async function enforceQaQualityGate(params: {
     }
 
     if (rerunCount === MAX_QA_RERUNS) {
+      // T028: Generate investigation report on max retries exhausted
+      await generateInvestigationReport(projectDir, projectId, coverage.missing, coverage.coveragePercent, threshold);
       throw new Error(
         `Quality gate failed after ${MAX_QA_RERUNS} re-runs: ${coverage.coveragePercent}% coverage (threshold ${threshold}%). Missing criteria: ${coverage.missing.join(', ') || 'unknown'}`,
       );
     }
 
+    // T026: Build diagnostic retry prompt with specific failure context
     const retryPrompt = buildQaRetryPrompt(
       taskPrompt,
       coverage.missing,
       coverage.coveragePercent,
       threshold,
       rerunCount + 1,
+      { filesInvolved: aggregateResult.filesCreated },
     );
+
+    // Inject investigation skill into retry system prompt when available
+    const retrySystemPrompt = investigationSkill
+      ? `${systemPrompt}\n\n---\n\n${investigationSkill}`
+      : systemPrompt;
 
     const retryResult = await runAgent({
       agentId,
       projectId,
       agentType: 'qa-agent',
       layer: 4,
-      systemPrompt,
+      systemPrompt: retrySystemPrompt,
       taskPrompt: retryPrompt,
       projectDir,
       batchSignal,
@@ -154,6 +171,41 @@ async function enforceQaQualityGate(params: {
   return aggregateResult;
 }
 
+/**
+ * T028: Generates investigation-report.md when QA retries are exhausted.
+ * Persists to project dir and emits WebSocket event.
+ */
+async function generateInvestigationReport(
+  projectDir: string,
+  projectId: string,
+  missingCriteria: string[],
+  coveragePercent: number,
+  threshold: number,
+): Promise<void> {
+  const criteriaList = missingCriteria.length > 0
+    ? missingCriteria.map((c) => `### ${c}\n- **Hipótesis:** Criterio no cubierto después de ${MAX_QA_RERUNS} reintentos\n- **Recomendación:** Revisar implementación manualmente`).join('\n\n')
+    : '### (sin criterios identificados)';
+
+  const report = `# Investigation Report\n\n## Criterios no cubiertos\n${criteriaList}\n\n## Resumen\n- Cobertura alcanzada: ${coveragePercent}%\n- Umbral requerido: ${threshold}%\n- Reintentos ejecutados: ${MAX_QA_RERUNS}\n- Bloqueadores identificados: ${missingCriteria.join(', ') || 'ninguno identificado'}\n`;
+
+  const reportDir = path.join(projectDir, 'qa');
+  const reportPath = path.join(reportDir, 'investigation-report.md');
+
+  try {
+    await fs.mkdir(reportDir, { recursive: true });
+    await fs.writeFile(reportPath, report, 'utf8');
+  } catch { /* non-fatal */ }
+
+  emitEvent(buildEvent('qa:investigation-report', projectId, {
+    agentType: 'qa-agent',
+    layer: 4,
+    message: `Investigation report generated: qa/investigation-report.md`,
+    reportPath: 'qa/investigation-report.md',
+    missingCriteria,
+    coveragePercent,
+  }));
+}
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -167,9 +219,10 @@ const PROJECTS_BASE_DIR = path.resolve(
  * before the agent-specific system.md content.
  * Order: conventions → anti-patterns → output-format → agent system.md
  */
-export function composeSystemPrompt(sharedSkills: string[], agentSystemMd: string): string {
-  if (sharedSkills.length === 0) return agentSystemMd;
-  return [...sharedSkills, agentSystemMd].join('\n\n---\n\n');
+export function composeSystemPrompt(sharedSkills: string[], agentSystemMd: string, extraSkills?: string[]): string {
+  const allSkills = [...sharedSkills, ...(extraSkills ?? [])];
+  if (allSkills.length === 0) return agentSystemMd;
+  return [...allSkills, agentSystemMd].join('\n\n---\n\n');
 }
 
 /**
@@ -180,6 +233,23 @@ export function composeSystemPrompt(sharedSkills: string[], agentSystemMd: strin
 export async function loadSharedSkills(): Promise<string[]> {
   const sharedFiles = ['conventions.md', 'anti-patterns.md', 'output-format.md'];
   return Promise.all(sharedFiles.map((f) => readSkillFile(`_shared/${f}`)));
+}
+
+/** TDD skill layers: backend-agent (2) and frontend-agent (3) */
+export const TDD_LAYERS = new Set([2, 3]);
+
+/**
+ * @description Loads the TDD shared skill. Called once per pipeline run.
+ */
+export async function loadTddSkill(): Promise<string> {
+  return readSkillFile('_shared/test-driven-development.md');
+}
+
+/**
+ * @description Loads the investigating-test-failures skill for QA retries.
+ */
+export async function loadInvestigationSkill(): Promise<string> {
+  return readSkillFile('_shared/investigating-test-failures.md');
 }
 
 const MAX_MEMORY_CHARS = 20_000; // ≈ 5000 tokens at 4 chars/token
@@ -292,7 +362,42 @@ async function materializeSpec(projectId: string, projectDir: string): Promise<v
 
 /**
  * @description Main pipeline orchestrator.
- * Runs all 9 agent layers sequentially for a project.
+/**
+ * T031: Creates a PipelineState record when a pipeline run starts.
+ */
+async function createPipelineState(projectId: string): Promise<string> {
+  const state = await prisma.pipelineState.create({
+    data: { projectId, status: 'running', currentLayer: 0, completedLayers: [] },
+  });
+  return state.id;
+}
+
+/**
+ * T031: Updates PipelineState after a batch of layers completes.
+ */
+async function updateLayerCompleted(pipelineStateId: string, currentLayer: number, completedLayers: number[]): Promise<void> {
+  await prisma.pipelineState.update({
+    where: { id: pipelineStateId },
+    data: {
+      currentLayer,
+      completedLayers: completedLayers as unknown as import('@prisma/client').Prisma.InputJsonValue,
+    },
+  });
+}
+
+/**
+ * T031: Marks a PipelineState as completed or failed at pipeline end.
+ */
+async function completePipelineState(pipelineStateId: string, status: 'completed' | 'failed'): Promise<void> {
+  await prisma.pipelineState.update({
+    where: { id: pipelineStateId },
+    data: { status },
+  });
+}
+
+/**
+ * @description Main pipeline entry point.
+ * Runs all 10 agent layers (planner + 9 generation agents) for a project.
  * On retry, skips layers whose agents are already completed in the DB.
  */
 export async function runPipeline(projectId: string, _userId: string): Promise<void> {
@@ -306,6 +411,8 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
 
   // Load shared skills once for the entire pipeline (not per layer)
   const sharedSkills = await loadSharedSkills();
+  const tddSkill = await loadTddSkill();
+  const investigationSkill = await loadInvestigationSkill();
 
   // Build set of already-completed layers for retry support
   const completedAgents = await prisma.agent.findMany({
@@ -319,6 +426,9 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
     where: { id: projectId },
     data: { status: 'running' },
   });
+
+  // T031: Create pipeline state record
+  const pipelineStateId = await createPipelineState(projectId);
 
   const totalLayers = AGENT_GRAPH.length;
 
@@ -377,6 +487,8 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
               projectId,
               projectDir,
               sharedSkills,
+              tddSkill,
+              investigationSkill,
               completedLayers: new Set(completedLayerNums),
               batchSignal: batchController.signal,
             });
@@ -420,6 +532,9 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
         where: { id: projectId },
         data: { progress: pipelineProgress, currentLayer: lastLayer.layer },
       });
+
+      // T031: Update pipeline state after batch completion
+      try { await updateLayerCompleted(pipelineStateId, lastLayer.layer, [...completedLayerNums]); } catch { /* non-fatal */ }
     }
 
     // All layers done
@@ -429,6 +544,9 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
     });
 
     emitEvent(buildEvent('project:done', projectId, { progress: 100 }));
+
+    // T031: Mark pipeline state as completed
+    try { await completePipelineState(pipelineStateId, 'completed'); } catch { /* non-fatal */ }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
 
@@ -436,6 +554,9 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
       where: { id: projectId },
       data: { status: 'error', errorMessage: message },
     });
+
+    // T031: Mark pipeline state as failed
+    try { await completePipelineState(pipelineStateId, 'failed'); } catch { /* non-fatal */ }
 
     emitEvent(buildEvent('project:error', projectId, { message }));
     throw err;
@@ -446,6 +567,10 @@ interface RunLayerContext {
   projectId: string;
   projectDir: string;
   sharedSkills: string[];
+  /** TDD shared skill content — injected for layers in TDD_LAYERS */
+  tddSkill: string;
+  /** Investigation skill content — injected for QA retry prompts */
+  investigationSkill: string;
   /** Layers completed before this batch started — passed to context-builder for parallel-safe injection */
   completedLayers: Set<number>;
   /** Abort signal from the batch AbortController — fired when a sibling parallel agent fails */
@@ -457,7 +582,7 @@ interface RunLayerContext {
  * execute runAgent, track files, append memory, emit progress.
  */
 async function runLayer(layerDef: LayerNode, ctx: RunLayerContext): Promise<void> {
-  const { projectId, projectDir, sharedSkills, completedLayers, batchSignal } = ctx;
+  const { projectId, projectDir, sharedSkills, tddSkill, investigationSkill, completedLayers, batchSignal } = ctx;
 
   // Get or create agent record
   const agent = await prisma.agent.upsert({
@@ -480,7 +605,8 @@ async function runLayer(layerDef: LayerNode, ctx: RunLayerContext): Promise<void
 
   // Read skill prompts and compose with shared skills
   const agentSystemMd = await readSkillFile(layerDef.systemFile);
-  const systemPrompt = composeSystemPrompt(sharedSkills, agentSystemMd);
+  const extraSkills = TDD_LAYERS.has(layerDef.layer) ? [tddSkill] : undefined;
+  const systemPrompt = composeSystemPrompt(sharedSkills, agentSystemMd, extraSkills);
   const taskTemplate = await readSkillFile(layerDef.taskFile);
 
   // Build task prompt with context from prior layers
@@ -513,6 +639,7 @@ async function runLayer(layerDef: LayerNode, ctx: RunLayerContext): Promise<void
       taskPrompt,
       batchSignal,
       initialResult: result,
+      investigationSkill,
     });
   }
 
@@ -546,6 +673,47 @@ async function runLayer(layerDef: LayerNode, ctx: RunLayerContext): Promise<void
     );
   }
 
+  // Verify layer output (post-agent checkpoint)
+  let planContent: string | undefined;
+  try {
+    planContent = await fs.readFile(path.join(projectDir, 'plan', 'execution-plan.md'), 'utf8');
+  } catch { /* plan may not exist */ }
+
+  const verification = await verifyBatchOutput(layerDef, projectDir, planContent);
+
+  // Persist checkpoint in DB (non-fatal)
+  try {
+    await prisma.verificationCheckpoint.create({
+      data: {
+        projectId,
+        layer: layerDef.layer,
+        agentType: layerDef.type,
+        status: verification.status,
+        details: verification.details as unknown as import('@prisma/client').Prisma.InputJsonValue,
+      },
+    });
+  } catch { /* non-fatal — model may not exist yet */ }
+
+  emitEvent(buildEvent('checkpoint:result', projectId, {
+    layer: layerDef.layer,
+    agentType: layerDef.type,
+    status: verification.status,
+    details: verification.details,
+  }));
+
+  if (verification.status === 'fail') {
+    await prisma.project.update({
+      where: { id: projectId },
+      data: { status: 'paused', errorMessage: `Verification failed for ${layerDef.type}: ${verification.details.map((d) => d.message).join('; ')}` },
+    });
+    emitEvent(buildEvent('project:paused', projectId, {
+      reason: 'verification_failure',
+      layer: layerDef.layer,
+      details: verification.details,
+    }));
+    throw new Error(`Verification CRITICAL failure for ${layerDef.type}`);
+  }
+
   // Append layer completion to project memory (non-fatal)
   appendProjectMemory(projectDir, layerDef.layer, layerDef.type, result.summary).catch(() => { /* non-fatal */ });
 
@@ -555,4 +723,15 @@ async function runLayer(layerDef: LayerNode, ctx: RunLayerContext): Promise<void
     tokensUsed: result.tokensInput + result.tokensOutput,
     filesCount: result.filesCreated.length,
   }));
+
+  // Emit plan:generated after planner-agent (Layer 0) completes
+  if (layerDef.layer === 0) {
+    let planContent = '';
+    try {
+      planContent = await fs.readFile(path.join(projectDir, 'plan', 'execution-plan.md'), 'utf8');
+    } catch { /* non-fatal — plan may not have been written */ }
+    emitEvent(buildEvent('plan:generated', projectId, {
+      message: planContent || 'Execution plan generated',
+    }));
+  }
 }

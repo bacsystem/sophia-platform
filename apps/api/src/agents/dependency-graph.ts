@@ -21,7 +21,8 @@ export interface LayerNode {
  * L5 and L6 can run in parallel (both depend on L4 and L4.5).
  */
 export const AGENT_GRAPH: LayerNode[] = [
-  { layer: 1,   type: 'dba-agent',         systemFile: 'dba-agent/system.md',         taskFile: 'dba-agent/task.md',         dependsOn: [] },
+  { layer: 0,   type: 'planner-agent',     systemFile: 'planner-agent/system.md',     taskFile: 'planner-agent/task.md',     dependsOn: [] },
+  { layer: 1,   type: 'dba-agent',         systemFile: 'dba-agent/system.md',         taskFile: 'dba-agent/task.md',         dependsOn: [0] },
   { layer: 1.5, type: 'seed-agent',        systemFile: 'seed-agent/system.md',        taskFile: 'seed-agent/task.md',        dependsOn: [1] },
   { layer: 2,   type: 'backend-agent',     systemFile: 'backend-agent/system.md',     taskFile: 'backend-agent/task.md',     dependsOn: [1, 1.5] },
   { layer: 3,   type: 'frontend-agent',    systemFile: 'frontend-agent/system.md',    taskFile: 'frontend-agent/task.md',    dependsOn: [2] },

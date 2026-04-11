@@ -174,6 +174,38 @@ Dependencias cross-module:
 NO leas: módulos de M1–M7 (no hay dependencias directas, solo context-builder usa prisma)
 ```
 
+## M10 — Pipeline Improvements (HU-48→59)
+
+```
+Lee:
+  docs/superpowers/plans/2026-04-10-m10-pipeline-improvements.md → plan completo
+  apps/api/src/agents/
+    orchestrator.ts          → runPipeline, createPipelineState, updateLayerCompleted, completePipelineState, loadTddSkill, loadInvestigationSkill, TDD_LAYERS, MAX_QA_RERUNS
+    pipeline-recovery.ts     → detectInterruptedPipelines, verifyBeforeResume, emitInterruptedEvents
+    batch-verifier.ts        → verifyBatchOutput (verification checkpoints)
+    context-builder.ts       → buildTaskPrompt, token budget
+  apps/api/src/queue/agent-worker.ts  → startWorker con detección de pipelines interrumpidos
+  apps/api/src/modules/projects/
+    project.routes.ts        → POST /projects/:id/resume
+    project.controller.ts    → resumeProjectHandler
+    project.service.ts       → resumeProject()
+  apps/api/src/websocket/ws.emitter.ts → pipeline:interrupted, pipeline:resumed events
+  apps/api/prisma/schema.prisma → PipelineState, VerificationCheckpoint models
+  apps/web/components/projects/pipeline-recovery.tsx  → recovery banner UI
+  apps/web/components/dashboard/dashboard-layout.tsx  → checkpoint indicators
+  apps/web/hooks/use-dashboard-store.ts → interruptedInfo state
+  apps/web/hooks/use-websocket.ts → pipeline event handlers
+  apps/web/lib/ws-events.ts → event types
+  skills/                    → shared skills, TDD skill, investigation skill
+
+Dependencias cross-module:
+  M9 agents (base-agent, dependency-graph, context-builder)
+  M2 projects (project.service for resume endpoint)
+  M5 dashboard (dashboard-layout for recovery UI)
+
+NO leas: módulos de M1, M3, M6, M7 (sin dependencias directas)
+```
+
 ## Deploy / Docker
 
 ```

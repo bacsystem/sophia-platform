@@ -10,6 +10,7 @@ import {
   pauseProjectHandler,
   continueProjectHandler,
   retryProjectHandler,
+  resumeProjectHandler,
 } from './project.controller.js';
 
 /** Routes for the M2 Projects module. All routes require authentication. */
@@ -51,5 +52,10 @@ export async function projectRoutes(app: FastifyInstance) {
     '/projects/:id/retry',
     { preHandler: [authenticate] },
     retryProjectHandler,
+  );
+  app.post<{ Params: { id: string } }>(
+    '/projects/:id/resume',
+    { preHandler: [authenticate] },
+    resumeProjectHandler,
   );
 }

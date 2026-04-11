@@ -198,6 +198,39 @@ export function useWebSocket({ projectId, enabled = true }: UseWebSocketOptions)
         break;
       }
 
+      case 'plan:generated': {
+        if (event.message) {
+          state.setExecutionPlan(event.message);
+        }
+        state.addLog({
+          id: `${event.timestamp}-plan`,
+          agentType: 'planner',
+          level: 'ok',
+          message: 'Execution plan generated',
+          timestamp: event.timestamp,
+        });
+        break;
+      }
+
+      case 'checkpoint:result': {
+        const payload = event as unknown as Record<string, unknown>;
+        state.setCheckpoint({
+          layer: (payload.layer as number) ?? 0,
+          agentType: (payload.agentType as string) ?? '',
+          status: (payload.status as 'pass' | 'warn' | 'fail') ?? 'pass',
+          details: (payload.details as Array<{ severity: 'CRITICAL' | 'MEDIUM' | 'LOW'; message: string; file?: string }>) ?? [],
+        });
+        const level = payload.status === 'fail' ? 'error' : payload.status === 'warn' ? 'warn' : 'ok';
+        state.addLog({
+          id: `${event.timestamp}-checkpoint-${payload.layer}`,
+          agentType: (payload.agentType as string) ?? 'system',
+          level,
+          message: `Checkpoint ${payload.agentType}: ${payload.status}`,
+          timestamp: event.timestamp,
+        });
+        break;
+      }
+
       case 'project:error': {
         state.setStatus('error');
         state.updateAgent('orchestrator', { status: 'error' });
@@ -206,6 +239,37 @@ export function useWebSocket({ projectId, enabled = true }: UseWebSocketOptions)
           agentType: 'system',
           level: 'error',
           message: event.message ?? 'Pipeline failed',
+          timestamp: event.timestamp,
+        });
+        break;
+      }
+
+      case 'pipeline:interrupted': {
+        const payload = event as unknown as Record<string, unknown>;
+        state.setStatus('error');
+        state.setInterruptedInfo({
+          lastCompletedLayer: (payload.lastCompletedLayer as number) ?? 0,
+          interruptedAt: (payload.interruptedAt as string) ?? event.timestamp,
+        });
+        state.addLog({
+          id: `${event.timestamp}-interrupted`,
+          agentType: 'system',
+          level: 'error',
+          message: `Pipeline interrupted at layer ${payload.lastCompletedLayer ?? '?'}`,
+          timestamp: event.timestamp,
+        });
+        break;
+      }
+
+      case 'pipeline:resumed': {
+        const payload = event as unknown as Record<string, unknown>;
+        state.setStatus('running');
+        state.setInterruptedInfo(null);
+        state.addLog({
+          id: `${event.timestamp}-resumed`,
+          agentType: 'system',
+          level: 'ok',
+          message: `Pipeline resumed from layer ${payload.resumeFromLayer ?? '?'}`,
           timestamp: event.timestamp,
         });
         break;
