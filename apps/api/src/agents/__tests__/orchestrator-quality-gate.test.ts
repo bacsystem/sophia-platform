@@ -22,6 +22,7 @@ vi.mock('../../lib/prisma.js', () => ({
     generatedFile: { upsert: vi.fn().mockResolvedValue({}), findFirst: vi.fn().mockResolvedValue(null) },
     agentLog: { create: vi.fn().mockResolvedValue({}) },
     verificationCheckpoint: { create: vi.fn().mockResolvedValue({}) },
+    pipelineState: { create: vi.fn().mockResolvedValue({ id: 'ps-1' }), update: vi.fn().mockResolvedValue({}) },
   },
 }));
 

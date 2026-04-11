@@ -15,6 +15,7 @@ import { AgentControls } from './agent-controls';
 import { FilePreviewModal } from './file-preview-modal';
 import { DashboardEmpty } from './dashboard-empty';
 import { CheckpointIndicators } from '@/components/projects/checkpoint-indicator';
+import { PipelineRecovery } from '@/components/projects/pipeline-recovery';
 import { LAYER_AGENTS, AGENT_CONFIGS, type AgentType } from '@/lib/agent-config';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
@@ -205,6 +206,7 @@ export function DashboardLayout({ projectId, projectName, startedAt, initialStat
           <div className="px-5 py-2 shrink-0 border-b border-[var(--border-subtle)] bg-[var(--panel-bg)]/80">
             <AgentMetricsBar startedAt={startedAt} />
             <CheckpointIndicators />
+            <PipelineRecovery projectId={projectId} />
           </div>
 
           {/* ── Desktop: Canvas (6 rows) + Tabbed Console (6 rows) ── */}

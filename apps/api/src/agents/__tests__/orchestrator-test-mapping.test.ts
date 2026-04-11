@@ -19,6 +19,8 @@ vi.mock('../../lib/prisma.js', () => ({
     projectSpec: { findFirst: vi.fn().mockResolvedValue(null) },
     generatedFile: { upsert: vi.fn().mockResolvedValue({}), findFirst: vi.fn().mockResolvedValue(null) },
     agentLog: { create: vi.fn().mockResolvedValue({}) },
+    verificationCheckpoint: { create: vi.fn().mockResolvedValue({}) },
+    pipelineState: { create: vi.fn().mockResolvedValue({ id: 'ps-1' }), update: vi.fn().mockResolvedValue({}) },
   },
 }));
 
@@ -33,6 +35,10 @@ vi.mock('../../agents/context-builder.js', () => ({
 vi.mock('../../websocket/ws.emitter.js', () => ({
   emitEvent: vi.fn(),
   buildEvent: vi.fn().mockReturnValue({}),
+}));
+
+vi.mock('../../agents/batch-verifier.js', () => ({
+  verifyBatchOutput: vi.fn().mockResolvedValue({ status: 'pass', details: [] }),
 }));
 
 vi.mock('redis', () => ({

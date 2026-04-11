@@ -116,6 +116,9 @@ interface DashboardStore {
   // Verification checkpoints
   checkpoints: Map<number, CheckpointResult>;
 
+  // Pipeline interruption state
+  interruptedInfo: { lastCompletedLayer: number; interruptedAt: string } | null;
+
   // UI state
   connected: boolean;
   scrollPaused: boolean;
@@ -137,6 +140,7 @@ interface DashboardStore {
   setActiveAgents: (count: number) => void;
   setExecutionPlan: (plan: string) => void;
   setCheckpoint: (checkpoint: CheckpointResult) => void;
+  setInterruptedInfo: (info: { lastCompletedLayer: number; interruptedAt: string } | null) => void;
   applySnapshot: (snapshot: DashboardSnapshot) => void;
   reset: () => void;
 }
@@ -179,6 +183,7 @@ export const useDashboardStore = create<DashboardStore>((set) => ({
   activeAgents: 0,
   executionPlan: null as string | null,
   checkpoints: new Map<number, CheckpointResult>(),
+  interruptedInfo: null as { lastCompletedLayer: number; interruptedAt: string } | null,
 
   // UI
   connected: false,
@@ -206,6 +211,7 @@ export const useDashboardStore = create<DashboardStore>((set) => ({
       next.set(checkpoint.layer, checkpoint);
       return { checkpoints: next };
     }),
+  setInterruptedInfo: (info) => set({ interruptedInfo: info }),
 
   applySnapshot: (snapshot) =>
     set((state) => {
@@ -242,6 +248,7 @@ export const useDashboardStore = create<DashboardStore>((set) => ({
       tokensUsed: 0,
       totalFiles: 0,
       activeAgents: 0,
+      interruptedInfo: null,
       connected: false,
       scrollPaused: false,
       unreadCount: 0,

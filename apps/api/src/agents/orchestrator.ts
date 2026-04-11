@@ -362,6 +362,41 @@ async function materializeSpec(projectId: string, projectDir: string): Promise<v
 
 /**
  * @description Main pipeline orchestrator.
+/**
+ * T031: Creates a PipelineState record when a pipeline run starts.
+ */
+async function createPipelineState(projectId: string): Promise<string> {
+  const state = await prisma.pipelineState.create({
+    data: { projectId, status: 'running', currentLayer: 0, completedLayers: [] },
+  });
+  return state.id;
+}
+
+/**
+ * T031: Updates PipelineState after a batch of layers completes.
+ */
+async function updateLayerCompleted(pipelineStateId: string, currentLayer: number, completedLayers: number[]): Promise<void> {
+  await prisma.pipelineState.update({
+    where: { id: pipelineStateId },
+    data: {
+      currentLayer,
+      completedLayers: completedLayers as unknown as import('@prisma/client').Prisma.InputJsonValue,
+    },
+  });
+}
+
+/**
+ * T031: Marks a PipelineState as completed or failed at pipeline end.
+ */
+async function completePipelineState(pipelineStateId: string, status: 'completed' | 'failed'): Promise<void> {
+  await prisma.pipelineState.update({
+    where: { id: pipelineStateId },
+    data: { status },
+  });
+}
+
+/**
+ * @description Main pipeline entry point.
  * Runs all 10 agent layers (planner + 9 generation agents) for a project.
  * On retry, skips layers whose agents are already completed in the DB.
  */
@@ -391,6 +426,9 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
     where: { id: projectId },
     data: { status: 'running' },
   });
+
+  // T031: Create pipeline state record
+  const pipelineStateId = await createPipelineState(projectId);
 
   const totalLayers = AGENT_GRAPH.length;
 
@@ -494,6 +532,9 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
         where: { id: projectId },
         data: { progress: pipelineProgress, currentLayer: lastLayer.layer },
       });
+
+      // T031: Update pipeline state after batch completion
+      try { await updateLayerCompleted(pipelineStateId, lastLayer.layer, [...completedLayerNums]); } catch { /* non-fatal */ }
     }
 
     // All layers done
@@ -503,6 +544,9 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
     });
 
     emitEvent(buildEvent('project:done', projectId, { progress: 100 }));
+
+    // T031: Mark pipeline state as completed
+    try { await completePipelineState(pipelineStateId, 'completed'); } catch { /* non-fatal */ }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
 
@@ -510,6 +554,9 @@ export async function runPipeline(projectId: string, _userId: string): Promise<v
       where: { id: projectId },
       data: { status: 'error', errorMessage: message },
     });
+
+    // T031: Mark pipeline state as failed
+    try { await completePipelineState(pipelineStateId, 'failed'); } catch { /* non-fatal */ }
 
     emitEvent(buildEvent('project:error', projectId, { message }));
     throw err;

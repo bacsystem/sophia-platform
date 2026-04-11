@@ -1,6 +1,8 @@
 import prisma from '../../lib/prisma.js';
 import { getRedisClient } from '../../lib/redis.js';
 import { enqueueAgentRun } from '../../queue/agent-queue.js';
+import { getProjectDir } from '../../agents/orchestrator.js';
+import { verifyBeforeResume } from '../../agents/pipeline-recovery.js';
 import type { CreateProjectInput, UpdateProjectInput, ListProjectsQuery } from './project.schema.js';
 
 /** Maps currentLayer number to a human-readable layer name. */
@@ -255,4 +257,57 @@ export async function retryProject(userId: string, id: string) {
   const jobId = await enqueueAgentRun(id, userId);
 
   return { data: { id, status: 'running', jobId } };
+}
+
+/**
+ * T034: Resumes an interrupted pipeline from the last completed checkpoint.
+ * Returns 409 if the project does not have an interrupted pipeline state.
+ */
+export async function resumeProject(userId: string, id: string) {
+  const project = await prisma.project.findFirst({ where: { id, deletedAt: null } });
+  if (!project) return { error: 'NOT_FOUND', message: 'Proyecto no encontrado', status: 404 };
+  if (project.userId !== userId) return { error: 'FORBIDDEN', message: 'No tienes acceso a este proyecto', status: 403 };
+
+  // Find the latest interrupted pipeline state for this project
+  const pipelineState = await prisma.pipelineState.findFirst({
+    where: { projectId: id, status: 'interrupted' },
+    orderBy: { updatedAt: 'desc' },
+  });
+
+  if (!pipelineState) {
+    return { error: 'NOT_INTERRUPTED', message: 'No hay pipeline interrumpido para reanudar', status: 409 };
+  }
+
+  // T037: Verify integrity of last completed layer before resuming
+  const completedLayers = (pipelineState.completedLayers as number[]) ?? [];
+  const projectDir = getProjectDir(id);
+  const verification = await verifyBeforeResume(id, completedLayers, projectDir);
+  if (!verification.ok) {
+    return {
+      error: 'VERIFICATION_FAILED',
+      message: verification.reason ?? 'La verificación del último checkpoint falló. Usa retry en su lugar.',
+      status: 409,
+    };
+  }
+
+  // Mark pipeline state as resumed
+  await prisma.pipelineState.update({
+    where: { id: pipelineState.id },
+    data: { status: 'resumed' },
+  });
+
+  await prisma.project.update({ where: { id }, data: { status: 'running', errorMessage: null } });
+  const jobId = await enqueueAgentRun(id, userId);
+
+  return {
+    data: {
+      id,
+      status: 'running',
+      jobId,
+      resumedFrom: {
+        layer: pipelineState.currentLayer,
+        completedLayers: pipelineState.completedLayers,
+      },
+    },
+  };
 }

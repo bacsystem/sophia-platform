@@ -25,6 +25,10 @@ vi.mock('../../lib/prisma.js', () => ({
     verificationCheckpoint: {
       create: vi.fn().mockResolvedValue({}),
     },
+    pipelineState: {
+      create: vi.fn().mockResolvedValue({ id: 'ps-1' }),
+      update: vi.fn().mockResolvedValue({}),
+    },
   },
 }));
 
@@ -83,6 +87,8 @@ describe('orchestrator — runPipeline', () => {
     vi.clearAllMocks();
     // Default: not paused, no completed agents
     (prisma.agent.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (prisma.pipelineState.create as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 'ps-1' });
+    (prisma.pipelineState.update as ReturnType<typeof vi.fn>).mockResolvedValue({});
     (runAgent as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
       summary: 'Done',
@@ -134,6 +140,10 @@ describe('orchestrator — runPipeline', () => {
         generatedFile: { upsert: vi.fn().mockResolvedValue({}), findFirst: vi.fn().mockResolvedValue(null) },
         agentLog: { create: vi.fn().mockResolvedValue({}) },
         verificationCheckpoint: { create: vi.fn().mockResolvedValue({}) },
+        pipelineState: {
+          create: vi.fn().mockResolvedValue({ id: 'ps-1' }),
+          update: vi.fn().mockResolvedValue({}),
+        },
       },
     }));
     vi.mock('../../agents/base-agent.js', () => ({
@@ -306,6 +316,8 @@ describe('orchestrator — plan:generated event (M10-T011/T013)', () => {
     (prisma.agent.upsert as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 'agent-1' });
     (prisma.project.update as ReturnType<typeof vi.fn>).mockResolvedValue({});
     (prisma.verificationCheckpoint.create as ReturnType<typeof vi.fn>).mockResolvedValue({});
+    (prisma.pipelineState.create as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 'ps-1' });
+    (prisma.pipelineState.update as ReturnType<typeof vi.fn>).mockResolvedValue({});
     mockVerifyBatchOutput.mockResolvedValue({ status: 'pass', details: [] });
     (runAgent as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
@@ -385,6 +397,8 @@ describe('orchestrator — verification checkpoints (M10-T020/T024)', () => {
     (prisma.agent.upsert as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 'agent-1' });
     (prisma.project.update as ReturnType<typeof vi.fn>).mockResolvedValue({});
     (prisma.verificationCheckpoint.create as ReturnType<typeof vi.fn>).mockResolvedValue({});
+    (prisma.pipelineState.create as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 'ps-1' });
+    (prisma.pipelineState.update as ReturnType<typeof vi.fn>).mockResolvedValue({});
     (runAgent as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
       summary: 'Done',
@@ -477,5 +491,76 @@ describe('orchestrator — verification checkpoints (M10-T020/T024)', () => {
     const updateCalls = (prisma.project.update as ReturnType<typeof vi.fn>).mock.calls;
     expect(updateCalls.some((c: unknown[]) => (c[0] as { data: { status: string } }).data.status === 'done')).toBe(true);
     expect(updateCalls.some((c: unknown[]) => (c[0] as { data: { status: string } }).data.status === 'paused')).toBe(false);
+  });
+});
+
+describe('orchestrator — pipeline state persistence (M10-T031/T038)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (prisma.agent.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (prisma.agent.upsert as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 'agent-1' });
+    (prisma.project.update as ReturnType<typeof vi.fn>).mockResolvedValue({});
+    (prisma.verificationCheckpoint.create as ReturnType<typeof vi.fn>).mockResolvedValue({});
+    (prisma.pipelineState.create as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 'ps-1' });
+    (prisma.pipelineState.update as ReturnType<typeof vi.fn>).mockResolvedValue({});
+    mockVerifyBatchOutput.mockResolvedValue({ status: 'pass', details: [] });
+    (runAgent as ReturnType<typeof vi.fn>).mockResolvedValue({
+      success: true,
+      summary: 'Done',
+      tokensInput: 10,
+      tokensOutput: 5,
+      filesCreated: [],
+    });
+  });
+
+  it('creates pipeline state at pipeline start', async () => {
+    const { runPipeline } = await import('../../agents/orchestrator.js');
+    await runPipeline('proj-ps-create', 'user-1');
+
+    expect(prisma.pipelineState.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        projectId: 'proj-ps-create',
+        status: 'running',
+      }),
+    });
+  });
+
+  it('updates pipeline state after each batch', async () => {
+    const { runPipeline } = await import('../../agents/orchestrator.js');
+    await runPipeline('proj-ps-update', 'user-1');
+
+    // PipelineState.update should be called multiple times (batch updates + final completion)
+    const updateCalls = (prisma.pipelineState.update as ReturnType<typeof vi.fn>).mock.calls;
+    expect(updateCalls.length).toBeGreaterThanOrEqual(1);
+    // Find a batch update call (one that has completedLayers in data)
+    const batchCall = updateCalls.find(
+      (c: unknown[]) => (c[0] as { data: { completedLayers?: unknown } }).data.completedLayers !== undefined,
+    );
+    expect(batchCall).toBeDefined();
+    expect((batchCall![0] as { where: { id: string } }).where.id).toBe('ps-1');
+  });
+
+  it('marks pipeline state as completed on success', async () => {
+    const { runPipeline } = await import('../../agents/orchestrator.js');
+    await runPipeline('proj-ps-done', 'user-1');
+
+    const updateCalls = (prisma.pipelineState.update as ReturnType<typeof vi.fn>).mock.calls;
+    const completedCall = updateCalls.find(
+      (c: unknown[]) => (c[0] as { data: { status: string } }).data.status === 'completed',
+    );
+    expect(completedCall).toBeDefined();
+  });
+
+  it('marks pipeline state as failed on error', async () => {
+    (runAgent as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('Agent crash'));
+
+    const { runPipeline } = await import('../../agents/orchestrator.js');
+    await expect(runPipeline('proj-ps-fail', 'user-1')).rejects.toThrow('Agent crash');
+
+    const updateCalls = (prisma.pipelineState.update as ReturnType<typeof vi.fn>).mock.calls;
+    const failedCall = updateCalls.find(
+      (c: unknown[]) => (c[0] as { data: { status: string } }).data.status === 'failed',
+    );
+    expect(failedCall).toBeDefined();
   });
 });

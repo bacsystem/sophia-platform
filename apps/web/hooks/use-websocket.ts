@@ -243,6 +243,37 @@ export function useWebSocket({ projectId, enabled = true }: UseWebSocketOptions)
         });
         break;
       }
+
+      case 'pipeline:interrupted': {
+        const payload = event as unknown as Record<string, unknown>;
+        state.setStatus('error');
+        state.setInterruptedInfo({
+          lastCompletedLayer: (payload.lastCompletedLayer as number) ?? 0,
+          interruptedAt: (payload.interruptedAt as string) ?? event.timestamp,
+        });
+        state.addLog({
+          id: `${event.timestamp}-interrupted`,
+          agentType: 'system',
+          level: 'error',
+          message: `Pipeline interrupted at layer ${payload.lastCompletedLayer ?? '?'}`,
+          timestamp: event.timestamp,
+        });
+        break;
+      }
+
+      case 'pipeline:resumed': {
+        const payload = event as unknown as Record<string, unknown>;
+        state.setStatus('running');
+        state.setInterruptedInfo(null);
+        state.addLog({
+          id: `${event.timestamp}-resumed`,
+          agentType: 'system',
+          level: 'ok',
+          message: `Pipeline resumed from layer ${payload.resumeFromLayer ?? '?'}`,
+          timestamp: event.timestamp,
+        });
+        break;
+      }
     }
   }, [store]);
 

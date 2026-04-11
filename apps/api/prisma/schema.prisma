@@ -77,6 +77,7 @@ model Project {
   generatedFiles GeneratedFile[]
   agentMessages  AgentMessage[]
   verificationCheckpoints VerificationCheckpoint[]
+  pipelineStates          PipelineState[]
 
   @@index([userId], name: "idx_projects_user_id")
   @@index([status], name: "idx_projects_status")
@@ -227,4 +228,20 @@ model VerificationCheckpoint {
   @@index([projectId])
   @@index([projectId, layer])
   @@map("verification_checkpoints")
+}
+
+model PipelineState {
+  id              String   @id @default(uuid())
+  projectId       String   @map("project_id")
+  status          String   @default("running") @db.VarChar(20) // running | completed | interrupted | failed
+  currentLayer    Float    @default(0) @map("current_layer")
+  completedLayers Json     @default("[]") @map("completed_layers") // Float[]
+  startedAt       DateTime @default(now()) @map("started_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([projectId])
+  @@map("pipeline_states")
 }

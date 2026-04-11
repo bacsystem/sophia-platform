@@ -551,10 +551,10 @@ Phase 6 (Pipeline Resilience) ← Phase 4 needed for resume verification
 - New `PipelineState` model (see Data Model section)
 - Relation to Project model
 
-- [ ] Add `PipelineState` model to schema.prisma with all fields
-- [ ] Add `pipelineStates` relation to Project model
-- [ ] Run `pnpm db:migrate` — migration applied
-- [ ] Commit: `feat(M10-T030): add PipelineState model`
+- [X] Add `PipelineState` model to schema.prisma with all fields
+- [X] Add `pipelineStates` relation to Project model
+- [X] Run `pnpm db:migrate` — migration applied
+- [X] Commit: `feat(M10-T030): add PipelineState model`
 
 ### Task 31: Persist pipeline state in orchestrator
 
@@ -566,12 +566,12 @@ Phase 6 (Pipeline Resilience) ← Phase 4 needed for resume verification
 - Update currentLayer + completedLayers atomically after each layer
 - Set status to completed/failed at pipeline end
 
-- [ ] Write failing test: pipeline start → PipelineState created with status `running`
-- [ ] Write failing test: layer complete → PipelineState.completedLayers updated
-- [ ] Write failing test: pipeline done → PipelineState.status = `completed`
-- [ ] Implement `createPipelineState()`, `updateLayerCompleted()`, `completePipeline()` in orchestrator
-- [ ] Run tests — verify GREEN
-- [ ] Commit: `feat(M10-T031): persist pipeline state transitions`
+- [X] Write failing test: pipeline start → PipelineState created with status `running`
+- [X] Write failing test: layer complete → PipelineState.completedLayers updated
+- [X] Write failing test: pipeline done → PipelineState.status = `completed`
+- [X] Implement `createPipelineState()`, `updateLayerCompleted()`, `completePipeline()` in orchestrator
+- [X] Run tests — verify GREEN
+- [X] Commit: `feat(M10-T031): persist pipeline state transitions`
 
 ### Task 32: Create pipeline-recovery module
 
@@ -584,12 +584,12 @@ Phase 6 (Pipeline Resilience) ← Phase 4 needed for resume verification
 - Mark as `interrupted`
 - Provide resume function that continues from last completed layer
 
-- [ ] Write failing test: PipelineState running + old → detected as interrupted
-- [ ] Write failing test: PipelineState running + recent → NOT flagged (still active)
-- [ ] Implement `detectInterruptedPipelines(): InterruptedPipeline[]`
-- [ ] Implement `resumePipeline(projectId): void` that calls `runPipeline()` with `startFromLayer`
-- [ ] Run tests — verify GREEN
-- [ ] Commit: `feat(M10-T032): pipeline-recovery detection and resume`
+- [X] Write failing test: PipelineState running + old → detected as interrupted
+- [X] Write failing test: PipelineState running + recent → NOT flagged (still active)
+- [X] Implement `detectInterruptedPipelines(): InterruptedPipeline[]`
+- [X] Implement `resumePipeline(projectId): void` that calls `runPipeline()` with `startFromLayer`
+- [X] Run tests — verify GREEN
+- [X] Commit: `feat(M10-T032): pipeline-recovery detection and resume`
 
 ### Task 33: Integrate recovery into worker startup
 
@@ -600,10 +600,10 @@ Phase 6 (Pipeline Resilience) ← Phase 4 needed for resume verification
 - On worker start, call `detectInterruptedPipelines()`
 - Emit `pipeline:interrupted` events for each detected pipeline
 
-- [ ] Add recovery check to worker initialization
-- [ ] Emit WebSocket events for interrupted pipelines
-- [ ] Log interrupted pipelines count on startup
-- [ ] Commit: `feat(M10-T033): detect interrupted pipelines on worker start`
+- [X] Add recovery check to worker initialization
+- [X] Emit WebSocket events for interrupted pipelines
+- [X] Log interrupted pipelines count on startup
+- [X] Commit: `feat(M10-T033): detect interrupted pipelines on worker start`
 
 ### Task 34: Add resume endpoint
 
@@ -616,19 +616,19 @@ Phase 6 (Pipeline Resilience) ← Phase 4 needed for resume verification
 - `POST /api/projects/:id/resume` triggers pipeline resume from last checkpoint
 - Returns 409 if pipeline not in `interrupted` state
 
-- [ ] Add route `POST /api/projects/:id/resume`
-- [ ] Implement controller + service: validate state, enqueue resume job
-- [ ] Commit: `feat(M10-T034): POST /api/projects/:id/resume endpoint`
+- [X] Add route `POST /api/projects/:id/resume`
+- [X] Implement controller + service: validate state, enqueue resume job
+- [X] Commit: `feat(M10-T034): POST /api/projects/:id/resume endpoint`
 
 ### Task 35: WebSocket events for pipeline recovery
 
 **Files:**
 - Modify: `apps/api/src/websocket/ws.emitter.ts`
 
-- [ ] Add `'pipeline:interrupted'` and `'pipeline:resumed'` to AgentEventType
-- [ ] Emit `pipeline:interrupted` with `{ projectId, lastCompletedLayer, interruptedAt }`
-- [ ] Emit `pipeline:resumed` with `{ projectId, resumeFromLayer }`
-- [ ] Commit: `feat(M10-T035): WebSocket pipeline recovery events`
+- [X] Add `'pipeline:interrupted'` and `'pipeline:resumed'` to AgentEventType
+- [X] Emit `pipeline:interrupted` with `{ projectId, lastCompletedLayer, interruptedAt }`
+- [X] Emit `pipeline:resumed` with `{ projectId, resumeFromLayer }`
+- [X] Commit: `feat(M10-T035): WebSocket pipeline recovery events`
 
 ### Task 36: Frontend — pipeline recovery UI
 
@@ -641,20 +641,20 @@ Phase 6 (Pipeline Resilience) ← Phase 4 needed for resume verification
 - "Resume Pipeline" button that calls resume endpoint
 - Progress indicator showing which layers completed before interruption
 
-- [ ] Create `pipeline-recovery.tsx` with interrupted banner + resume button
-- [ ] Wire to WebSocket `pipeline:interrupted` event
-- [ ] Call `POST /api/projects/:id/resume` on button click
-- [ ] Show progress of completed layers
-- [ ] Commit: `feat(M10-T036): pipeline recovery UI component`
+- [X] Create `pipeline-recovery.tsx` with interrupted banner + resume button
+- [X] Wire to WebSocket `pipeline:interrupted` event
+- [X] Call `POST /api/projects/:id/resume` on button click
+- [X] Show progress of completed layers
+- [X] Commit: `feat(M10-T036): pipeline recovery UI component`
 
 ### Task 37: Resume integration with batch-verifier
 
 **Files:**
 - Modify: `apps/api/src/agents/pipeline-recovery.ts`
 
-- [ ] Before resuming, run `verifyBatchOutput()` on last completed layer to ensure integrity
-- [ ] If verification fails, flag to user instead of auto-resuming
-- [ ] Commit: `feat(M10-T037): verify integrity before pipeline resume`
+- [X] Before resuming, run `verifyBatchOutput()` on last completed layer to ensure integrity
+- [X] If verification fails, flag to user instead of auto-resuming
+- [X] Commit: `feat(M10-T037): verify integrity before pipeline resume`
 
 ### Task 38: Pipeline resilience tests
 
@@ -662,22 +662,22 @@ Phase 6 (Pipeline Resilience) ← Phase 4 needed for resume verification
 - Modify: `apps/api/src/agents/__tests__/pipeline-recovery.test.ts`
 - Modify: `apps/api/src/agents/__tests__/orchestrator.test.ts`
 
-- [ ] Test: pipeline state created at start, updated per layer, completed at end
-- [ ] Test: interrupted detection with time threshold
-- [ ] Test: resume continues from correct layer
-- [ ] Test: resume with verification failure → does not auto-resume
-- [ ] Run `pnpm --filter @sophia/api test`
-- [ ] Commit: `test(M10-T038): pipeline resilience integration tests`
+- [X] Test: pipeline state created at start, updated per layer, completed at end
+- [X] Test: interrupted detection with time threshold
+- [X] Test: resume continues from correct layer
+- [X] Test: resume with verification failure → does not auto-resume
+- [X] Run `pnpm --filter @sophia/api test`
+- [X] Commit: `test(M10-T038): pipeline resilience integration tests`
 
 **Phase 6 Checkpoint:**
-- [ ] Run `pnpm --filter @sophia/api lint` — zero violations
-- [ ] Run `pnpm --filter @sophia/api build` — zero errors
-- [ ] Run `pnpm --filter @sophia/api test` — all tests pass
-- [ ] Run `pnpm --filter @sophia/web lint` — zero violations
-- [ ] Run `pnpm --filter @sophia/web build` — zero errors
-- [ ] Verify: pipeline state persisted and updated per layer
-- [ ] Verify: interrupted pipelines detected on worker restart
-- [ ] Verify: resume works from correct checkpoint
+- [X] Run `pnpm --filter @sophia/api lint` — zero violations
+- [X] Run `pnpm --filter @sophia/api build` — zero errors
+- [X] Run `pnpm --filter @sophia/api test` — all tests pass
+- [X] Run `pnpm --filter @sophia/web lint` — zero violations
+- [X] Run `pnpm --filter @sophia/web build` — zero errors
+- [X] Verify: pipeline state persisted and updated per layer
+- [X] Verify: interrupted pipelines detected on worker restart
+- [X] Verify: resume works from correct checkpoint
 
 ---
 

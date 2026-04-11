@@ -14,6 +14,7 @@ import {
   pauseProject,
   continueProject,
   retryProject,
+  resumeProject,
 } from './project.service.js';
 
 /** Creates a new project for the authenticated user. */
@@ -148,6 +149,19 @@ export async function retryProjectHandler(
   reply: FastifyReply,
 ): Promise<void> {
   const result = await retryProject(request.user.sub, request.params.id);
+  if ('error' in result) {
+    reply.status(result.status as number).send({ error: result.error, message: result.message });
+    return;
+  }
+  reply.status(200).send(result);
+}
+
+/** T034: Resumes an interrupted pipeline from last checkpoint. */
+export async function resumeProjectHandler(
+  request: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+): Promise<void> {
+  const result = await resumeProject(request.user.sub, request.params.id);
   if ('error' in result) {
     reply.status(result.status as number).send({ error: result.error, message: result.message });
     return;

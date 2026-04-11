@@ -7,6 +7,8 @@ export type AgentEventType =
   | 'agent:failed'
   | 'plan:generated'
   | 'checkpoint:result'
+  | 'pipeline:interrupted'
+  | 'pipeline:resumed'
   | 'project:paused'
   | 'project:done'
   | 'project:error';
@@ -69,4 +71,15 @@ export type CheckpointResultEvent = AgentEvent & {
   layer: number;
   status: 'pass' | 'warn' | 'fail';
   details: CheckpointDetail[];
+};
+
+export type PipelineInterruptedEvent = AgentEvent & {
+  type: 'pipeline:interrupted';
+  lastCompletedLayer?: number;
+  interruptedAt?: string;
+};
+
+export type PipelineResumedEvent = AgentEvent & {
+  type: 'pipeline:resumed';
+  resumeFromLayer?: number;
 };
